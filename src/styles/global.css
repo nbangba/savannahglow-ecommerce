@@ -21,3 +21,8 @@ body{
     border:2px solid #35486F !important; 
     box-shadow:0 0 10px #9bb2e1;
   }
+
+  main{
+    padding:0;
+    color:none;
+  }
