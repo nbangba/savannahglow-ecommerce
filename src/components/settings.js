@@ -10,12 +10,16 @@ import { reactTextInput } from './addressform';
 import styled from 'styled-components'
 import { CSSTransition } from 'react-transition-group';
 import Reauth from './reauth';
-import { ModalComponent } from './addressform';
+import  ModalComponent from './modal';
 import firebase from '../firebase/fbconfig';
 import ShowPassword from '../images/show-password.svg'
 import HidePassword from '../images/hide-password.svg'
 import AddressForm from './addressform';
 import * as Yup from 'yup'
+import { useFirestoreConnect } from 'react-redux-firebase';
+import { useSelector } from 'react-redux';
+import Addresscard from './addresscard';
+
 const dropDownStyle ={
     border:'1px solid #556585',
     backgroudColor:'#f4ece6',
@@ -89,16 +93,56 @@ const LinkButton = styled.div`
 const Switch = styled.label`
   position: relative;
   display: inline-block;
-  width: 60px;
-  height: 34px;
+  width: 45px;
+  height: 25.5px;
 
   input{
     opacity: 0;
     width: 0;
     height: 0;
   }
-`
 
+  input:checked + span {
+    background-color: #2659bf;
+  }
+
+  input:checked + span:before {
+    
+    transform: translateX(19.5px);
+  }
+  
+`
+const Slider =styled.span`
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #7b7c7c;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 25.5px;
+
+  &:before{
+    position: absolute;
+  content: "";
+  height: 19.5px;
+  width: 19.5px;
+  left: 3px;
+  bottom: 3px;
+  border-radius: 50%;
+  background-color: #f4ece6;
+  -webkit-transition: .4s;
+  transition: .4s;
+  }
+`
+const CardWrapper = styled.div`
+  display:flex;
+  width:fit-content;
+  flex:1 0 200px;
+  flex-wrap:wrap;
+`
   function Account(){
       return(
         <Formik
@@ -401,14 +445,20 @@ function Notifications(){
       }}
     >
       {({ isSubmitting,setFieldValue,handleChange,values }) => (
-        <Form style={{width:'500px'}}>
-          <InputWrapper>
-              <Label for='firstname' >Subscribe to newsletters</Label>
+        <Form style={{maxWidth:'500px'}}>
+          <InputWrapper style={{display:'flex',flexWrap:'wrap',width:'100%',flex:'1 1 100px',justifyContent:'space-between',minWidth:200}}>
+              <Label for='firstname'  >Subscribe to newsletters</Label>
+              <Switch>
               <Input onChange={handleChange} value={values.firstname} type="checkbox" name="firstname"  id='firstname' />
+              <Slider></Slider>
+              </Switch> 
           </InputWrapper>
-          <InputWrapper>
+          <InputWrapper style={{display:'flex',flexWrap:'wrap',width:'100%',flex:'1 1 100px',justifyContent:'space-between',minWidth:200}}>
               <Label for='lastname' >Recieve Notifications</Label>
-              <Input onChange={handleChange} value={values.lastname} type="checkbox" name="lastname"  id='lastname' />
+              <Switch>
+              <Input onChange={handleChange} value={values.firstname} type="checkbox" name="firstname"  id='firstname' />
+              <Slider></Slider>
+              </Switch>
           </InputWrapper>
          
           <InputWrapper wide style={{display:'flex',justifyContent:'flex-end'}} >
@@ -440,6 +490,21 @@ function AccordionButton({active,setActive,name,title,children}){
     )
 }
 
+function Addresses(){
+   
+  useFirestoreConnect(()=>[{collection:'addresses',orderBy:['dateCreated','desc']}])
+  
+  const addresses = useSelector(state=> state.firestore.ordered.addresses)
+  useSelector(state => console.log("state",state))
+  console.log(addresses)
+  return(
+   <CardWrapper>
+      {
+        addresses && addresses.map((addressInfo)=><Addresscard addressInfo={addressInfo}></Addresscard>)
+      }
+   </CardWrapper>
+  )
+}
 export default function Settings(){
     const [active,setActive] = useState(null)
   return(
@@ -451,7 +516,8 @@ export default function Settings(){
         <Password/>
     </AccordionButton>
      <AccordionButton name='address' title="Address" active={active} setActive={setActive}>
-        <AddressForm/>
+
+        <Addresses/>
     </AccordionButton>
     <AccordionButton name='notifications' title="Notifications" active={active} setActive={setActive}>
         <Notifications/>

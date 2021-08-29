@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,700;1,300&family=Niconne&display=swap');
+
+body{
+    display:flex;
+    flex-direction: column;
+    height:100vh;
+    background-color:#EBDDD2;
+    
+  }
+#gatsby-focus-wrapper{
+  display:flex;
+    flex-direction: column;
+    height:100vh;
+}
+  html{
+    font-size:16px;
+  }
+
+  .react-tel-input .form-control:focus{
+    outline:none;
+    border:2px solid #35486F !important; 
+    box-shadow:0 0 10px #9bb2e1;
+  }
