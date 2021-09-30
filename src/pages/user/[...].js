@@ -7,7 +7,8 @@ import styled from 'styled-components'
 import { MenuContentList,MenuContent } from "../../components/popper"
 import { Link } from "gatsby"
 import Settings from "../../components/settings"
-import { useFirestoreConnect } from 'react-redux-firebase'
+import { doc, getFirestore } from 'firebase/firestore';
+import { FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp } from 'reactfire';
 const SideMenu = styled.div`
   display:flex;
   width:150px;
@@ -29,7 +30,9 @@ const User = styled.div`
 
 
 const App = (props) => {
+  const firestoreInstance = getFirestore(useFirebaseApp());
   return (
+    
     <Layout>
         <User>
         <SideMenu>
@@ -46,6 +49,7 @@ const App = (props) => {
       </Router>
       </User> 
     </Layout>
+ 
   )
 }
 

@@ -1,24 +1,30 @@
-import React, { useState } from 'react'
+
+import React, { useState,useEffect } from 'react'
 import { Formik, Form, Field, ErrorMessage, validateYupSchema } from 'formik';
 import { Input } from './addressform';
 import { InputWrapper } from './addressform';
 import PhoneInput from 'react-phone-input-2';
 import { Label } from './addressform';
-import { Button } from './addressform';
+import { Button } from './navbar';
 import { GSelect } from './addressform';
 import { reactTextInput } from './addressform';
 import styled from 'styled-components'
 import { CSSTransition } from 'react-transition-group';
 import Reauth from './reauth';
 import  ModalComponent from './modal';
-import firebase from '../firebase/fbconfig';
+//import firebase from '../firebase/fbconfig';
 import ShowPassword from '../images/show-password.svg'
 import HidePassword from '../images/hide-password.svg'
 import AddressForm from './addressform';
 import * as Yup from 'yup'
-import { useFirestoreConnect } from 'react-redux-firebase';
-import { useSelector } from 'react-redux';
+//import { useFirestoreConnect } from 'react-redux-firebase';
+//import { useSelector } from 'react-redux';
 import Addresscard from './addresscard';
+import { doc, getFirestore,collection,query,orderBy,where} from 'firebase/firestore';
+import { useUser,useFirestoreCollectionData, useFirestore} from 'reactfire';
+import { updateEmail,updatePassword,deleteUser} from 'firebase/auth'; // Firebase v9+
+import Errorwrapper from './errorwrapper';
+import { AddressCardOptions } from './addresscard';
 
 const dropDownStyle ={
     border:'1px solid #556585',
@@ -139,9 +145,10 @@ const Slider =styled.span`
 `
 const CardWrapper = styled.div`
   display:flex;
-  width:fit-content;
+  width:100%;
   flex:1 0 200px;
   flex-wrap:wrap;
+  overflow-x:auto;
 `
   function Account(){
       return(
@@ -227,7 +234,9 @@ const CardWrapper = styled.div`
 }
 
 function ChangeEmail({setShowModal}){
-  const user = firebase.auth().currentUser;
+  //const user = firebase.auth().currentUser;
+
+  const { data: user } = useUser()
   const [reauth,setReauth] = useState(false)
   const[success,setSuccess] =useState(false)
    return(
@@ -247,7 +256,7 @@ function ChangeEmail({setShowModal}){
     onSubmit={(values, { setSubmitting }) => {
       setTimeout(() => {
         console.log(JSON.stringify(values, null, 2));
-        user.updateEmail(values.email).then(() => {
+        updateEmail(user,values.email).then(() => {
           setSuccess(true)
           console.log(`email updated to ${values.email} successfully`)
         }).catch((error) => {
@@ -291,7 +300,8 @@ function ChangeEmail({setShowModal}){
 }
 
 function ChangePassword({setShowModal}){
-  const user = firebase.auth().currentUser;
+  //const user = firebase.auth().currentUser;
+  const { data: user } = useUser()
   const [reauth,setReauth] = useState(false)
   const[success,setSuccess] =useState(false)
   const [showPassword,setShowPassword]=useState(false)
@@ -310,7 +320,7 @@ function ChangePassword({setShowModal}){
     onSubmit={(values, { setSubmitting }) => {
       setTimeout(() => {
         console.log(JSON.stringify(values, null, 2));
-        user.updatePassword(values.password).then(() => {
+        updatePassword(user,values.password).then(() => {
           setSuccess(true)
           // Update successful.
         }).catch((error) => {
@@ -364,7 +374,8 @@ function ChangePassword({setShowModal}){
 }
 
 function DeleteAccount({setShowModal}){
-  const user = firebase.auth().currentUser;
+  //const user = firebase.auth().currentUser;
+  const { data: user } = useUser()
   const [reauth,setReauth] = useState(false)
   const[success,setSuccess] =useState(false)
   const termsSchema = Yup.object().shape({
@@ -378,7 +389,7 @@ function DeleteAccount({setShowModal}){
     onSubmit={(values, { setSubmitting }) => {
       setTimeout(() => {
         console.log(JSON.stringify(values, null, 2));
-        user.delete().then(() => {
+        deleteUser(user).then(() => {
           setSuccess(true)
           // User deleted.
         }).catch((error) => {
@@ -490,19 +501,41 @@ function AccordionButton({active,setActive,name,title,children}){
     )
 }
 
-function Addresses(){
-   
-  useFirestoreConnect(()=>[{collection:'addresses',orderBy:['dateCreated','desc']}])
+export function Addresses({wrap,selectable,selected,setSelected}){
+  const firestore = useFirestore();
+  const addressesCollection = collection(firestore, 'addresses');
+  const addressesQuery = query(addressesCollection,orderBy('dateCreated', 'desc'))
+  const getDefault = (addresses)=> addresses.filter((address)=> address.isDefault)
+  const { status, data:addresses } = useFirestoreCollectionData(addressesQuery);
+  const[defaultAddress,setDefaultAddress] = useState(null)
+  const [showModal, setShowModal] = useState(false)
   
-  const addresses = useSelector(state=> state.firestore.ordered.addresses)
-  useSelector(state => console.log("state",state))
-  console.log(addresses)
+  useEffect(() => {
+    const currentDefault = getDefault(addresses)
+    if(currentDefault.length == 1)
+    setDefaultAddress(currentDefault[0].NO_ID_FIELD)
+  }, [addresses])
+  
+  
   return(
-   <CardWrapper>
+    <div>
+      <Button secondary onClick={()=> setShowModal(true)}>Add Address</Button>
+      <ModalComponent showModal={showModal} setShowModal={setShowModal}>
+                <AddressForm setShowModal={setShowModal}/>
+      </ModalComponent>
+   <CardWrapper wrap={wrap}>
       {
-        addresses && addresses.map((addressInfo)=><Addresscard addressInfo={addressInfo}></Addresscard>)
+        addresses && addresses.map((addressInfo)=> {
+          return(
+        <Addresscard selectable={selectable} selected={selectable&&(selected.NO_ID_FIELD == addressInfo.NO_ID_FIELD)} setSelected={setSelected}  addressInfo={addressInfo} key={addressInfo.NO_ID_FIELD}>
+          <AddressCardOptions defaultAddress={defaultAddress} setDefaultAddress={setDefaultAddress} addressInfo={addressInfo}/>
+        </Addresscard>
+          )
+        }
+        )
       }
    </CardWrapper>
+   </div>
   )
 }
 export default function Settings(){
@@ -516,8 +549,9 @@ export default function Settings(){
         <Password/>
     </AccordionButton>
      <AccordionButton name='address' title="Address" active={active} setActive={setActive}>
-
-        <Addresses/>
+       <Errorwrapper>
+       <Addresses wrap/>
+       </Errorwrapper>
     </AccordionButton>
     <AccordionButton name='notifications' title="Notifications" active={active} setActive={setActive}>
         <Notifications/>

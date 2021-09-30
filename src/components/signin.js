@@ -2,7 +2,7 @@ import * as firebaseui from 'firebaseui'
 import 'firebaseui/dist/firebaseui.css'
 import React,{useEffect} from 'react'
 import firebase from '../firebase/fbconfig';
-  
+
   export default function SignIn() {
     var uiConfig = {
         signInSuccessUrl: '<url-to-redirect-to-on-success>',
@@ -27,7 +27,7 @@ import firebase from '../firebase/fbconfig';
       };
       
       useEffect(() => {
-        var ui = new firebaseui.auth.AuthUI(firebase.auth());
+        var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
         // The start method will wait until the DOM is loaded.
         ui.start('#firebaseui-auth-container', uiConfig);
       }, [])

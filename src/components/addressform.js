@@ -5,9 +5,9 @@ import countryCodes from '../data/countrycodes.json'
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import Autocomplete from "react-google-autocomplete";
-import fb from '../firebase/fbconfig'
-import { isLoaded,useFirebaseConnect ,isEmpty, useFirestore} from 'react-redux-firebase'
-import { useSelector } from 'react-redux';
+import { useSigninCheck,useUser,useFirestore} from 'reactfire';
+import { collection, addDoc, serverTimestamp,doc, setDoc } from "firebase/firestore";
+
 
 const textInput = `width: 100%;
   padding: 12px 20px;
@@ -132,10 +132,22 @@ export const Button = styled.button`
   `}
 `
 
- export default function AddressForm({setShowModal,addressInfo={firstname:'',lastname:'',email:'',phone:'',location:'',street:'',city:'',state:'',country:''}}) {
+ export default function AddressForm({setShowModal,
+                                      setOrderAddress,
+                                      addressInfo={firstname:'',
+                                      lastname:'',
+                                      email:'',
+                                      phone:'',
+                                      location:'',
+                                      street:'',
+                                      city:'',
+                                      state:'',
+                                      country:''}}) {
    
-    const auth = useSelector(state=>state.firebase.auth)
-    const fs = useFirestore()
+    const db = useFirestore()
+    const { status, data: signInCheckResult } = useSigninCheck();
+    const {status:info, data: user } = useUser()
+    const addressId = addressInfo.NO_ID_FIELD
     const setAddress =(place,setFieldValue,values)=>{
       let address1=''
       let postcode=''
@@ -202,15 +214,26 @@ export const Button = styled.button`
         onSubmit={(values, { setSubmitting }) => {
           setTimeout(() => {
             console.log(JSON.stringify(values, null, 2));
-            if(isLoaded(auth)){
-              fs.collection('addresses').add({
-                user:auth.uid,
-                dateCreated:fs.FieldValue.serverTimestamp(),
+            if(setOrderAddress)
+              setOrderAddress({...values})
+            if(signInCheckResult.signedIn === true){
+              if(addressId){
+                setDoc(doc(db, "addresses", addressId), {
+                  ...values
+                },{merge:true})
+                .then(()=> console.log('address updated'))
+              .catch((e)=>console.log(e))
+              }
+              else{
+             addDoc(collection(db, "addresses"), {
+                user:user.uid,
+                dateCreated:serverTimestamp(),
                 ...values
               })
               .then(()=> console.log('address added'))
               .catch((e)=>console.log(e))
             }
+          }
             setSubmitting(false);
           }, 400);
         }}
@@ -232,7 +255,9 @@ export const Button = styled.button`
             </InputWrapper>
             <InputWrapper wide>
             <Label for='phone' >Phone Number</Label>
-            <PhoneInput country='gh' onChange={(value,country,e)=>handleChange(e)} value={values.phone} inputProps={{name:"phone"}} type="text"  id="phone" dropdownStyle={{...dropDownStyle}} inputStyle={{...reactTextInput}}/>
+            <PhoneInput country='gh' onChange={(value,country,e)=>handleChange(e)} 
+            value={values.phone} inputProps={{name:"phone"}} type="text"  id="phone" 
+            dropdownStyle={{...dropDownStyle}} inputStyle={{...reactTextInput}}/>
             </InputWrapper>
             <InputWrapper wide>
             <Label for='location' >Location</Label>
@@ -255,11 +280,11 @@ export const Button = styled.button`
             onChange={handleChange}/>
             </InputWrapper>
             <InputWrapper>
-                <Label for='street' >Street</Label>
+                <Label for="street" >Street</Label>
                 <Input onChange={handleChange} value={values.street}  type="text" name="street" id="street" />
             </InputWrapper>
             <InputWrapper>
-                <Label for='street' >City</Label>
+                <Label for='city' >City</Label>
                 <Input onChange={handleChange} value={values.city} type="text" name="city" id="city"  />
             </InputWrapper>
             <InputWrapper>

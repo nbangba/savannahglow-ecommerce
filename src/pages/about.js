@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'gatsby'
 
-export default function AbputPage() {
+export default function AboutPage() {
     return (
         <main>
           <title>About Me</title>

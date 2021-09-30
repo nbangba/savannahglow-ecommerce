@@ -2,10 +2,15 @@ import React, { useState,useEffect } from 'react'
 import styled,{css} from 'styled-components'
 import Logo from '../images/logo.svg'
 import User from '../images/user.svg'
-import fb from '../firebase/fbconfig'
 import SignIn from './signin'
 import Popper from './popper'
 import ModalComponent from './modal'
+import { useUser,useSigninCheck,useFirestore,useFirestoreDocData } from 'reactfire'
+import {doc} from '@firebase/firestore'
+import Errorwrapper from './errorwrapper';
+import { Link } from 'gatsby'
+import ShoppingBag from '../images/bag.svg'
+
 const Navbar = styled.div`
    display: flex;
    width:100%;
@@ -57,6 +62,11 @@ const MenuItem = styled.li`
    font-weight: 500;
    box-sizing:border-box;
        a{
+        color:#35486F;
+        box-sizing: border-box;
+        width:100%;
+        display:inline-block;
+           text-decoration:none;
            &:hover{
             text-decoration: underline; 
            }
@@ -69,6 +79,7 @@ export const Button = styled.div`
    cursor:pointer;
    width:100px;
    padding:10px;
+   margin:5px;
    box-sizing:border-box;
    border-radius:0.5rem;
    margin: 0 10px;
@@ -85,7 +96,8 @@ export const Button = styled.div`
    ${props => props.primary && css`
    background-color:#35486F;
    color: white;
-   width:fit-content;
+   margin:5px;
+   min-width:fit-content;
    &:hover{
        color: white;
        background:#13213D;
@@ -100,6 +112,7 @@ export const Button = styled.div`
      display:inline-flex;
      border-radius:5px;
      width:50px;
+     margin:5px;
      align-items: center;
      justify-content: center;
      min-width:fit-content;
@@ -128,37 +141,75 @@ const UserWrapper = styled.div`
    background:rgba(224,193,175,0.9);
    }
 `
-
+const CartNumber = styled.div`
+   position:absolute;
+   display:flex;
+   width:30px;
+   height:30px;
+   top:1%;
+   cursor:pointer;
+   left:35.5%;
+   color:#3f3633;
+   justify-content:center;
+   align-items:flex-end;
+   font-weight:bold;
+`
 export default function Nav() {
     const menuItems = ['Home','Catlogue','Blog','Support']
-    const [showModal, setshowModal] = useState(false)
-    const [loggedIn, setloggedIn] = useState(null)
-    const [showPopper, setshowPopper] = useState(false)
-    const subMenuItems =['Profile','History','Settings']
     
-    useEffect(() => {    
-      const unsubscribe =  fb.auth().onAuthStateChanged((user)=>{
-          if(user)
-            setloggedIn(true)
-          else
-          setloggedIn(false)
-      })
-        return () => {
-            unsubscribe()
-        }
-    }, [])
 
+    
     return (
         <Navbar>
             <Logo  style={{width:100,height:100}}/>
             <Menu style={{flexGrow:10}}>
-                {menuItems.map(item=> <MenuItem> {item} </MenuItem>)}
+                {menuItems.map(item=> <MenuItem><Link to={item==='Home'?'/':`/${item.toLowerCase()}`} >{item}</Link> </MenuItem>)}
             </Menu>
-            <Menu left>
-                { loggedIn !=null &&
+            <Errorwrapper>
+                <LoginStatus/>
+            </Errorwrapper>
+        </Navbar>
+    )
+}
+
+function LoginStatus(){
+
+    const [showModal, setshowModal] = useState(false)
+    const [loggedIn, setloggedIn] = useState(null)
+    const [showPopper, setshowPopper] = useState(false)
+    const subMenuItems =['Profile','History','Settings']
+
+    const { data: user } = useUser()
+    const { status, data: signInCheckResult } = useSigninCheck();
+    console.log(user)
+    console.log(signInCheckResult)
+    const firestore = useFirestore()
+    const cartRef =user && doc(firestore, 'carts', user.uid);
+    
+
+    const CartComponent = ()=>{
+        const { data:cart } = useFirestoreDocData(cartRef);
+        console.log('cart',cart)
+        return(
+            <CartNumber>
+                <Link to='/cart'>
+                <small>{cart && cart.numberOfItems?cart.numberOfItems:'0'}</small>
+                </Link>
+        </CartNumber>
+        )
+    }
+    return(
+        <Menu left>
+            <MenuItem>
+            {
+                user? <CartComponent/>:<CartNumber><small>0</small></CartNumber>
+            }
+            <ShoppingBag fill='#474E52' style={{width:30,height:30}}/>
+            </MenuItem>
+                { status === 'success' &&
                 <>
                 {
-                    loggedIn?
+                   signInCheckResult && signInCheckResult.signedIn === true?
                     <Popper subMenuItems={subMenuItems}>
                         {
                             (setReferenceElement,setOpen,open)=>
@@ -178,6 +229,5 @@ export default function Nav() {
                    <SignIn/>
                 </ModalComponent>
             </Menu>
-        </Navbar>
     )
 }

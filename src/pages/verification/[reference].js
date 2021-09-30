@@ -5,7 +5,7 @@ import styled from 'styled-components'
 
 const axios = require('axios');
 
-const Loading = styled.div`
+export const Loading = styled.div`
   width:100px;
   height:100px;
   border-radius:50%;
@@ -17,7 +17,7 @@ const Loading = styled.div`
     to {transform: rotate(1turn);}
   }
 `
-const CenterChild = styled.div`
+export const CenterChild = styled.div`
     display:flex;
     justify-content:center;
     text-align:center;

@@ -1,23 +1,21 @@
 import React from "react"
-import { Provider } from "react-redux"
-import store from "./src/store"
-import { createFirestoreInstance} from 'redux-firestore'
-import firebase from "./src/firebase/fbconfig"
-import { ReactReduxFirebaseProvider, useFirestore} from 'react-redux-firebase'
+import { FirebaseAppProvider } from 'reactfire';
+
 // eslint-disable-next-line react/display-name,react/prop-types
 export default ({ element }) => {
-    const rrfConfig = {
-        userProfile: 'users',
-         useFirestoreForProfile: true // Firestore for Profile instead of Realtime DB
-      }
-    const rrfProps = {
-        firebase,
-        config: rrfConfig,
-        dispatch: store.dispatch,
-        createFirestoreInstance // <- needed if using firestore
-      }
+
+  var firebaseConfig = {
+    apiKey: `${process.env.FIREBASE_API_KEY}`,
+    authDomain: "savannah-glow.firebaseapp.com",
+    projectId: "savannah-glow",
+    storageBucket: "savannah-glow.appspot.com",
+    messagingSenderId: "199451664618",
+    appId: "1:199451664618:web:d6d17b013c804b9b15b793",
+    measurementId: "G-6432EF2LT9"
+  };
   // Instantiating store in `wrapRootElement` handler ensures:
   //  - there is fresh store for each SSR page
   //  - it will be called only once in browser, when React mounts
-  return <Provider store={store}><ReactReduxFirebaseProvider {...rrfProps}>{element}</ReactReduxFirebaseProvider></Provider>
+  if (typeof window === "undefined") return <p>Loading...</p>
+  return <FirebaseAppProvider firebaseConfig={firebaseConfig} suspense >{element}</FirebaseAppProvider>
 }

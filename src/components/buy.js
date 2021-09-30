@@ -1,3 +1,4 @@
+
 import React, { useState,useRef, useEffect } from 'react'
 import pomade from '../images/shea-butter.png'
 import styled from 'styled-components'
@@ -5,6 +6,15 @@ import { Button } from './navbar'
 import AddressForm from './addressform'
 import  ModalComponent from './modal'
 import {Helmet} from "react-helmet";
+import { Formik, Form, ErrorMessage, validateYupSchema } from 'formik';
+import AddressCard from './addresscard';
+import { useUser,useSigninCheck,useFirebaseApp, useFirestore, useFirestoreCollectionData,SuspenseWithPerf} from 'reactfire'
+import { collection,where,query } from 'firebase/firestore'
+import Errorwrapper from './errorwrapper'
+import { CardItem } from './addresscard'
+import { Addresses } from './settings'
+import * as Yup from 'yup'
+import { verifyPaystack } from '../helperfunctions/cloudfunctions'
 
 const product ={
     width:'100px',
@@ -85,11 +95,18 @@ width:100%;
    max-width:400px;
 `
 
+const AddressesWrapper = styled.div`
+   max-width:500px;
+   overflow-x:scroll;
+
+`
+
 export default function BuyComponent() {
     const [small, setSmall] = useState({product:'small',quantity:2,price:2,available:100})
     const [big, setBig] = useState({product:'big',quantity:3,price:4,available:100})
     const [currentItem,setCurrentItem]= useState(big)
-    const [showModal, setShowModal] = useState(false)
+    
+
     useEffect(() => {
         setCurrentItem(small)  
     }, [small])
@@ -99,7 +116,10 @@ export default function BuyComponent() {
     }, [big])
     
 
-  
+    const orderSchema = Yup.object().shape({
+        orderAddress: Yup.object().required('An address is required'),
+      });
+
     return (
         <Buy>
             <section>
@@ -138,6 +158,19 @@ export default function BuyComponent() {
                 
             </section>
             <section>
+                <Formik
+                initialValues={{orderAddress:null}}
+                validationSchema={orderSchema}
+                onSubmit={(values, { setSubmitting }) => {
+                  setTimeout(() => {
+                      console.log('verifying')
+                    console.log(JSON.stringify(values, null, 2));
+                    payWithPaystack(values.orderAddress);
+                    setSubmitting(false);
+                  }, 400);
+                }}>
+                {({ isSubmitting,setFieldValue,handleChange,values,errors }) => (
+                <Form>
                 <OrderWrapper>
                <h2>Your Order</h2>
                <OrderPrice>
@@ -154,22 +187,90 @@ export default function BuyComponent() {
                    </span>
                </OrderPrice>
                <h3 >Address</h3>
-               <Button secondary onClick={()=> setShowModal(true)}>Add Address</Button>
-               <ModalComponent showModal={showModal} setShowModal={setShowModal}>
-                   <AddressForm setShowModal={setShowModal}/>
-               </ModalComponent>
-
-               <Button primary style={{width:'fit-content', marginTop:20}}onClick={()=>payWithPaystack()}>Make Payment</Button>
+               <Errorwrapper>
+                   <UserAddress setFieldValue={setFieldValue}/>
+               </Errorwrapper>
+               <button type="submit" disabled={isSubmitting} style={{width:'fit-content', marginTop:20}}>Make Payment</button>
+               {errors && errors.orderAddress}
                </OrderWrapper>
+               </Form>
+                )}
+               </Formik>
             </section> 
         </Buy>
     )
 }
 
+function UserAddress({setFieldValue}){
+    const [showModal, setShowModal] = useState(false)
+    const [selected, setSelected] = useState(null)
+    const [changeAddress, setchangeAddress] = useState(false)
+    const { status, data: signInCheckResult } = useSigninCheck();
+    const firestore = useFirestore();
+    const addressesCollection = collection(firestore, 'addresses');
+    const addressesQuery = query(addressesCollection,where('isDefault','==',true))
+    const { status:info, data:addresses } = useFirestoreCollectionData(addressesQuery);
+    
+    console.log(addresses)
+    
+    
+    useEffect(() => {
+        if(addresses[0])
+        setSelected(addresses[0])
+    }, [])
+    console.log(info,addresses)
+    
+    useEffect(() => {
+        
+        setFieldValue('orderAddress',selected)
+    }, [selected])
+    return(
+        <>
+        {signInCheckResult&&signInCheckResult.signedIn? 
+               <>
+               {selected &&
+               <AddressCard  addressInfo={selected}>
+                   <CardItem>
+                   <Button secondary onClick={()=>setchangeAddress(!changeAddress)}>{changeAddress?'Done': 'Change'}</Button>
+                   </CardItem> 
+               </AddressCard>
+               }
+               {changeAddress && 
+               <>
+               <ChangeAddressOptions selected={selected} setSelected={setSelected}/> 
+               </>
+               }
+               </>
+                 :
+                <>
+               <Button secondary onClick={()=> setShowModal(true)}>Add Address</Button>
+               <ModalComponent showModal={showModal} setShowModal={setShowModal}>
+                <AddressForm setShowModal={setShowModal} setOrderAddress={setSelected}/>
+               </ModalComponent>
+                </>
+             }
+             
+        </>
+    )
+}
 
-function payWithPaystack() {
+function ChangeAddressOptions({selected,setSelected}){
+    //add 'selectable' option to card component
+    return(
+        <>
+         <CardItem><h3>Select Address</h3></CardItem>
+       
+           <Addresses selectable={true} selected={selected} setSelected={setSelected}/>
+      
+        </> 
+    )
+}
+
+
+
+function payWithPaystack(info) {
     var handler = window.PaystackPop.setup({
-        key: 'pk_test_64cadcb7dfa0a05f73626432160213f40c80c77c', // Replace with your public key
+        key:`${process.env.PAY_STACK_PUBLIC_KEY}` , // Replace with your public key
         email: 'nbangba.la@gmail.com',
         amount: 10, // the amount value is multiplied by 100 to convert to the lowest currency unit
         currency: 'GHS', // Use GHS for Ghana Cedis or USD for US Dollars
@@ -177,7 +278,8 @@ function payWithPaystack() {
         //this happens after the payment is completed successfully
         var reference = response.reference
         console.log(response)
-        window.location = "http://localhost:8000/verification/" + response.reference;
+        verifyPaystack(info,response)
+        
         alert('Payment complete! Reference: ' + reference);
         // Make an AJAX call to your server with the reference to verify the transaction
         },
@@ -186,6 +288,6 @@ function payWithPaystack() {
         },
     });
     handler.openIframe();
-    }
+}
 
  
