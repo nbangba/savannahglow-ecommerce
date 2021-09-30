@@ -1,10 +1,10 @@
-import { reference } from '@popperjs/core';
 import { getFunctions,httpsCallable } from 'firebase/functions';
-import {useFirebaseApp} from 'reactfire'
 
-const functions = getFunctions();
-const addMessage = httpsCallable(functions, 'payStackTransctionVerification');
+
 export function verifyPaystack(info,response){
+    const functions =  getFunctions();
+    const addMessage = httpsCallable(functions, 'payStackTransctionVerification');
+    
     addMessage({info:info,response:response })
     .then((result) => {
         console.log(info,response)

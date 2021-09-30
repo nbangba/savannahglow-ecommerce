@@ -278,6 +278,7 @@ function payWithPaystack(info) {
         //this happens after the payment is completed successfully
         var reference = response.reference
         console.log(response)
+        (typeof window !== "undefined")
         verifyPaystack(info,response)
         
         alert('Payment complete! Reference: ' + reference);
