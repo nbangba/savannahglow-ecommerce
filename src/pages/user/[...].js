@@ -8,7 +8,8 @@ import { MenuContentList,MenuContent } from "../../components/popper"
 import { Link } from "gatsby"
 import Settings from "../../components/settings"
 import { doc, getFirestore } from 'firebase/firestore';
-import { FirebaseAppProvider, FirestoreProvider, useFirestoreDocData, useFirestore, useFirebaseApp } from 'reactfire';
+import {  useFirebaseApp } from 'reactfire';
+
 const SideMenu = styled.div`
   display:flex;
   width:150px;

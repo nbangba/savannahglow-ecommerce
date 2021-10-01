@@ -1,6 +1,5 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Provider,useSelector } from 'react-redux'
 
 const ProfileWrapper = styled.div`
    display:flex;

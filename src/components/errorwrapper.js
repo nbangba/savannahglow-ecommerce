@@ -1,7 +1,6 @@
 import React from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { SuspenseWithPerf } from 'reactfire'
-import { Loading } from '../pages/verification/[reference]'
 
 export default function Errorwrapper({children}) {
     return (

@@ -1,7 +1,6 @@
 import React,{useEffect} from 'react'
 import { Formik, Form, Field, ErrorMessage, validateYupSchema } from 'formik';
 import styled,{css} from 'styled-components'
-import countryCodes from '../data/countrycodes.json'
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import Autocomplete from "react-google-autocomplete";

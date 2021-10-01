@@ -1,11 +1,9 @@
-import React, { useEffect, useState,useRef, Children } from 'react'
-import Layout from './layout'
+import React, { useEffect, useState,useRef} from 'react'
 import { useUser,useSigninCheck,useFirestore ,useAuth,useFirestoreDocData} from 'reactfire'
-import { collection, addDoc, serverTimestamp,doc, setDoc,updateDoc,increment,arrayUnion} from "firebase/firestore";
-import { signInAnonymously } from "firebase/auth"
+import { doc, setDoc} from "firebase/firestore";
 import styled from 'styled-components';
 import { Button } from './navbar'
-import CardComponent,{Card} from './card';
+import {Card} from './card';
 import {Remove} from './addresscard'
 import { Input } from './addressform';
 import { DeleteDialog } from './addresscard';

@@ -6,7 +6,6 @@ import { InputWrapper } from './addressform';
 import PhoneInput from 'react-phone-input-2';
 import { Label } from './addressform';
 import { Button } from './navbar';
-import { GSelect } from './addressform';
 import { reactTextInput } from './addressform';
 import styled from 'styled-components'
 import { CSSTransition } from 'react-transition-group';

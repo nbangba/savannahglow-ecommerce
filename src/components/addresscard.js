@@ -8,8 +8,7 @@ import ModalComponent from './modal'
 import AddressForm from './addressform'
 import { doc, deleteDoc,getFirestore,setDoc } from "firebase/firestore";
 import {  useFirebaseApp,useSigninCheck,useUser} from 'reactfire';
-import Errorwrapper from './errorwrapper'
-import { CenterChild } from '../pages/verification/[reference]'
+
 
 export const CardItem = styled.div`
   display:flex;

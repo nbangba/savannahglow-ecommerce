@@ -12,11 +12,11 @@ import Master from '../images/master.svg'
 import { Addresses } from './settings'
 import ModalComponent from './modal'
 import * as Yup from 'yup'
-import { verifyPaystack } from '../helperfunctions/cloudfunctions'
 import AddressForm from './addressform'
 import AddressCard from './addresscard'
 import { Formik, Form,Field, ErrorMessage, validateYupSchema } from 'formik';
 import { CardItem } from './addresscard'
+
 const RadioButtonsContainer = styled.label`
     display: block;
     position: relative;

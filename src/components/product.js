@@ -2,7 +2,7 @@ import React, { useState,useEffect } from 'react'
 import styled from 'styled-components'
 import { Button } from './navbar'
 import { useUser,useSigninCheck,useFirestore ,useAuth,useFirestoreDocData} from 'reactfire'
-import { collection, addDoc, serverTimestamp,doc, setDoc,updateDoc,increment,arrayUnion} from "firebase/firestore";
+import { serverTimestamp,doc, setDoc,updateDoc,increment,arrayUnion} from "firebase/firestore";
 import { signInAnonymously } from "firebase/auth";
 import Errorwrapper from './errorwrapper';
 import { Input } from './addressform';
