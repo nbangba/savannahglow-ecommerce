@@ -174,7 +174,7 @@ exports.payStackTransctionVerification = functions
       axios(options)
                .then(response=>{
                  console.log('RESPONSE',response.data);
-                 const data = response.data
+                 const data = response.data.data
                  try {
                    fs.runTransaction(async (transaction) => {
                     const docRef = fs.collection("ordersMetadata").doc("ordersMetadata");

@@ -111,7 +111,7 @@ export default function Checkout() {
     return (
         <CheckoutWrapper>
             <Formik
-                initialValues={{orderAddress:null,payment:'paystack',paystackOptions:'defaultCard'}}
+                initialValues={{orderAddress:null,payment:'paystack',paystackOptions:''}}
                 validationSchema={orderSchema}
                 onSubmit={(values, { setSubmitting }) => {
                   setTimeout(() => {
