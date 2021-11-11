@@ -1,4 +1,3 @@
-
 import React, { useState,useRef, useEffect } from 'react'
 import pomade from '../images/shea-butter.png'
 import styled from 'styled-components'

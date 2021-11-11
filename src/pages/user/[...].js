@@ -7,9 +7,13 @@ import styled from 'styled-components'
 import { MenuContentList,MenuContent } from "../../components/popper"
 import { Link } from "gatsby"
 import Settings from "../../components/settings"
+import Orders from "../../components/orders"
 import { doc, getFirestore } from 'firebase/firestore';
 import {  useFirebaseApp } from 'reactfire';
-
+import AdminOrders from "../admin/orders"
+import AdminUsers from "../admin/users"
+import PrivateRoute from "../../components/privateroutes"
+import Errorwrapper from "../../components/errorwrapper"
 const SideMenu = styled.div`
   display:flex;
   width:150px;
@@ -43,11 +47,16 @@ const App = (props) => {
                                         </MenuContentList>)}
             </MenuContent>
         </SideMenu>
+        <Errorwrapper>
       <Router basepath="/user" style={{width:'100%'}}>
-        <Profile path="/profile" />
-        <Settings path="/settings"/>
+        <PrivateRoute path="/profile" component={Profile} />
+        <PrivateRoute path="/settings" component={Settings} />
+        <PrivateRoute path="/orders" component={Orders} />
+        <PrivateRoute path="admin/orders" component={AdminOrders} />
+        <PrivateRoute path="admin/users" component={AdminUsers} />
         <Home path="/" />
       </Router>
+      </Errorwrapper>
       </User> 
     </Layout>
  

@@ -6,7 +6,7 @@ export const Card = styled.div`
   display:flex;
   width:100%;
   max-width:${props=> props.maxWidth||'300px'};
-  min-width:${props=> props.maxWidth||'200px'};
+  min-width:${props=> props.minWidth||'200px'};
   border:${props=>props.selected?'10px solid #f5d2a687':''};
   border-radius:0px;
   cursor:${props=>props.selectable?'pointer':''};
@@ -17,7 +17,7 @@ export const Card = styled.div`
   box-sizing:border-box;
   text-overflow:ellipsis;
   box-shadow: 0px 2px 1px -1px rgb(0 0 0 / 20%), 0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%);
- 
+
   ${props=>props.selectable && css`
   
    &:hover{
@@ -27,10 +27,11 @@ export const Card = styled.div`
 }
 
 `
-export default function CardComponent({children, selected,selectable,addressInfo,setSelected,maxWidth}) {
+export default function CardComponent({children, selected,selectable,addressInfo,setSelected,maxWidth,minWidth,style}) {
     return (
-        <Card selected={selected} maxWidth={maxWidth} selectable={selectable} onClick={()=>{if(selectable)setSelected(addressInfo)}}>
+        <Card selected={selected} minWidth={minWidth} maxWidth={maxWidth} selectable={selectable} style={{...style}}
+        onClick={()=>{if(selectable)setSelected(addressInfo)}}>
             {children}
         </Card>
-    )
+          )
 }

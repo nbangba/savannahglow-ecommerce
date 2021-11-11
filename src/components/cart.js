@@ -8,6 +8,8 @@ import {Remove} from './addresscard'
 import { Input } from './addressform';
 import { DeleteDialog } from './addresscard';
 import { Link } from 'gatsby';
+import { calculateSubTotal } from '../helperfunctions';
+import { getAnalytics, logEvent } from "firebase/analytics";
 
 const ProductImageWrapper= styled.div`
  position:relative;
@@ -20,7 +22,7 @@ const ProductImageWrapper= styled.div`
 
  font-family: 'Montserrat', sans-serif;
     color:#35486F;
-    text-align:left;
+    text-align:left;   
  ul{
    display:flex;
    padding:0px;
@@ -83,11 +85,6 @@ export function CartItems({children}) {
         
         const items =cart && cart.items
         
-        const calculateSubTotal = ()=>{
-            const reducer =(previousItem,currentItem)=> previousItem + (currentItem.price*currentItem.quantity)
-        return items.reduce(reducer,0)
-        }
-        
         const deleteCartItem = (index,quantity)=> {
             const currentItems = [...items]
             currentItems.splice(index,1)
@@ -115,7 +112,7 @@ export function CartItems({children}) {
 
         useEffect(() => {
         if(cart && cart.items )
-        setSubtotal(calculateSubTotal())
+        setSubtotal(calculateSubTotal(items))
         }, [cart])
 
        if(items && items.length>0) return (
