@@ -95,7 +95,7 @@ export default function Checkout() {
     const cardsCollection = collection(firestore, 'cards');
     const cardsQuery = user && query(cardsCollection,where('owner','==',user.uid))
     const { data:cards } = useFirestoreCollectionData(cardsQuery);
-    const card =cards && cards[0].authorization
+    const card = (cards && cards[0]) && cards[0].authorization
     console.log(card)
     
     useEffect(() => {
