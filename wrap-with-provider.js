@@ -5,7 +5,7 @@ import { FirebaseAppProvider } from 'reactfire';
 export default ({ element }) => {
 
   var firebaseConfig = {
-    apiKey: `${process.env.FIREBASE_API_KEY}`,
+    apiKey: `AIzaSyBriNCuhss3BduhnE7R7zAuqxSGFez3vs8`,
     authDomain: "savannah-glow.firebaseapp.com",
     projectId: "savannah-glow",
     storageBucket: "savannah-glow.appspot.com",
