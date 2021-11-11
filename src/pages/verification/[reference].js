@@ -2,9 +2,13 @@ import React,{useState,useEffect} from 'react'
 import Layout from "../../components/layout"
 import  '../../styles/global.css'
 import styled from 'styled-components'
-
-const axios = require('axios');
-
+import { Page, Text, View, Document, StyleSheet ,PDFViewer,Font} from '@react-pdf/renderer';
+import { useUser,useSigninCheck,useFirestore ,useAuth,useFirestoreDocData} from 'reactfire'
+import { doc, setDoc} from "firebase/firestore";
+import Errorwrapper from '../../components/errorwrapper';
+import { verifyPaystack } from '../../helperfunctions/cloudfunctions';
+import PDFDoc from '../../components/pdfdoc';
+import { getAnalytics, logEvent } from "firebase/analytics";
 export const Loading = styled.div`
   width:100px;
   height:100px;
@@ -19,6 +23,7 @@ export const Loading = styled.div`
 `
 export const CenterChild = styled.div`
     display:flex;
+    flex-wrap:wrap;
     justify-content:center;
     text-align:center;
     h1{
@@ -30,45 +35,58 @@ export const CenterChild = styled.div`
     }
 `
 
+export default function Verification({reference}){
+  return(
+    <Layout>
+    <Errorwrapper>
+      <VerificationComponent reference={reference}/>
+    </Errorwrapper>
+    </Layout>
+  )
+}
 
-
-export default function Verification({reference}) {
+ function VerificationComponent({reference}) {
   console.log(reference)
-  const options = {
-    baseURL: 'https://api.paystack.co',
-    url: `/transaction/verify/${reference}`,
-    method: 'get',
-    proxy:{port:443},
-    headers: {
-      Authorization: 'Bearer sk_test_968aa6f94eb55fc9f9c9a99c7d922890d9fcc4e1'
-    }
-  }
-
-    const [payStackData, setpayStackData] = useState(null)
+ 
     
-    useEffect(() => {
-        axios.request(options).then((response) => {
-          setpayStackData(response.data);
-          console.log(response)
-        });
-      },[]);
+  const analytics = getAnalytics();
+      const db = useFirestore()
+      const orderRef = doc(db, 'orders', reference);
+      const { data:order } = useFirestoreDocData(orderRef);
 
-      if(!payStackData)
+      if(!order)
       return(
-          <Layout>
             <CenterChild>
               <Loading />
             </CenterChild>
-          </Layout>
       )
 
     return (
-        <Layout>
+        
           <CenterChild>
-            <h1>
-              Your transaction was a {payStackData.data.status}
+            <h1 >
+              Your transaction was a {order.response.status}
             </h1>
+            <Errorwrapper>
+            <Receipt order={order}/>
+            </Errorwrapper>
           </CenterChild>  
-        </Layout>
+        
     )
 }
+
+
+function Receipt({order}){
+
+
+   console.log(order)
+   if(order)
+  return(
+    <PDFViewer style={{width:500, height:500,border:0}}> 
+      <PDFDoc order={order}/>
+    </PDFViewer>
+  )
+
+  return<div>Loading receipt...</div>
+}
+

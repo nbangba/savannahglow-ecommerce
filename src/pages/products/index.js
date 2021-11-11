@@ -5,7 +5,7 @@ import ProductItem from '../../components/productitem'
 import styled from 'styled-components'
 import slugify from '@sindresorhus/slugify';
 import { Link } from 'gatsby'
-
+import { getAnalytics, logEvent } from "firebase/analytics";
 const ProductsWrapper = styled.div`
   margin:20px;
   font-family: 'Montserrat', sans-serif;
@@ -24,6 +24,7 @@ const ProductsWrapper = styled.div`
 export default function Products({data}) {
      const sgproducts = data.allContentfulSavannahGlowProduct.nodes
      console.log(sgproducts)
+     const analytics = getAnalytics();
     return (
         <Layout>
           <ProductsWrapper>

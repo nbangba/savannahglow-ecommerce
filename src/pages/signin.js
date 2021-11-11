@@ -1,12 +1,10 @@
 import React from 'react'
 import Layout from '../components/layout'
-import UserProfile from '../components/userprofile'
+import SignIn from '../components/signin'
 import { getAnalytics, logEvent } from "firebase/analytics";
-export default function User() {
+export default function Sign() {
     const analytics = getAnalytics();
     return ( 
-        <Layout>
-           <UserProfile/>
-        </Layout>    
+           <SignIn/>  
     )
 }

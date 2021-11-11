@@ -1,7 +1,7 @@
 import React,{useState,useEffect} from 'react'
 import { Card } from './card'
 import { useUser,useSigninCheck,useFirestoreDocData, useFirestore, useFirestoreCollectionData,SuspenseWithPerf} from 'reactfire'
-import { collection,where,query,doc} from 'firebase/firestore'
+import { collection,where,query,doc,orderBy} from 'firebase/firestore'
 import styled from 'styled-components'
 import { CartItems } from './cart'
 import { Button } from './navbar'
@@ -16,6 +16,11 @@ import AddressForm from './addressform'
 import AddressCard from './addresscard'
 import { Formik, Form,Field, ErrorMessage, validateYupSchema } from 'formik';
 import { CardItem } from './addresscard'
+import { verifyPaystack } from '../helperfunctions/cloudfunctions'
+import { calculateSubTotal } from '../helperfunctions'
+import Cards from 'react-credit-cards'
+import { chargeCard } from '../helperfunctions/cloudfunctions'
+import 'react-credit-cards/es/styles-compiled.css';
 
 const RadioButtonsContainer = styled.label`
     display: block;
@@ -29,6 +34,7 @@ const RadioButtonsContainer = styled.label`
     -ms-user-select: none;
     user-select: none;
     height:fit-content;
+    font-family: 'Montserrat', sans-serif;
     input{
         position: absolute;
         opacity: 0;
@@ -85,14 +91,16 @@ export default function Checkout() {
     const cartRef = user && doc(firestore, 'carts', user.uid);
     const { data:cart } = useFirestoreDocData(cartRef);
     const items =cart && cart.items
-    const calculateSubTotal = ()=>{
-        const reducer =(previousItem,currentItem)=> previousItem + (currentItem.price*currentItem.quantity)
-    return items.reduce(reducer,0)
-    }
+    
+    const cardsCollection = collection(firestore, 'cards');
+    const cardsQuery = user && query(cardsCollection,where('owner','==',user.uid))
+    const { data:cards } = useFirestoreCollectionData(cardsQuery);
+    const card =cards && cards[0].authorization
+    console.log(card)
     
     useEffect(() => {
         if(cart && cart.items )
-        setSubtotal(calculateSubTotal())
+        setSubtotal(calculateSubTotal(items))
         }, [cart])
     
     const orderSchema = Yup.object().shape({
@@ -103,13 +111,17 @@ export default function Checkout() {
     return (
         <CheckoutWrapper>
             <Formik
-                initialValues={{orderAddress:null,payment:'paystack',}}
+                initialValues={{orderAddress:null,payment:'paystack',paystackOptions:'defaultCard'}}
                 validationSchema={orderSchema}
                 onSubmit={(values, { setSubmitting }) => {
                   setTimeout(() => {
                       console.log('verifying')
                       values.amount = subtotal
+                      values.items = [...items]
                     console.log(JSON.stringify(values, null, 2));
+                    if(values.paystackOptions=='defaultCard')
+                    chargeCard({...values},cards[0].NO_ID_FIELD)
+                    else if(values.payment=='paystack')
                     payWithPaystack({...values});
                     setSubmitting(false);
                   }, 400);
@@ -118,7 +130,7 @@ export default function Checkout() {
                 <Form style={{display:'flex'}}>
                     <div>
                     <UserAddress setFieldValue={setFieldValue}/>
-                    <PaymentSegment/>
+                    <PaymentSegment card={card} values={values}/>
                     <CartItems/>
                     </div>
                     <Subtotal cart={cart} subtotal={subtotal}/>
@@ -129,27 +141,6 @@ export default function Checkout() {
     )
 }
 
-function AddressSegment({address}){
-    
-    const [showModal, setShowModal] = useState(false)
-  return(
-      <Card>
-          {
-              address &&
-              <div>
-          <div><span>{address.firstname}</span> <span>{address.lastname}</span></div>
-          <div>{address.phone}</div>
-          <div>{address.location}</div>
-          </div>
-         }
-          <div onClick={()=>setShowModal(true)}>Change Address</div>
-         <ModalComponent showModal={showModal}>
-             <Addresses wrap/>
-             <button onClick={()=>setShowModal(false)}>CLOSE</button>
-         </ModalComponent>
-      </Card>
-  )
-}
 
 function UserAddress({setFieldValue}){
     const [showModal, setShowModal] = useState(false)
@@ -203,7 +194,8 @@ function UserAddress({setFieldValue}){
     )
 }
 
-function PaymentSegment(){
+function PaymentSegment({card,values}){
+    
     return(
         <Card maxWidth='400px'>
             <div role='group' aria-labelledby="my-radio-group">
@@ -214,13 +206,32 @@ function PaymentSegment(){
                    <Visa/>
                    <Master/>
                </div>
-           <Field type="radio" checked name="payment" value='paystack'/>
-             <span class="checkmark"></span>
+                <Field type="radio" name="payment" value='paystack'/>
+                <span class="checkmark"></span>
+                {(card && values.payment == 'paystack') &&
+                    <>
+                    <RadioButtonsContainer> Mobile Money or New Card
+                        <Field type="radio"  name="paystackOptions" value='momo'/>
+                        <span class="checkmark"></span>
+                        </RadioButtonsContainer>
+                        <span class="checkmark" ></span>
+                        <RadioButtonsContainer> 
+                            <Cards cvc='***'
+                                        expiry={`${card.exp_month}/${card.exp_year}`} 
+                                        name={card.account_name?card.account_name:'CARD HOLDER'}
+                                        number={`${card.bin}******${card.last4}`} />
+                        <Field type="radio"  name="paystackOptions" value='defaultCard'/>
+                        <span class="checkmark"></span>
+                    </RadioButtonsContainer>
+                    </>
+                   }
            </RadioButtonsContainer>
            <RadioButtonsContainer> Pay on delivery
              <Field type="radio" name="payment" value='POD'/>
              <span class="checkmark"></span>
            </RadioButtonsContainer>
+           <div>payment: {values.payment}</div>
+           <div>opyions: {values.paystackOptions}</div>
            </div>
         </Card>
     )
@@ -245,7 +256,7 @@ function payWithPaystack(info) {
         //this happens after the payment is completed successfully
         var reference = response.reference
         console.log(response)
-        //verifyPaystack(info,response)
+        verifyPaystack(info,response)
         
         alert('Payment complete! Reference: ' + reference);
         // Make an AJAX call to your server with the reference to verify the transaction

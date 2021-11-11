@@ -53,7 +53,6 @@ export default function AddressCard({addressInfo,children,selected,setSelected,s
 }
 
 export function AddressCardOptions({setDefaultAddress,defaultAddress,addressInfo}){
-  const [deleteAddress,setDeleteAddress] = useState(false)
     const [showDeletDialog,setShowDeleteDialog] = useState(false)
     const [editAddress,setEditAddress]= useState(false)
     
@@ -87,7 +86,7 @@ export function AddressCardOptions({setDefaultAddress,defaultAddress,addressInfo
     }
   return(
    <>
-   <Remove onClick={()=>setDeleteAddress(true)} />
+   <Remove onClick={()=>setShowDeleteDialog(true)} />
    <CardItem>
     <Button secondary onClick={()=>setEditAddress(true)}><Edit fill='#474E52' style={{width:20,height:20}}/>edit</Button> 
     {isDefault?<div style={{display:'flex',justifyContent:'center',alignItems:'center'}}>default</div>:
@@ -96,7 +95,7 @@ export function AddressCardOptions({setDefaultAddress,defaultAddress,addressInfo
   <ModalComponent showModal={editAddress}>
       <AddressForm setShowModal={setEditAddress} addressInfo={addressInfo}/>
   </ModalComponent>
-  <DeleteDialog setShowDialog={setDeleteAddress} deleteItem={deleteItem} showModal={deleteAddress} />
+  <DeleteDialog setShowDialog={setShowDeleteDialog} deleteItem={deleteItem} showModal={showDeletDialog} />
    </>
   )
 }

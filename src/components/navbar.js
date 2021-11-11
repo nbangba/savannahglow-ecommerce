@@ -37,7 +37,7 @@ const Navbar = styled.div`
     transition: opacity 200ms;
   }
 `
-const Menu = styled.ul` 
+export const Menu = styled.ul` 
   position: relative; 
   display:flex;
   flex-grow:1;
@@ -51,7 +51,7 @@ const Menu = styled.ul`
   `}
 `
 
-const MenuItem = styled.li`
+export const MenuItem = styled.li`
    position: relative;
    display:block;
    color:#35486F;
@@ -155,9 +155,9 @@ const CartNumber = styled.div`
    font-weight:bold;
 `
 export default function Nav() {
-    const menuItems = ['Home','Catlogue','Blog','Support']
+    const menuItems = ['Home','Catlogue','Blog','Support','Products']
     
-
+    
     
     return (
         <Navbar>
@@ -182,7 +182,7 @@ function LoginStatus(){
     const { data: user } = useUser()
     const { status, data: signInCheckResult } = useSigninCheck();
     console.log(user)
-    console.log(signInCheckResult)
+    console.log(status,signInCheckResult)
     const firestore = useFirestore()
     const cartRef =user && doc(firestore, 'carts', user.uid);
     
@@ -195,7 +195,7 @@ function LoginStatus(){
                 <Link to='/cart'>
                 <small>{cart && cart.numberOfItems?cart.numberOfItems:'0'}</small>
                 </Link>
-        </CartNumber>
+           </CartNumber>
         )
     }
     return(
@@ -206,10 +206,10 @@ function LoginStatus(){
             }
             <ShoppingBag fill='#474E52' style={{width:30,height:30}}/>
             </MenuItem>
-                { status === 'success' &&
+                { status === 'success' && 
                 <>
                 {
-                   signInCheckResult && signInCheckResult.signedIn === true?
+                   (signInCheckResult && signInCheckResult.signedIn === true)&&(!user.isAnonymous)?
                     <Popper subMenuItems={subMenuItems}>
                         {
                             (setReferenceElement,setOpen,open)=>
@@ -220,13 +220,14 @@ function LoginStatus(){
                         
                     </Popper> 
                     :
-                    <MenuItem><Button primary onClick={()=>setshowModal(true)}>Sign In/Up</Button></MenuItem>
+                    <MenuItem><Button primary onClick={()=>window.open('http://localhost:8000/signin', 'Sign In', 'width=985,height=735')}>Sign In/Up</Button></MenuItem>
                 }
                 </>
                 }  
                 
                 <ModalComponent showModal={showModal}>
                    <SignIn/>
+                   <button onClick={()=>setshowModal(false)}>close</button>
                 </ModalComponent>
             </Menu>
     )

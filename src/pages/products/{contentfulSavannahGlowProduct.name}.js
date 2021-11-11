@@ -3,9 +3,10 @@ import { graphql } from 'gatsby'
 import Layout from '../../components/layout'
 import styled from 'styled-components'
 import Product from '../../components/product'
-
+import { getAnalytics, logEvent } from "firebase/analytics";
 
   export default function ProductComponent({data}) {
+    const analytics = getAnalytics();
     return(
        <Layout>
          <Product data={data}/>

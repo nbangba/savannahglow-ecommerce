@@ -24,7 +24,7 @@ import { useUser,useFirestoreCollectionData, useFirestore} from 'reactfire';
 import { updateEmail,updatePassword,deleteUser} from 'firebase/auth'; // Firebase v9+
 import Errorwrapper from './errorwrapper';
 import { AddressCardOptions } from './addresscard';
-
+import { getAnalytics, logEvent } from "firebase/analytics";
 const dropDownStyle ={
     border:'1px solid #556585',
     backgroudColor:'#f4ece6',
@@ -150,9 +150,10 @@ const CardWrapper = styled.div`
   overflow-x:auto;
 `
   function Account(){
+      const { data: user } = useUser()
       return(
         <Formik
-        initialValues={{ fisrtname:'',lastname:'',email: '',phone:''}}
+        initialValues={{ displayName:user.displayName||'',email:user.email||'',phone:user.phoneNumber||''}}
         validate={values => {
           const errors = {};
           if (!values.email) {
@@ -174,12 +175,8 @@ const CardWrapper = styled.div`
         {({ isSubmitting,setFieldValue,handleChange,values }) => (
           <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden'}}>
             <InputWrapper>
-                <Label for='firstname' >First Name</Label>
-                <Input onChange={handleChange} value={values.firstname} type="text" name="firstname"  id='firstname' />
-            </InputWrapper>
-            <InputWrapper>
-                <Label for='lastname' >Last Name</Label>
-                <Input onChange={handleChange} value={values.lastname} type="text" name="lastname"  id='lastname' />
+                <Label for='firstname' >Display Name</Label>
+                <Input onChange={handleChange} value={values.displayName} type="text" name="displayName"  id='displayName' />
             </InputWrapper>
             <InputWrapper>
                 <Label for='email' >Email</Label>
@@ -281,8 +278,8 @@ function ChangeEmail({setShowModal}){
       <InputWrapper style={{display:'flex',justifyContent:'flex-end'}} wide >
             <Button secondary onClick={()=>setShowModal(false)} type='button'
               style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
-              <Button primary type='submit'  disabled={isSubmitting}
-              style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >SEND</Button>
+              <button primary type='submit'  disabled={isSubmitting}
+              style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >SEND</button>
               </InputWrapper>
               {reauth && 
                 <InputWrapper>
