@@ -5,7 +5,10 @@ import { useUser,useSigninCheck,useFirestore ,useAuth,useFirestoreDocData} from 
 import { serverTimestamp,doc, setDoc,updateDoc,increment,arrayUnion} from "firebase/firestore";
 import { signInAnonymously } from "firebase/auth";
 import Errorwrapper from './errorwrapper';
-import { Input } from './addressform';
+import Review from './review';
+import ModalComponent from './modal';
+import { Formik,Form } from 'formik';
+import { InputWrapper,Label,Input ,Button as Btn} from './addressform';
 const product ={
   width:'100px',
   height:'100px'
@@ -123,18 +126,31 @@ export default function Product({data}) {
       const [selectedVariety,setSelectedVariety] = useState(sgproducts.varieties[0])
       const [selectedImage,setSelectedImage]=useState(0)
       const [qty,setQty] = useState(selectedVariety.quantity)
+      const [showModal, setShowModal] = useState(false)
+      const firestore = useFirestore();
+      const ref = doc(firestore, 'product',selectedVariety.id );
+      const { status, data: product } = useFirestoreDocData(ref);
+      
       console.log(selectedVariety)
       
+      const setAvailableQuantity = (available)=>{
+        setDoc(ref,{
+          available:available
+        },{merge:true})
+        .then(()=>{console.log("Available quantity set");setShowModal(false)})
+        .catch((e)=>console.log(e))
+      }
+
       useEffect(() => {
         setSelectedImage(0)
       }, [selectedVariety])
       
       const changeItemCount =(changeQty)=>{
-        if(selectedVariety.quantity+changeQty > selectedVariety.available)
+       if(selectedVariety.quantity+changeQty > selectedVariety.available)
         setQty(selectedVariety.available)
        else if(selectedVariety.quantity+changeQty < 1) 
          setQty(1)
-        else
+       else
         setQty(qty+changeQty)
         
       }
@@ -174,23 +190,31 @@ export default function Product({data}) {
                         )
                       }
                       </VarietyList>
-                  <div>
+                  <div>{
+                    product &&
+                    <>
                       <Button secondary onClick={()=> changeItemCount(-1) }>-</Button>
-                       <Input onChange={(e)=>{+e.target.value>selectedVariety.available?setQty(selectedVariety.available):setQty(+e.target.value)}} 
-                                onBlur={()=>{qty >selectedVariety.available?setQty(selectedVariety.available): qty<1?setQty(1):setQty(qty)}}                        
-                        min={1} max={selectedVariety.available} value={qty} type='number' style={{width:50,padding:8}}/>  
+                       <Input onChange={(e)=>{+e.target.value>product.available?setQty(product.available):setQty(+e.target.value)}} 
+                                onBlur={()=>{qty >product.available?setQty(product.available): qty<1?setQty(1):setQty(qty)}}                        
+                        min={1} max={product.available} value={qty} type='number' style={{width:50,padding:8}}/>  
                       <Button secondary onClick={()=>changeItemCount(1)}>+</Button>
-                      <span>{selectedVariety.available} available</span>
+                      <span>{product?product.available+' available':'Available not set'}</span>
+                      </>
+                       }
+                      <Button secondary onClick={()=>setShowModal(true)}>Set Available</Button>
+                      <ProductSetting showModal={showModal} setShowModal={setShowModal} setAvailableQuantity={setAvailableQuantity}/>
                   </div>
                   <div style={{margin:'10px 0px',display:'flex',flexWrap:'wrap'}}>
                   <Button primary>Buy Now</Button>
                   <Errorwrapper>
                   <AddtoBagButton selectedVariety={selectedVariety} />
                   </Errorwrapper>
-                  </div>
-                     
+                  </div>  
                   </div>
               </section>
+              <div>
+                <Review/>
+              </div>
               </ProductWrapper>
       )
   }
@@ -206,8 +230,8 @@ export default function Product({data}) {
 
     const addCart = (cartUser)=>{
       console.log('cart user',cartUser)
-      setDoc(doc(db, "carts",cartUser.user.uid), {
-          user:cartUser.user.uid,
+      setDoc(doc(db, "carts",cartUser.uid), {
+          user:cartUser.uid,
           dateCreated:serverTimestamp(),
           items:[selectedVariety],
           numberOfItems:selectedVariety.quantity,
@@ -280,4 +304,36 @@ export default function Product({data}) {
         <Button secondary onClick={addToBag}>Add To Bag</Button>
     )
     else return <AddToBag/>
+  }
+
+  function ProductSetting({setAvailableQuantity,showModal,setShowModal}){
+   return(
+     <ModalComponent showModal={showModal} setShowModal={setShowModal}>
+        <Formik
+        initialValues={{available:''}}
+       
+        onSubmit={(values, { setSubmitting }) => {
+          console.log(values)
+          setTimeout(() => {
+            setAvailableQuantity(values.available)
+            setSubmitting(false);
+          }, 400);
+        }}
+      >
+        {({ isSubmitting,setFieldValue,handleChange,values }) => (
+          <Form style={{width:'500px',display:'flex',flexWrap:'wrap'}}>
+              
+            <InputWrapper style={{minWidth:'100%'}}>
+                <Label for='name' > Available</Label>
+                <Input min={1} onChange={handleChange} value={values.available} name="available" type='number' style={{width:50,padding:8}}/> 
+            </InputWrapper>
+            <Btn secondary onClick={()=>setShowModal(false)} type='button'
+              style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Btn>
+            <Btn primary type='submit'  disabled={isSubmitting}
+              style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >DONE</Btn>
+          </Form>
+        )}
+      </Formik>
+     </ModalComponent>
+   )
   }

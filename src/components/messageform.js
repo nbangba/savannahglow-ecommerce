@@ -25,7 +25,7 @@ const textInput = `width: 100%;
 const Input = styled.input`
     ${textInput}
 `
-const TextAreaInput = styled.textarea`
+export const TextAreaInput = styled.textarea`
    ${textInput}
 `
 const Label = styled.label`

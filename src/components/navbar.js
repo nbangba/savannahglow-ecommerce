@@ -5,11 +5,12 @@ import User from '../images/user.svg'
 import SignIn from './signin'
 import Popper from './popper'
 import ModalComponent from './modal'
-import { useUser,useSigninCheck,useFirestore,useFirestoreDocData } from 'reactfire'
+import { useUser,useSigninCheck,useFirestore,useFirestoreDocData,useFirebaseApp } from 'reactfire'
 import {doc} from '@firebase/firestore'
 import Errorwrapper from './errorwrapper';
 import { Link } from 'gatsby'
 import ShoppingBag from '../images/bag.svg'
+import { getMessaging, getToken, } from "firebase/messaging";
 
 const Navbar = styled.div`
    display: flex;
@@ -155,9 +156,39 @@ const CartNumber = styled.div`
    font-weight:bold;
 `
 export default function Nav() {
+    
+    const messaging = getMessaging()
     const menuItems = ['Home','Catlogue','Blog','Support','Products']
+    useEffect(() => {
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker
+              .register("./firebase-messaging-sw.js")
+              .then(function(registration) {
+                console.log("Registration successful, scope is:", registration.scope);
+                getToken(messaging, { vapidKey: 'BLfh0aam15mTS6B5Fn3p9J_9-IMZPJH7PnA6sCgNDAIalkNB84HMUYV1Nlnyy7MIjuvaOUqlmuTudwUGgU_AViE' })
+                .then((currentToken) => {
+                    if (currentToken) {
+                    // Send the token to your server and update the UI if necessary
+                    // ...
+                    console.log(currentToken)
+                    } else {
+                    // Show permission request UI
+                    console.log('No registration token available. Request permission to generate one.');
+                    // ...
+                    }
+                }).catch((err) => {
+                    console.log('An error occurred while retrieving token. ', err);
+                    // ...
+                });
+                })
+                .catch(function(err) {
+                  console.log("Service worker registration failed, error:"  , err );
+              }); 
+            }
+    }, [])
     
-    
+            
+           
     
     return (
         <Navbar>
@@ -209,7 +240,7 @@ function LoginStatus(){
                 { status === 'success' && 
                 <>
                 {
-                   (signInCheckResult && signInCheckResult.signedIn === true)&&(!user.isAnonymous)?
+                   (signInCheckResult && signInCheckResult.signedIn === true)&&(user&&!user.isAnonymous)?
                     <Popper subMenuItems={subMenuItems}>
                         {
                             (setReferenceElement,setOpen,open)=>

@@ -216,10 +216,10 @@ function PaymentSegment({card,values}){
                         </RadioButtonsContainer>
                         <span class="checkmark" ></span>
                         <RadioButtonsContainer> 
-                            <Cards cvc='***'
-                                        expiry={`${card.exp_month}/${card.exp_year}`} 
-                                        name={card.account_name?card.account_name:'CARD HOLDER'}
-                                        number={`${card.bin}******${card.last4}`} />
+                            <Cards  cvc='***'
+                                    expiry={`${card.exp_month}/${card.exp_year}`} 
+                                    name={card.account_name?card.account_name:'CARD HOLDER'}
+                                    number={`${card.bin}******${card.last4}`} />
                         <Field type="radio"  name="paystackOptions" value='defaultCard'/>
                         <span class="checkmark"></span>
                     </RadioButtonsContainer>

@@ -25,6 +25,7 @@ const Modal = styled.div`
     background-color:#EBDDD2;
     border-radius:5px;
     z-index:200 !important;
+    font-family: 'Montserrat', sans-serif;
     h3{
         font-family: 'Montserrat', sans-serif;
         font-size:24px;
@@ -66,11 +67,11 @@ const Modal = styled.div`
      }
 
   `
- export default function ModalComponent({showModal,children,width}){
+ export default function ModalComponent({showModal,setShowModal,children,width,type}){
   
   useEffect(() => {
     if(showModal)
-    document.body.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'unset';
     }
@@ -82,7 +83,7 @@ const Modal = styled.div`
     
       
     return(
-        <Modal>
+        <Modal onMouseLeave={()=>{if(type != 'form' && setShowModal) setShowModal(false)}}>
             <ModalContent width={width}>
                 <h3>Enter Your Address</h3>
                 <FormWrapper>

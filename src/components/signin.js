@@ -13,6 +13,11 @@ import { getAnalytics, logEvent } from "firebase/analytics";
             provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
             // Required to enable ID token credentials for this provider.
             clientId: '199451664618-mjnu72rutr4dkjelklvuv9rvpci6tomg.apps.googleusercontent.com',
+            customParameters: {
+              // Forces account selection even when one account
+              // is available.
+              prompt: 'select_account'
+            }
           },
           firebase.auth.FacebookAuthProvider.PROVIDER_ID,
           firebase.auth.TwitterAuthProvider.PROVIDER_ID,
@@ -25,11 +30,12 @@ import { getAnalytics, logEvent } from "firebase/analytics";
         callbacks:{
           'signInSuccessWithAuthResult': function(authResult) {
             const analytics = getAnalytics();
+            console.log(authResult)
             if(!authResult.additionalUserInfo.isNewUser)
-            logEvent(analytics,'login',{method:authResult.credential.providerId})
+            logEvent(analytics,'login',{method:authResult.additionalUserInfo.providerId})
             
             if(authResult.additionalUserInfo.isNewUser)
-            logEvent(analytics,'sign_up',{method:authResult.credential.providerId})
+            logEvent(analytics,'sign_up',{method:authResult.additionalUserInfo.providerId})
 
             console.log(authResult)
             return false;
@@ -39,7 +45,7 @@ import { getAnalytics, logEvent } from "firebase/analytics";
         // function.
         // Terms of service url/callback.
         //signInFlow: 'popup',
-        
+        signInFlow: 'popup',
         tosUrl: '<your-tos-url>',
         // Privacy policy url/callback.
         privacyPolicyUrl: function() {

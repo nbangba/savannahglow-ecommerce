@@ -1,6 +1,6 @@
-import React,{useState} from 'react'
+import React,{useState,useEffect} from 'react'
 import { getAuth } from '@firebase/auth'
-import { useFirestore,useFirestoreCollectionData} from 'reactfire'
+import { useAuth, useFirestore,useFirestoreCollectionData} from 'reactfire'
 import { query,collection,writeBatch,doc,where } from '@firebase/firestore'
 import { useTable,useRowSelect} from 'react-table'
 import styled from 'styled-components'
@@ -13,6 +13,8 @@ import { Field } from 'formik'
 import { Formik,Form } from 'formik'
 import { InputWrapper } from './addressform'
 import { assignRole } from '../helperfunctions/cloudfunctions'
+import Select from 'react-select';
+import useRole from './useRole'
 
 const Table = styled.table`
     tr:nth-child(even) {background: #fbf2ed}
@@ -105,6 +107,8 @@ const IndeterminateCheckbox = React.forwardRef(
   )
 
 function ReactTable({users}) {
+    const{role} = useRole()
+    console.log(role)
     const data =React.useMemo(()=> users)
      
     const columns = React.useMemo(
@@ -122,7 +126,7 @@ function ReactTable({users}) {
             accessor: 'role',
           },
       ],
-      []
+      [role]
     )
   
     const {
@@ -132,6 +136,7 @@ function ReactTable({users}) {
       rows,
       prepareRow,
       selectedFlatRows,
+      toggleRowSelected,
       state: { selectedRowIds }, 
     } = useTable({ columns, data },useRowSelect,
         hooks => {
@@ -148,20 +153,28 @@ function ReactTable({users}) {
               ),
               // The cell can use the individual row's getToggleRowSelectedProps method
               // to the render a checkbox
-              Cell: ({ row }) => (
+              Cell: ({ row}) => {
+                
+                if((role=='admin 1' && (!row.values.role||row.values.role=='dispatch'))||
+                (role=='admin 2'&&(!row.values.role||row.values.role=='dispatch'||row.values.role=='admin 1')))
+                return( 
                 <div>
                   <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
                 </div>
-              ),
+              )
+              else return <div></div>
+            },
             },
             ...columns,
           ])
         })
-     console.log(selectedFlatRows)
+     const filteredRows = selectedFlatRows.filter(row=>!row.values.role ||row.values.role!=role)
+    if(role =='admin 1' || role =='admin 2')
     return (
         <div>
-        <AdminOptions selectedRows={selectedFlatRows}/>
+        <AdminOptions selectedRows={filteredRows}/> 
       <Table {...getTableProps()} cellSpacing='0' style={{}}>
+        
         <thead>
           {headerGroups.map(headerGroup => (
             <tr {...headerGroup.getHeaderGroupProps()}>
@@ -185,6 +198,8 @@ function ReactTable({users}) {
         <tbody {...getTableBodyProps()}>
           {rows.map(row => {
             prepareRow(row)
+            console.log(row)
+            
             return (
                 
               <tr {...row.getRowProps()}>
@@ -204,17 +219,27 @@ function ReactTable({users}) {
               </tr>
             )
           })}
-        </tbody>
+        </tbody>      
       </Table>
       </div>
     )
+
+    else return(
+      <div>
+        You are not authorized to view this page
+      </div>
+    )
   }
+
 function AdminOptions({selectedRows}){
   const fs = useFirestore()
   const batch = writeBatch(fs)
   const [deleteState, setDeleteState] = useState('')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showDeleting, setShowDeleting] = useState(false)
   const [showAssignRoleDialog, setShowAssignRoleDialog] = useState(false)
+ console.log(selectedRows)
+  const {role} = useRole()
   /*const deleteUsers = ()=>{
       setDeleteState('deleting')
       selectedRows.forEach(element => {
@@ -228,32 +253,38 @@ function AdminOptions({selectedRows}){
   }
 */
   function DeleteDialog(){
+    const initiateDelete= async()=>{
+      setDeleteState('deleting')
+      const stateofDelete = await deleteUsers(selectedRows)
+      setDeleteState(stateofDelete)
+    } 
+
+    useEffect(() => {
+      if(deleteState=='success'){
+      setShowDeleteDialog(false)
+       setDeleteState('')
+      }
+    }, [deleteState])
     return(
-      <ModalComponent showModal={showDeleteDialog}>
+      <ModalComponent showModal={showDeleteDialog||(deleteState=='deleting')||(deleteState=='error')} setShowModal={setShowDeleteDialog}>
+        {deleteState==''?
       <div>
         <div>Are you sure you want to delete user(s)</div>
-        <button onClick={()=>{deleteUsers(selectedRows); setShowDeleteDialog(false)}} >YES</button>
-        <button onClick={()=>setShowDeleteDialog(false)}>NO</button>
-      </div>
-      </ModalComponent>
-    )
-  }
-
-  function Deleting(){
-      
-      return(
-      <ModalComponent showModal={(deleteState=='deleting')||(deleteState=='error')}>
-       {deleteState=='deleting'?
-           <>
+        <button onClick={initiateDelete} >YES</button>
+        <button onClick={()=>{setShowDeleteDialog(false);setDeleteState('')}}>NO</button>
+      </div>:
+        deleteState=='deleting'?
+        <>
         <Loading/>
         <div>Deleting user(s)</div>
         </> :
-        deleteState=="error"? <><div>something went wrong </div><button onClick={()=>setDeleteState('')}>close</button></>:
-        <button onClick={()=>setDeleteState('')}>close</button>
+        deleteState=="error"? <><div>something went wrong </div><button onClick={()=>{setShowDeleteDialog(false);setDeleteState('')}}>close</button></>:
+        <button onClick={()=>{setShowDeleteDialog(false);setDeleteState('')}}>close</button>
        }
       </ModalComponent>
     )
   }
+    if (role=='admin 2'&& selectedRows.length >0)
     return(
         <div>
         <Menu style={{justifyContent:'flex-start'}}>
@@ -261,11 +292,22 @@ function AdminOptions({selectedRows}){
             <MenuItem><Button secondary style={{width:'fit-content'}}>Disable</Button></MenuItem>
             <MenuItem><Button secondary style={{width:'fit-content'}} onClick={()=>setShowDeleteDialog(true)}>Delete</Button></MenuItem>
         </Menu>
-            <AssignRole showAssignRoleDialog={showAssignRoleDialog} setShowAssignRoleDialog={setShowAssignRoleDialog} selectedRows={selectedRows} />
+            
+            <>
+              <AssignRole showAssignRoleDialog={showAssignRoleDialog} setShowAssignRoleDialog={setShowAssignRoleDialog} selectedRows={selectedRows} />
             <DeleteDialog/>
-            <Deleting/>
+            </>
         </div>
     )
+    else if(role == 'admin 1'&&selectedRows.length >0)
+    return (
+      <div>
+        <Menu style={{justifyContent:'flex-start'}}>
+            <MenuItem><Button secondary style={{width:'fit-content'}} onClick={()=>assignRole('dispatch',selectedRows)} >Make Dispatch</Button></MenuItem>
+        </Menu>
+      </div>
+    )
+    else return <div></div>
 }
   export default function Users() {
     const firestore = useFirestore();
@@ -281,6 +323,10 @@ function AdminOptions({selectedRows}){
    }
 
 function AssignRole({showAssignRoleDialog,setShowAssignRoleDialog,selectedRows}){
+  const options = [ {label:'None',value:null},
+                    {label:'Dispatch',value:'dispatch'},
+                    {label:'Admin 1',value:'admin 1'},
+                    {label:'Admin 2',value:'admin 2'}]
     return(
     <ModalComponent showModal={showAssignRoleDialog}>
         <Formik
@@ -295,19 +341,29 @@ function AssignRole({showAssignRoleDialog,setShowAssignRoleDialog,selectedRows})
         }}>
         {({isSubmitting,setFieldValue,handleChange,handleSubmit,values,errors }) => (
            
-        <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',maxWidth:'500px'}}>
-        <InputWrapper style={{maxWidth:'80%'}}>
-            <Field as='select' name='role'>
-                <option value="">Select Role</option>
-                <option value="dispatch">Dispatch</option>
-                <option value="admin 1">Admin 1</option>
-                <option value="admin 2">Admin 2</option>
-            </Field>
+        <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',maxWidth:'500px',minHeight:300}}>
+        <InputWrapper style={{maxWidth:'100%'}}>
+          <Select
+              styles={{container: base => ({
+                ...base,
+                flex: '1 1 ',
+                
+              })}}
+              className="basic-single"
+              classNamePrefix="select"
+              isClearable={true}
+              options={options}
+              placeholder={'select a role'}
+              onChange={(value)=>setFieldValue('role',value.value)}
+            />
+            
         </InputWrapper>
-        <button onClick={()=>setShowAssignRoleDialog(false)}>Cancel</button>
-        <button type='submit'>
+        <div style={{textAlign:'center',width:'100%'}}>
+        <button style={{height:'fit-content'}} onClick={()=>setShowAssignRoleDialog(false)}>Cancel</button>
+        <button style={{height:'fit-content'}} type='submit'>
             Submit
         </button>
+        </div>
         </Form>
         )}
         </Formik>

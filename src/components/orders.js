@@ -40,8 +40,8 @@ function OrdersComponent({user}) {
   const firestore = useFirestore();
   //const { status, data: signInCheckResult } = useSigninCheck()
   const ordersCollection = collection(firestore, 'orders');
-  const ordersQuery = user && query(ordersCollection,where('order.orderAddress.user', '==',user.uid),
-                                                    orderBy('orderCreated','desc'))
+  const ordersQuery = user && query(ordersCollection,where('user', '==',user.uid),
+                                                   orderBy('orderCreated','desc'))
   const { status, data:orders } = useFirestoreCollectionData(ordersQuery);
   console.log('orders',orders)
   if(orders.length>0)
@@ -49,18 +49,17 @@ function OrdersComponent({user}) {
       <OrderWrapper>
         {
           orders.map((order)=>
-            <OrderCard order={order}/>
+            <OrderCard order={order} role='owner'/>
           )
         }
-        </OrderWrapper>
+      </OrderWrapper>
     )
   else
   return <div>nothing found</div>
 }
 
 
-export function OrderCard({order,children}){
-
+export function OrderCard({order,role=null,children}){
   return(
     <CardComponent maxWidth="400px" style={{height:'fit-content'}}>
               <CardItem>
@@ -77,34 +76,30 @@ export function OrderCard({order,children}){
                                        <CardItem>
                                         <CardItem style={{fontWeight:'bold'}}>Savannah Glow</CardItem> 
                                         <div style={{display:'flex'}}>
-                                        
                                          <img style={{width:100,objectFit:'contain'}} src={item.images[0].fluid.src}/>
-                                         
                                          <CardItem>
                                         <CardItem>{item.name} </CardItem>
                                         <CardItem>{'GHS '+item.price +' * '+ item.quantity} </CardItem>
                                         </CardItem>
                                         </div>
-                                      </CardItem>
+                                        </CardItem>
                                       )}
               <CardItem><span style={{fontWeight:'bold'}}>Quantity</span>: 7</CardItem>     
               <CardItem><span style={{fontWeight:'bold'}}>Total</span>: GHS {calculateSubTotal(order.order.items)}</CardItem>     
               <CardItem>
-                {order.orderStatus=='received' && <Button secondary onClick={()=>refund(order.response.reference,(order.order.amount*100)+"")} >Cancel order</Button>} 
-                <Button onClick={()=>generatePdfDocument(order,`sg-receipt-${leadingZeros(5,order.receiptID)}`)}>
+                {(order.orderStatus =='received' &&  role != 'dispatch') && <Button secondary onClick={()=>refund(order.response.reference,(order.order.amount*100)+"")}>Cancel order</Button>} 
+                {order.orderStatus !='cancelled' && <Button onClick={()=>generatePdfDocument(order,`sg-receipt-${leadingZeros(5,order.receiptID)}`)}>
                     Download Receipt
-                </Button>
+                </Button>}
                {children && children}
               </CardItem>                 
             </CardComponent>
-  )
-
+      )
 }
+
 const generatePdfDocument = async (order,fileName) => {
   const blob = await pdf((
-      <PDFDoc  
-          order={order}
-      />
-  )).toBlob();
+      <PDFDoc  order={order}/>
+     )).toBlob();
   saveAs(blob,fileName);
 };

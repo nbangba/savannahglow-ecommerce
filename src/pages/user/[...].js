@@ -12,8 +12,9 @@ import { doc, getFirestore } from 'firebase/firestore';
 import {  useFirebaseApp } from 'reactfire';
 import AdminOrders from "../admin/orders"
 import AdminUsers from "../admin/users"
-import PrivateRoute from "../../components/privateroutes"
+import PrivateRoute,{PrivateRouteAdmin,PrivateRouteAdmin12} from "../../components/privateroutes"
 import Errorwrapper from "../../components/errorwrapper"
+
 const SideMenu = styled.div`
   display:flex;
   width:150px;
@@ -59,7 +60,6 @@ const App = (props) => {
       </Errorwrapper>
       </User> 
     </Layout>
- 
   )
 }
 

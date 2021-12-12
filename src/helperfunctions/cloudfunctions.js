@@ -26,7 +26,7 @@ export function chargeCard(info,cardId){
     const chargeCardFn = httpsCallable(functions, 'chargeCard');
 
     chargeCardFn({info:info,docId:cardId})
-    .then(()=>{console.log('Card charged')})
+    .then((result)=>{console.log(result)})
     .catch((e)=>console.log(e))
 }
 
@@ -44,18 +44,24 @@ export  function refund(transactionID,amount){
     const createRefund = httpsCallable(functions, 'createRefund');
 
  createRefund({transactionID,amount})
+ .then((result)=>{console.log(result)})
+ .catch((e)=>console.log(e))
   
 }
 
-export function deleteUsers(selectedRows){
+export async function deleteUsers(selectedRows){
     const functions =  getFunctions();
     console.log(selectedRows)
     const selected = selectedRows.map(e=>e.original)
     console.log(selected)
     const deleteUsersFn = httpsCallable(functions, 'deleteUsers');
-    deleteUsersFn({selectedRows:selected})
-    .then(data=>{console.log(data)})
-    .catch(e=>console.log(e))
+   const data = await deleteUsersFn({selectedRows:selected})
+   console.log(data)
+   if(data.data && data.data.result.length>0)    
+    return 'success'
+   
+    else
+    return 'error'
 }
 
 export  function assignRole(role,selectedRows){

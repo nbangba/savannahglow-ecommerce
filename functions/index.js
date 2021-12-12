@@ -1,6 +1,10 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const cors = require('cors')({
+  origin: true,
+});
 const { default: axios } = require("axios");
+
 admin.initializeApp();
 const fs = admin.firestore()
 fs.settings({ ignoreUndefinedProperties: true })
@@ -58,8 +62,27 @@ exports.payStackTransctionVerification = functions
    
     
     if(info && response){
+      
+
       if(response.status == 'success')
-      try {
+        try {
+          
+                  info.items.map((item)=>{
+
+                  fs.runTransaction(async (transaction)=>{
+                    console.log(item)
+                    const itemRef  = fs.collection('product').doc(item.id);
+                    const itemDoc = await transaction.get(itemRef)
+                    if (!itemDoc.exists) {
+                      throw "Document does not exist!";
+                    }
+                    const newAvailable = itemDoc.data().available - item.quantity
+
+                    transaction.update(itemRef,{available:newAvailable})
+                  } )
+              
+              })
+
         await fs.runTransaction(async (transaction) => {
           const docRef = fs.collection("ordersMetadata").doc("ordersMetadata");
           const ordersMetaDataDoc  = await transaction.get(docRef);
@@ -87,7 +110,6 @@ exports.payStackTransctionVerification = functions
             return{orderID:newNumberOfOrders,receiptID:newNumberOfReceipts}
           }
           
-        
         })
         .then((result)=>
            admin.firestore().collection("orders").doc(response.reference).set({
@@ -152,7 +174,7 @@ exports.payStackTransctionVerification = functions
 .https.onCall(async (data, context) => {
   const {docId,info} = data
   const docRef = fs.collection("cards").doc(docId);
-  docRef.get().then((doc)=>{
+ const result = await docRef.get().then(async(doc)=>{
     if (doc.exists) {
       console.log("Document data:", doc.data());
       const secret = functions.config().paystack.key;
@@ -171,12 +193,35 @@ exports.payStackTransctionVerification = functions
         }
       }
 
-      axios(options)
-               .then(response=>{
+       return await  axios(options)
+               .then(async(response)=>{
                  console.log('RESPONSE',response.data);
                  const data = response.data.data
+                 if(data.status == 'success'){
+
+                  
+
                  try {
-                   fs.runTransaction(async (transaction) => {
+                  
+          
+                    info.items.map((item)=>{
+                      
+                          fs.runTransaction(async (transaction)=>{
+                          const itemRef  = fs.collection('product').doc(item.id);
+                          const itemDoc = await transaction.get(itemRef)
+                          if (!itemDoc.exists) {
+                            throw "Document does not exist!";
+                          }
+                          const newAvailable = itemDoc.data().available - item.quantity
+          
+                          transaction.update(itemRef,{available:newAvailable})
+                        } )
+                    
+                    })
+              
+
+                return  await fs.runTransaction(async (transaction) => {
+                    
                     const docRef = fs.collection("ordersMetadata").doc("ordersMetadata");
                     const ordersMetaDataDoc  = await transaction.get(docRef);
           
@@ -218,13 +263,20 @@ exports.payStackTransctionVerification = functions
                     items:[],
                     numberOfItems:0,
                     },{merge:true})
-                    ) 
-                  );
-                  console.log("Transaction successfully committed!");
+                    )
+                    
+                  )
+                  .then(()=> data.status) 
+                  .catch(e=>{console.log(e);return e.message});
                 } 
                 catch (e) {
                   console.log("Transaction failed: ", e);
+                  return e.message
                 }
+              }
+
+                else return data.status
+
                } )
                .catch(error=>{if (error.response) {
                 // The request was made and the server responded with a status code
@@ -241,18 +293,22 @@ exports.payStackTransctionVerification = functions
                 // Something happened in setting up the request that triggered an Error
                 console.log('Error', error.message);
               }
-              console.log(error.config);})
+              console.log(error.config)
+              return 'unsuccessful';})
+              
+              
   } else {
       // doc.data() will be undefined in this case
       console.log("No such document!");
+      return  'unsuccessful'
+     
   }
   }).catch((error) => {
     console.log("Error getting document:", error);
+    return error.message()
 });  
 
-return {
-  status:'complete'
- };
+return {status:result}
 }) 
 
 exports.payOnDelivery = functions
@@ -262,7 +318,26 @@ exports.payOnDelivery = functions
 })
 .https.onCall(async (data, context) => {
   const {info} = data;
+  
+      
+
   try {
+
+          info.items.map((item)=>{
+
+                fs.runTransaction(async (transaction)=>{
+                const itemRef  = fs.collection('product').doc(item.id);
+                const itemDoc = await transaction.get(itemRef)
+                if (!itemDoc.exists) {
+                  throw "Document does not exist!";
+                }
+                const newAvailable = itemDoc.data().available - item.quantity
+
+                transaction.update(itemRef,{available:newAvailable})
+              } )
+            
+          })
+
     await fs.runTransaction(async (transaction) => {
       const docRef = fs.collection("ordersMetadata").doc("ordersMetadata");
       const ordersMetaDataDoc  = await transaction.get(docRef);
@@ -340,16 +415,38 @@ exports.createRefund = functions
       }
     }
 
-          axios(options)
-               .then(response=>{console.log('RESPONSE',response.data);
+    const result = await axios(options)
+               .then(async (response)=>{console.log('RESPONSE',response.data);
                  const data = response.data
                  if(data.status){
                    console.log('Status',data.status)
-                  admin.firestore().collection("orders").doc(transactionID).set({
+                return await admin.firestore().collection("orders").doc(transactionID).set({
                     orderStatus:'cancelled',
                   },{merge:true})
-                  .then(()=>console.log('doc updated'))
-                  .catch((e)=>console.log(e.message))
+                  .then(()=>{
+                    const orderRef = fs.collection("orders").doc(transactionID);
+                    orderRef.get().then((doc)=>{
+                      const result = doc.data()
+                        result.order.items.map((item)=>{
+                          try{
+                              fs.runTransaction(async (transaction)=>{
+                              const itemRef  = fs.collection('product').doc(item.id);
+                              const itemDoc = await transaction.get(itemRef)
+                              if (!itemDoc.exists) {
+                                throw "Document does not exist!";
+                              }
+                              const newAvailable = itemDoc.data().available + item.quantity
+
+                              transaction.update(itemRef,{available:newAvailable})
+                            } )
+                          }
+                          catch(e){
+                            console.log(e)
+                          }
+                        })
+                    })
+                    console.log('doc updated');return data.status})
+                  .catch((e)=>{console.log(e.message);return e.message})
                  }
                } )
                .catch(error=>{if (error.response) {
@@ -367,7 +464,11 @@ exports.createRefund = functions
                 // Something happened in setting up the request that triggered an Error
                 console.log('Error', error.message);
               }
-              console.log(error.config);})     
+              console.log(error.config);
+              return 'Refund Failed';
+            })     
+
+            return {status:result}
   })
 
   exports.listUsers = functions
