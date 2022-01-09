@@ -4,6 +4,7 @@ import  '../styles/global.css'
 import Home from '../components/home'
 import {Helmet} from "react-helmet";
 import { getAnalytics, logEvent } from "firebase/analytics";
+
 const IndexPage = () => {
   const analytics = getAnalytics();
   return (

@@ -563,3 +563,59 @@ exports.createRefund = functions
     };
 
   })
+
+  exports.rateProduct = functions.runWith({
+    timeoutSeconds: 540,
+    memory: '2GB',
+  })
+  .https.onCall(async (data, context) => {
+
+    const {values} = data
+    if(!values.reviewId)
+    fs.collection('reviews').add({
+      ...values,
+      created:admin.firestore.Timestamp.now(),
+    })
+    else if(values.reviewId){
+      fs.collection('reviews').doc(values.reviewId).set({
+        ...values,
+        updated:admin.firestore.Timestamp.now(),
+      },{merge:true})
+    }
+    try{
+      fs.runTransaction(async (transaction)=>{
+        const itemRef  = fs.collection('products').doc(values.productId);
+        const itemDoc = await transaction.get(itemRef)
+        if (!itemDoc.exists) {
+          itemRef.set({
+            productName:values.productName,
+            productId:values.productId,
+            rating:values.rating,
+            numberOfRating:1,
+            created:admin.firestore.Timestamp.now(),
+          })
+          .then(()=>{
+            return
+          })
+          return
+        }
+        let newRating
+        let newNumberOfRating 
+        if(values.reviewId){
+        newRating  = parseFloat(((itemDoc.data().rating + values.rating - values.previousRating)/numberOfRating).toFixed(2))
+        }
+        else{
+        newNumberOfRating = itemDoc.data().numberOfRating + 1
+        newRating = parseFloat(((itemDoc.data().rating + values.rating)/newNumberOfRating).toFixed(2))
+        }
+        transaction.update(itemRef,{numberOfRating:newNumberOfRating,rating:newRating})
+      } )
+    }
+    catch(e){
+      console.log(e)
+    }
+
+    return{
+      result:'success'
+    }
+  })

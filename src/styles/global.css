@@ -3,14 +3,14 @@
 body{
     display:flex;
     flex-direction: column;
-    height:100vh;
-    background-color:#EBDDD2;
+
+    background:#EBDDD2 url(../images/sg-bg2.png);
     
   }
 #gatsby-focus-wrapper{
   display:flex;
     flex-direction: column;
-    height:100vh;
+  
 }
   html{
     font-size:16px;
@@ -26,5 +26,18 @@ body{
     padding:0;
     color:none;
   }
-
+  .carousel-root{
+    width:100%;
+  }
   
+  #gatsby-focus-wrapper > main > div > div.home__Testimonial-isyhln.hGwRJj > div > div.carousel.carousel-slider > ul{
+    margin:0px;
+  }
+
+  #checkout > div.card__Card-fNtOyb.bWCpsx > div > label:nth-child(1) > label:nth-child(6) > div{
+    width: 100%;
+  }
+
+  #checkout > div.card__Card-fNtOyb.bWCpsx > div > label:nth-child(1) > label:nth-child(6) > div > div{
+    width: 100%;
+  }

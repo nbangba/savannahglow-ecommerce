@@ -3,39 +3,65 @@ import styled from 'styled-components'
 import pomade from '../images/pomade.png'
 import woman from '../images/woman.png'
 import {Button} from './navbar'
-import customer1 from '../images/customer1.jpg'
 import Vitamins from  '../images/vitamins.svg'
 import Sun from  '../images/sun.svg'
 import EcoFriendly from  '../images/eco-friendly.svg'
 import HealthyLifestyle from  '../images/healthy-lifestyle.svg'
 import Buy from './buy'
+import "react-responsive-carousel/lib/styles/carousel.min.css";
+import { Carousel } from 'react-responsive-carousel';
 
+const HomeWrapper = styled.div`
+.gradient{
+  background:linear-gradient(250deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%);
+  transform:translate(-50px,0px)
+  }
+    
+@media only screen and (max-width: 833px) {
+  .gradient{
+  background:linear-gradient(180deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%);
+  transform:translate(0px,0px)
+  }
+}
+`
 const Top= styled.div`
   display:flex;
   width:100%;
-  flex:1 0 400px;
+  flex:1 0 420px;
+  font-family: 'Montserrat', sans-serif;
+  flex-wrap: wrap;
+  
 
   section{
-      width:100%;
-    min-width:500px;
+    width:50%;
+    min-width:400px;
     position:relative;
     box-sizing:border-box;
-  }
+    h1{
+      font-size:3.75rem;
+    }
+    @media only screen and (max-width: 853px) {
+      h1{
+        margin:2rem 0rem;
+        font-size: 3rem;
+      }
+    }
+   }
+
   img{
       max-height:100%;
       max-width:100%;
       
       z-index:1;
   }
-   .shift{
-    transform:translate(0px,-75px);
-   }
+  
 
   h1{
-      font-size:72px;
+      font-size:4.5rem;
       font-family: 'Montserrat', sans-serif;
       color:#20304F;
       text-align:center;
+      margin:3rem 0rem;
   }
 
   h3{
@@ -43,7 +69,41 @@ const Top= styled.div`
     font-size:48px;
     text-align:center;
     color:#35486F;
+    width:100%;
   }
+
+  .sub{
+    font-size:36px;
+    font-weight:400;
+    font-family: 'Montserrat', sans-serif;
+   
+    @media only screen and (max-width: 1200px) {
+      font-size: 24px;
+     }
+  }
+  .gradient{
+    margin-top:50px;
+    background:linear-gradient(180deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%);
+    }
+
+  @media only screen and (max-width: 833px) {
+    
+
+   
+    .gradient{
+    background:linear-gradient(180deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%);
+    }
+
+    .first{
+      order:1;
+      min-width: 100%;
+    }
+    .second{
+      order:2;
+      min-width: 100%;
+    }
+   }
+  
 `
 
 const Benefits = styled.div`
@@ -51,9 +111,17 @@ const Benefits = styled.div`
     width:100%;
     flex:1 0 400px;
     flex-wrap:wrap;
-    padding:100px;
-    justify-content:space-between;
+    padding:3vw;
+    justify-content:space-around;
     box-sizing:border-box;
+
+    @media only screen and (max-width: 700px) {
+      padding: 4rem;
+    }
+
+    @media only screen and (max-width: 700px) {
+      padding: 2rem;
+    }
     h2{
       min-width:100%;
       font-family: 'Montserrat', sans-serif;
@@ -76,15 +144,15 @@ const Benefits = styled.div`
       border-image-slice: 1;
       border-width: 5px;
       border-image-source: linear-gradient(250deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) );
-      padding: 20px;
-      margin: 20px 0px;
+      padding: 1.25rem;
+      margin: 1.25rem 0px;
       box-sizing:border-box;
     }
 
     p{
       min-width:100%;
       font-family: 'Montserrat', sans-serif;
-      font-size:18px;
+      font-size:1.125rem;
       color:#00000;
     }
 
@@ -95,7 +163,6 @@ const Benefits = styled.div`
       box-sizing:border-box;
      
     }
- 
 
     .benefits{
       fill: #94d31b; 
@@ -110,10 +177,10 @@ const Testimonial= styled.div`
    flex-wrap:wrap;
    justify-content:center;
    background: linear-gradient(rgba(224,193,175,1) ,rgba(224,193,175,0.2));
-   padding:50px;
+   padding:1vw;
    h2{
     font-family: 'Montserrat', sans-serif;
-    font-size:36px;
+    font-size:2rem;
     font-weight:400;
     color:#35486F;
      width:100%;
@@ -122,7 +189,7 @@ const Testimonial= styled.div`
 
    h3{
     font-family: 'Montserrat', sans-serif;
-    font-size:24px;
+    font-size:1.5rem;
     font-weight:400;
     color:#35486F;
      width:100%;
@@ -133,10 +200,15 @@ const Testimonial= styled.div`
    section{
      display:flex;
      width:50%;
-     padding:20px;
+     padding:1.25rem;
      box-sizing:border-box;
      justify-content:center;
      align-items:center;
+     flex: 1 0 350px;
+     
+     @media only screen and (max-width: 833px) {
+     font-size:
+    }
    }
 
    img{
@@ -168,30 +240,30 @@ const Testimonial= styled.div`
 
 export default function Home() {
     return (
-        <div>
+        <HomeWrapper>
             <Top>
-                <section>
+                <section className='first' style={{display:'flex',flexWrap:'wrap',justifyContent:'center', alignItems:'center'}}>
                   <h1>
                       SAVANNAH GLOW
                   </h1>
                   <h3>
                       Enrich your skin
                   </h3>
-                  <Button primary style={{width:280,display:'flex',margin:'100px', height:50, fontSize:24,height:60,alignItems:'center',justifyContent:'center'}} >BUY NOW FOR $2.00</Button>
+                  <Button primary style={{width:280,display:'flex',marginBottom:'5vw',  fontSize:24,alignItems:'center',justifyContent:'center'}} >BUY NOW FOR $2.00</Button>
                 </section>
-                <section>
-                  <img className='shift'  src={pomade}></img>  
+                <section className='second'>
+                  <img   src={pomade}></img>  
                 </section>
             </Top>
-            <Top style={{transform:'translate(-50px,0px)',borderRadius:50,background:'linear-gradient(250deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%)'}}>
-              <section >
+            <Top className='gradient' style={{borderRadius:50}}>
+              <section className='second' >
               <img   src={woman} style={{objectFit:'cover',objectPosition:'right top'}}></img>
                 </section>
-                <section>
+                <section  className='first' >
                   <h1>
                       Be confident in your skin
                   </h1>
-                  <h3 style={{fontFamily:`'Montserrat', sans-serif`,fontSize:36,fontWeight:400,margin:'0px 50px'}}>
+                  <h3 className='sub'>
                       Savannah Glow is enriched in vitamin A & E
                   </h3>
                 </section>
@@ -201,6 +273,7 @@ export default function Home() {
               <h2>
                 Why use savannah glow shea butter?
               </h2>
+              
               <section>
                 <h3>Rich in vitamins A & E <Vitamins fill='#474E52' style={{width:60}}/></h3>
                 
@@ -240,47 +313,45 @@ export default function Home() {
                 You're in good company
               </h2>
               <h3>Listen to what some of our customers have to say</h3>
-              <section>
-                <img src={customer1}/>
-                <blockquote>
-                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
-                  <span className='customer-profile'>
-                  ~Lukman Ahmed
-                  </span>
-                </blockquote>
-              </section>
-              <section>
-                <img src={customer1}/>
-                <blockquote>
-                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
-                  <span className='customer-profile'>
-                  ~Lukman Ahmed
-                  </span>
-                </blockquote>
-              </section>
-              <section>
-                <img src={customer1}/>
-                <blockquote>
-                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
-                  <span className='customer-profile'>
-                  ~Lukman Ahmed
-                  </span>
-                </blockquote>
-              </section>
-              <section>
-               <img src={customer1}/>
-                <div>
-                <blockquote>
-                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
-                  <span className='customer-profile'>
-                  ~Lukman Ahmed
-                  </span>
-                </blockquote>
+              <Carousel>
+              <div>
                 
-                </div>
-              </section>
+                <blockquote>
+                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
+                  <span className='customer-profile'>
+                  ~Lukman Ahmed
+                  </span>
+                </blockquote>
+              </div>
+              <div>
+                
+                <blockquote>
+                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
+                  <span className='customer-profile'>
+                  ~Lukman Ahmed
+                  </span>
+                </blockquote>
+              </div>
+              <div>
+                
+                <blockquote>
+                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
+                  <span className='customer-profile'>
+                  ~Lukman Ahmed
+                  </span>
+                </blockquote>
+              </div>
+              <div>
+                <blockquote>
+                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
+                  <span className='customer-profile'>
+                  ~Lukman Ahmed
+                  </span>
+                </blockquote>
+              </div>
+              </Carousel>
             </Testimonial>
-        </div>
+        </HomeWrapper>
     )
 }
 

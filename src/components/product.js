@@ -2,13 +2,15 @@ import React, { useState,useEffect } from 'react'
 import styled from 'styled-components'
 import { Button } from './navbar'
 import { useUser,useSigninCheck,useFirestore ,useAuth,useFirestoreDocData} from 'reactfire'
-import { serverTimestamp,doc, setDoc,updateDoc,increment,arrayUnion} from "firebase/firestore";
+import { serverTimestamp,doc, setDoc,updateDoc,increment,arrayUnion,getDoc} from "firebase/firestore";
 import { signInAnonymously } from "firebase/auth";
 import Errorwrapper from './errorwrapper';
 import Review from './review';
 import ModalComponent from './modal';
 import { Formik,Form } from 'formik';
 import { InputWrapper,Label,Input ,Button as Btn} from './addressform';
+import { Rating } from 'react-simple-star-rating'
+
 const product ={
   width:'100px',
   height:'100px'
@@ -39,6 +41,7 @@ li{
   display:block;
 }
 
+
 `
 
 
@@ -59,12 +62,13 @@ width:100%;
 const ProductWrapper = styled.div`
   display:flex;
   flex-wrap:wrap;
-  flex:1 0 200px;
+  justify-content:center;
   
   section{
     width:50%;
     padding:20px;
     box-sizing:border-box;
+    flex:1 0 300px;
   }
 
   span,h2,h3,ul,.description{
@@ -98,6 +102,17 @@ const ProductWrapper = styled.div`
   input[type=number] {
     -moz-appearance: textfield;
   }
+
+  @media only screen and (max-width: 633px) {
+    .top{
+      order:1;
+      min-width:100%;
+    }
+    .bottom{
+      order:2;
+      min-width:100%;
+    }
+   }
 `
 const VarietyList = styled.ul`
  padding:0px;
@@ -121,18 +136,31 @@ const VarietyListItem = styled.li`
 
 
 export default function Product({data}) {
-    const sgproducts = data.contentfulSavannahGlowProduct
+    
+    const db = useFirestore()
+    const sgproducts = data.contentfulProduct
+    
     console.log(sgproducts)
       const [selectedVariety,setSelectedVariety] = useState(sgproducts.varieties[0])
+      const [productRating,setProductRating] = useState(null)
       const [selectedImage,setSelectedImage]=useState(0)
-      const [qty,setQty] = useState(selectedVariety.quantity)
+      const [qty,setQty] = useState(1)
       const [showModal, setShowModal] = useState(false)
       const firestore = useFirestore();
       const ref = doc(firestore, 'product',selectedVariety.id );
       const { status, data: product } = useFirestoreDocData(ref);
-      
+      const { data: user } = useUser()
       console.log(selectedVariety)
-      
+      const docRef = doc(db, "products", sgproducts.id);
+       /**/
+      useEffect(() => {
+       getDoc(docRef).then((data)=> {
+         const values = data.data() 
+         if(values)
+         setProductRating(values)
+       })
+      }, [])
+
       const setAvailableQuantity = (available)=>{
         setDoc(ref,{
           available:available
@@ -162,6 +190,7 @@ export default function Product({data}) {
       return (
           
             <ProductWrapper>
+              <div style={{width:'100%',display:'flex',flexWrap:'wrap',maxWidth:1200,justifyContent:'center'}}>      
             <section>
                   <Selected>
                       <ProductImageWrapper>
@@ -174,8 +203,12 @@ export default function Product({data}) {
                   </Selected>
               </section>
               <section>
-              <div>
+              
                       <h2>{sgproducts.name}</h2>
+                      {productRating?
+                      <Rating allowHalfIcon ratingValue={productRating.rating/20.0} readonly size={25} style={{width:'fit-content'}}/>:
+                      <h3>This product has not been rated yet</h3>}
+                      
                       <hr></hr>
                       <div className='description'>{sgproducts.description.description}</div>
                       <hr></hr>
@@ -207,23 +240,22 @@ export default function Product({data}) {
                   <div style={{margin:'10px 0px',display:'flex',flexWrap:'wrap'}}>
                   <Button primary>Buy Now</Button>
                   <Errorwrapper>
-                  <AddtoBagButton selectedVariety={selectedVariety} />
+                  <AddtoBagButton selectedVariety={selectedVariety}  user={user} db={db}/>
                   </Errorwrapper>
                   </div>  
-                  </div>
+                  
               </section>
-              <div>
-                <Review/>
+              </div>
+              <div style={{width:"100%",maxWidth:1200,display:'flex',flexWrap:'wrap'}}>
+                <Review productName={sgproducts.name} productId={sgproducts.id} user={user}/>
               </div>
               </ProductWrapper>
       )
   }
 
-  function AddtoBagButton({selectedVariety}){
+  function AddtoBagButton({selectedVariety,user,db}){
 
-    const db = useFirestore()
-
-    const { data: user } = useUser()
+    
     const { status, data: signInCheckResult } = useSigninCheck();
     const auth = useAuth();
     console.log(signInCheckResult)
@@ -232,7 +264,6 @@ export default function Product({data}) {
       console.log('cart user',cartUser)
       setDoc(doc(db, "carts",cartUser.uid), {
           user:cartUser.uid,
-          dateCreated:serverTimestamp(),
           items:[selectedVariety],
           numberOfItems:selectedVariety.quantity,
           dateCreated:serverTimestamp(),
@@ -244,7 +275,7 @@ export default function Product({data}) {
     const addToBag = ()=>{
        if(!signInCheckResult.signedIn){
         signInAnonymously(auth)
-        .then((user) => {
+        .then(({user}) => {
           addCart(user)
         })
         .catch((error) => {
@@ -258,8 +289,10 @@ export default function Product({data}) {
     }
 
     const AddToBag =()=>{
+      console.log(user.uid)
       const cartRef = doc(db, 'carts', user.uid);
       const { data:cart } = useFirestoreDocData(cartRef);
+      
       const addToBag =()=>{
          if(signInCheckResult.signedIn && !cart){
           addCart(user)
@@ -299,11 +332,18 @@ export default function Product({data}) {
     )
     }
     
-    if(!user)
-    return(
-        <Button secondary onClick={addToBag}>Add To Bag</Button>
-    )
-    else return <AddToBag/>
+  if(status=='success'){
+      if(!user)
+      return(
+          <Button secondary onClick={addToBag}>Add To Bag</Button>
+      )
+      else if(signInCheckResult.signedIn&&user.uid) return <AddToBag/>
+      else return <div>Loading...</div>
+    }
+    else if(status == 'loading')
+       <div>Loading...</div>
+    else
+    <div>Something went wrong...</div>
   }
 
   function ProductSetting({setAvailableQuantity,showModal,setShowModal}){

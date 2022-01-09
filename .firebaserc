@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "savannah-glow"
-  }
+    "default": "savannah-glow",
+    "emulating": "savannah-glow",
+    "savannah-glow": "savannah-glow",
+    "emulate": "savannah-glow"
+  },
+  "targets": {}
 }

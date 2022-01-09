@@ -14,6 +14,8 @@ const ProductsWrapper = styled.div`
     display:flex;
     width:100%;
     padding:0;
+    flex-wrap:wrap;
+    justify-content:center;
   }
   li{
     display:flex;
@@ -22,7 +24,7 @@ const ProductsWrapper = styled.div`
   }
 `
 export default function Products({data}) {
-     const sgproducts = data.allContentfulSavannahGlowProduct.nodes
+     const sgproducts = data.allContentfulProduct.nodes
      console.log(sgproducts)
      const analytics = getAnalytics();
     return (
@@ -46,7 +48,7 @@ export default function Products({data}) {
 
 export const query = graphql`
 query {
-  allContentfulSavannahGlowProduct {
+  allContentfulProduct {
     nodes {
       name
       description {
@@ -55,7 +57,6 @@ query {
       varieties {
         name
         price
-        quantity
         images {
           fluid {
             src

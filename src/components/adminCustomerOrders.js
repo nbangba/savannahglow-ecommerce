@@ -1,6 +1,6 @@
 import React,{useEffect, useState} from 'react'
 import {useFirestore,useFirestoreCollectionData,useAuth,useUser} from 'reactfire'
-import { collection,query,orderBy,setDoc,doc,serverTimestamp,where} from "firebase/firestore";
+import { collection,query,orderBy,setDoc,doc,serverTimestamp,where,limit,startAt,endAt} from "firebase/firestore";
 import { OrderCard } from './orders';
 import { Button } from './navbar';
 import ModalComponent from './modal';
@@ -8,9 +8,9 @@ import Select from 'react-select';
 import styled from 'styled-components';
 import CreatableSelect from 'react-select/creatable';
 import useRole from './useRole';
-
+import QueryOptions from './queryOptions';
 const TA = styled.div`
-display: block;
+    display: block;
     width: 100%;
     height: calc(1.5em + 0.75rem + 2px);
     padding: 0.375rem 0.75rem;
@@ -24,30 +24,37 @@ display: block;
     border-radius: 0.25rem;
     transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 `
+const AdminOrders = styled.div`
+   display:flex;
+   flex-wrap:wrap;
+   justify-content:center;
+   max-width:1400px;
+   margin:auto;
+`
 export default function  AdminCustomers() {
     const firestore = useFirestore();
     const { data: user } = useUser()
     const ordersCollection = collection(firestore, 'orders');
-    const ordersQuery = query(ordersCollection, orderBy('orderCreated', 'desc'));
+    const ordersQuery = query(ordersCollection, orderBy('orderCreated', 'desc'),limit(1));
     const {role} = useRole()
-    const [orderStatus, setorderStatus] = useState('all')
+    const [orderStatus, setOrderStatus] = useState('all')
     const [queryOptions, setqueryOptions] = useState(ordersQuery)
     const [desc, setdesc] = useState(true)
     const { status, data:orders } = useFirestoreCollectionData(queryOptions);
+    const ORDERS_PER_PAGE = 12;
+    const [page,setPage] = useState(1)
     console.log('role',role)
-    useEffect(() => {
-        if(orderStatus == 'all')
-        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc')))
-        else
-        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),where('orderStatus','==',orderStatus)))
-    }, [orderStatus])
 
-   useEffect(() => {
-       if(role=='dispatch')
-       setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),where('dispatcher.uid','==',user.uid)))
-   }, [role])
+    useEffect(() => {
+        if(orderStatus == 'all' && (role =='admin 1' || role =='admin 2'))
+        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),limit(page*ORDERS_PER_PAGE)))
+        else if(role=='dispatch')
+        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),where('dispatcher.uid','==',user.uid),limit(page*ORDERS_PER_PAGE)))
+        else
+        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),where('orderStatus','==',orderStatus),limit(page*ORDERS_PER_PAGE)))
+    }, [orderStatus,role,page])
+
     console.log(orders)
-   
     
     const  delivered = (order) => {        
         setDoc(doc(firestore, "orders", order.NO_ID_FIELD), {
@@ -63,8 +70,10 @@ export default function  AdminCustomers() {
   if(role && role != 'none')
   return (
    <div>
+       <QueryOptions setOrderStatus={setOrderStatus}/>
+       <AdminOrders>
        {orders.map((order)=>
-        <OrderCard order={order} role={role} key={order.NO_ID_FIELD}>
+        <OrderCard order={order} role={role} key= {order.NO_ID_FIELD}>
             {(order.orderStatus != 'cancelled' && order.orderStatus != 'delivered') &&
             <>
             {(role && order.orderStatus == 'dispatched')?
@@ -84,6 +93,8 @@ export default function  AdminCustomers() {
            }
         </OrderCard>             
        )}
+       </AdminOrders>
+       <button onClick={()=>setPage(prev=>prev+1)}>Load more</button>
    </div>
   )
   else 

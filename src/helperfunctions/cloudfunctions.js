@@ -72,3 +72,12 @@ export  function assignRole(role,selectedRows){
     .then((data)=>console.log("User assigned role "+data))
     .catch((e)=>console.log(e))
 }
+
+export function rateProduct(values){
+    const functions =  getFunctions();
+    const rateProductFn = httpsCallable(functions, 'rateProduct');
+
+    rateProductFn({values:values})
+    .then(()=> console.log('You rated this product'))
+    .catch((e)=>console.log(e))
+}

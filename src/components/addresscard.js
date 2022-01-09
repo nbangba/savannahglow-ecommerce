@@ -36,12 +36,12 @@ export const CardItem = styled.div`
 `
 
 
-export default function AddressCard({addressInfo,children,selected,setSelected,selectable,maxWidth}) {
+export default function AddressCard({addressInfo,children,selected,setSelected,selectable,maxWidth,style}) {
     
     const {firstname='',lastname='',email='',phone='',location='',street='',city='',state='',country=''} = addressInfo
     
     return (
-        <Card selected ={selected} maxWidth={maxWidth} selectable={selectable} addressInfo={addressInfo} setSelected={setSelected} >
+        <Card selected ={selected} maxWidth={maxWidth} selectable={selectable} addressInfo={addressInfo} style={style} setSelected={setSelected} >
             
             <CardItem>{firstname} {lastname}</CardItem>
             <CardItem>{email}</CardItem>

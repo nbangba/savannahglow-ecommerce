@@ -41,13 +41,13 @@ const App = (props) => {
     
     <Layout>
         <User>
-        <SideMenu>
-            <MenuContent>
+        {/*<SideMenu>
+          <MenuContent>
                 {subMenuItems.map(item=> <MenuContentList padding='10px' >
                                         <Link to={`/user/${item.toLowerCase()}`} activeStyle={{fontWeight:'bold',background:'#dbb7a1',borderRadius:4 }}>{item}</Link>
                                         </MenuContentList>)}
             </MenuContent>
-        </SideMenu>
+        </SideMenu>*/}
         <Errorwrapper>
       <Router basepath="/user" style={{width:'100%'}}>
         <PrivateRoute path="/profile" component={Profile} />

@@ -8,9 +8,13 @@ import ModalComponent from './modal'
 import { useUser,useSigninCheck,useFirestore,useFirestoreDocData,useFirebaseApp } from 'reactfire'
 import {doc} from '@firebase/firestore'
 import Errorwrapper from './errorwrapper';
-import { Link } from 'gatsby'
+import { Link, navigate } from 'gatsby'
 import ShoppingBag from '../images/bag.svg'
+import HamburgerIcon from '../images/hamburger-menu.svg'
 import { getMessaging, getToken, } from "firebase/messaging";
+import Drawer from './drawer'
+import { MenuContent } from './popper'
+import { MenuContentList } from './popper'
 
 const Navbar = styled.div`
    display: flex;
@@ -19,6 +23,24 @@ const Navbar = styled.div`
    padding:10px;
    box-sizing:border-box;
    z-index:10;
+   
+   .desktop-menu {
+    display:none;
+    @media only screen and (min-width: 899.1px) {
+        display:flex;
+        }
+    }
+
+    .logoMobile{
+       
+        object-fit: cover;
+        @media only screen and (max-width: 899px) {  
+            position: absolute;
+            right: 50%;
+            width:80px;
+            }
+            
+    }
 
    .tooltip-enter{
      opacity:0;
@@ -50,6 +72,8 @@ export const Menu = styled.ul`
   ${props => props.left && css`
   justify-content:flex-end;
   `}
+ 
+  
 `
 
 export const MenuItem = styled.li`
@@ -57,11 +81,11 @@ export const MenuItem = styled.li`
    display:block;
    color:#35486F;
    text-align:center;
-   min-width:100px;
    font-family: 'Montserrat', sans-serif;
    font-size: 1.2rem;
    font-weight: 500;
    box-sizing:border-box;
+   padding-left:30px;
        a{
         color:#35486F;
         box-sizing: border-box;
@@ -149,14 +173,23 @@ const CartNumber = styled.div`
    height:30px;
    top:1%;
    cursor:pointer;
-   left:35.5%;
+  
    color:#3f3633;
    justify-content:center;
    align-items:flex-end;
    font-weight:bold;
 `
+const MenuIcon = styled.div`
+  cursor:pointer;
+  display: none;
+  align-items: center;
+  @media only screen and (max-width: 899px) {
+    display:flex;
+   }
+
+`
 export default function Nav() {
-    
+    const [openDrawer, setOpenDrawer] = useState(false)
     const messaging = getMessaging()
     const menuItems = ['Home','Catlogue','Blog','Support','Products']
     useEffect(() => {
@@ -192,8 +225,18 @@ export default function Nav() {
     
     return (
         <Navbar>
+            <MenuIcon onClick={()=>setOpenDrawer(true)}><HamburgerIcon style={{width:50,height:50}}/></MenuIcon>
+            <Drawer openDrawer={openDrawer} setOpenDrawer={setOpenDrawer}>
+            <MenuContent >
+                {menuItems.map(item=> 
+                <MenuContentList><Link to={item==='Home'?'/':`/${item.toLowerCase()}`} >{item}</Link> </MenuContentList>
+                )}
+            </MenuContent>
+            </Drawer>
+            <div className='logoMobile'>
             <Logo  style={{width:100,height:100}}/>
-            <Menu style={{flexGrow:10}}>
+            </div>
+            <Menu className='desktop-menu' style={{flexGrow:10}}>
                 {menuItems.map(item=> <MenuItem><Link to={item==='Home'?'/':`/${item.toLowerCase()}`} >{item}</Link> </MenuItem>)}
             </Menu>
             <Errorwrapper>
@@ -215,7 +258,7 @@ function LoginStatus(){
     console.log(user)
     console.log(status,signInCheckResult)
     const firestore = useFirestore()
-    const cartRef =user && doc(firestore, 'carts', user.uid);
+    const cartRef = user && doc(firestore, 'carts', user.uid);
     
 
     const CartComponent = ()=>{
@@ -244,14 +287,14 @@ function LoginStatus(){
                     <Popper subMenuItems={subMenuItems}>
                         {
                             (setReferenceElement,setOpen,open)=>
-                            <MenuItem ref={setReferenceElement} tabIndex={-1} onClick={()=>setOpen(!open)}>
+                            <MenuItem  ref={setReferenceElement} tabIndex={-1} onClick={()=>setOpen(!open)}>
                             <UserWrapper><User fill='#474E52' style={{width:30,height:30}}/></UserWrapper>
                             </MenuItem>
                         }
                         
                     </Popper> 
                     :
-                    <MenuItem><Button primary onClick={()=>window.open('http://localhost:8000/signin', 'Sign In', 'width=985,height=735')}>Sign In/Up</Button></MenuItem>
+                    <MenuItem><Button primary onClick={()=>window.open('http://localhost:8000/signin', 'Sign In', 'width=985,height=735')}>Sign In</Button></MenuItem>
                 }
                 </>
                 }  

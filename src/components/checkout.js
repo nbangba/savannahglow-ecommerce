@@ -79,6 +79,24 @@ const RadioButtonsContainer = styled.label`
 
 const CheckoutWrapper = styled.div`
    display:flex;
+   flex-wrap:wrap;
+   justify-content:center;
+   max-width:1200px;
+   margin:auto;
+   #checkout{
+       width:100%;
+   }
+   .checkout-form{
+       width:100%;
+       display:flex;
+       flex-wrap:wrap;
+       flex:1 0 300px;
+   @media only screen and (max-width: 750px) {
+    flex-wrap:wrap;
+    flex:1 0 100%;
+   }
+  }
+}
 `
 
 export default function Checkout() {
@@ -102,6 +120,10 @@ export default function Checkout() {
         if(cart && cart.items )
         setSubtotal(calculateSubTotal(items))
         }, [cart])
+
+    const addressesCollection = collection(firestore, 'addresses');
+    const addressesQuery = query(addressesCollection,where('isDefault','==',true))
+    const { status:info, data:addresses } = useFirestoreCollectionData(addressesQuery);    
     
     const orderSchema = Yup.object().shape({
     orderAddress: Yup.object().required('An address is required'),
@@ -109,15 +131,18 @@ export default function Checkout() {
     });
 
     return (
-        <CheckoutWrapper>
-            <Formik
-                initialValues={{orderAddress:null,payment:'paystack',paystackOptions:''}}
+        <CheckoutWrapper >
+            <div className='checkout-form'>
+            <UserAddress address={addresses&&addresses[0]} />
+            <Formik 
+                initialValues={{orderAddress:addresses[0],payment:'paystack',paystackOptions:''}}
                 validationSchema={orderSchema}
                 onSubmit={(values, { setSubmitting }) => {
                   setTimeout(() => {
                       console.log('verifying')
                       values.amount = subtotal
                       values.items = [...items]
+                      values.orderAddress = addresses[0]
                     console.log(JSON.stringify(values, null, 2));
                     if(values.paystackOptions=='defaultCard')
                     chargeCard({...values},cards[0].NO_ID_FIELD)
@@ -127,24 +152,24 @@ export default function Checkout() {
                   }, 400);
                 }}>
                 {({ isSubmitting,setFieldValue,handleChange,values,errors }) => (
-                <Form style={{display:'flex'}}>
-                    <div>
-                    <UserAddress setFieldValue={setFieldValue}/>
+                <Form id='checkout'>
+                    
                     <PaymentSegment card={card} values={values}/>
-                    <CartItems/>
-                    </div>
-                    <Subtotal cart={cart} subtotal={subtotal}/>
+                    <CartItems/> 
+  
                 </Form>
                 )}
             </Formik>
+            </div>
+            <Subtotal cart={cart} subtotal={subtotal}/>
         </CheckoutWrapper>
     )
 }
 
 
-function UserAddress({setFieldValue}){
+function UserAddress({address}){
     const [showModal, setShowModal] = useState(false)
-    const [selected, setSelected] = useState(null)
+    const [selected, setSelected] = useState(address)
     const [changeAddress, setchangeAddress] = useState(false)
     const { status, data: signInCheckResult } = useSigninCheck();
     const firestore = useFirestore();
@@ -155,28 +180,19 @@ function UserAddress({setFieldValue}){
     console.log(addresses)
     
     
-    useEffect(() => {
-        if(addresses[0])
-        setSelected(addresses[0])
-    }, [])
-    console.log(info,addresses)
     
-    useEffect(() => {
-        
-        setFieldValue('orderAddress',selected)
-    }, [selected])
     return(
         <>
-        {signInCheckResult&&signInCheckResult.signedIn? 
+        {signInCheckResult&&signInCheckResult.signedIn && selected? 
                <>
-               {selected &&
-               <AddressCard maxWidth='900px'  addressInfo={selected}>
+               { 
+               <AddressCard maxWidth='900px'  addressInfo={selected} style={{margin:'10px 0px'}}>
                    <CardItem>
                    <Button secondary onClick={()=>setchangeAddress(true)}>Change Address</Button>
                    </CardItem> 
                </AddressCard>
                }
-              <ModalComponent showModal={changeAddress}>
+              <ModalComponent showModal={changeAddress} >
                     <Addresses wrap selected={selected} setSelected={setSelected} selectable  />
                     <button onClick={()=>setchangeAddress(false)}>CLOSE</button>
               </ModalComponent>
@@ -197,7 +213,7 @@ function UserAddress({setFieldValue}){
 function PaymentSegment({card,values}){
     
     return(
-        <Card maxWidth='400px'>
+        <Card maxWidth='400px' style={{margin:'10px 0px',maxWidth:900}}>
             <div role='group' aria-labelledby="my-radio-group">
            <RadioButtonsContainer > 
                <div>
@@ -241,7 +257,7 @@ function Subtotal({cart,subtotal}){
     return(
       <Card style={{alignContent:'flex-start',maxHeight:200,fontFamily:`'Montserrat', sans-serif`}}>
         <div style={{width:"100%",padding:20}}>{`Subtotal(${cart.numberOfItems} items): GHS ${subtotal}.00`}</div>
-        <button type='submit' primary style={{minWidth:"fit-content",width:300}}>Place Order</button>
+        <button type='submit' form='checkout' primary style={{minWidth:"fit-content",width:300}}>Place Order</button>
       </Card>  
     )
 }

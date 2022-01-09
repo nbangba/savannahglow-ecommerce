@@ -11,6 +11,24 @@ import { Link } from 'gatsby';
 import { calculateSubTotal } from '../helperfunctions';
 import { getAnalytics, logEvent } from "firebase/analytics";
 
+const CartWrapper = styled.div`
+display:flex;
+flex-wrap:wrap;
+position:relative;
+justify-content:flex-start;
+max-width:1200px;
+margin: 0px auto;
+.mobileV{
+    flex: 1 0 300px;
+    @media only screen and (max-width: 750px) {
+        flex: 1 0 100%;
+        margin:0px;
+        order:2;
+       }
+    }
+
+
+`
 const ProductImageWrapper= styled.div`
  position:relative;
  text-align:center;
@@ -21,8 +39,8 @@ const ProductImageWrapper= styled.div`
  max-width:900px;
 
  font-family: 'Montserrat', sans-serif;
-    color:#35486F;
-    text-align:left;   
+ color:#35486F;
+ text-align:left;   
  ul{
    display:flex;
    padding:0px;
@@ -34,7 +52,9 @@ li{
   position:relative;
   display:flex;
   width:100%;
-  margin:20px;
+  margin:2vw;
+  flex-wrap:wrap;
+  justify-content:flex-start;
 }
  
 img{
@@ -55,6 +75,8 @@ input[type=number]::-webkit-outer-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+
+  
 `
 const CartLabel = styled.div`
   margin: 10px 0px;
@@ -116,8 +138,8 @@ export function CartItems({children}) {
         }, [cart])
 
        if(items && items.length>0) return (
-        <div style={{display:"flex",}}>
-        <Card maxWidth='900px'>
+        <CartWrapper>
+        <Card maxWidth='900px' className='mobileV' style={{margin:'10px 0px'}}>
         <ProductImageWrapper>
 
         <ul>
@@ -130,8 +152,7 @@ export function CartItems({children}) {
         </ProductImageWrapper>
         </Card>
         {children && children(cart,subtotal)}
-        </div>
-
+        </CartWrapper>
     )
     else return(
         <div>
@@ -169,7 +190,7 @@ function CartItem({item,updateCart,index,deleteCartItem}){
        <li>
            <Remove onClick={()=>setDeleteDialog(true)}/>
            <DeleteDialog showModal={deleteDialog}  setShowDialog={setDeleteDialog} deleteItem={deleteCartItem} />
-           <div style={{margin:10}}><img src={imgSrc}/></div>
+           <div style={{margin:10,flex:'0 0 200px'}}><img src={imgSrc}/></div>
        <div>    
        <CartLabel><h3 style={{marginTop:0}}>Savannah Glow Shea Butter</h3></CartLabel>
        <CartLabel>{item.name}</CartLabel>
@@ -194,7 +215,7 @@ function CartItem({item,updateCart,index,deleteCartItem}){
 
 function Subtotal({cart,subtotal}){
     return(
-        <Card style={{alignContent:'flex-start',maxHeight:200,fontFamily:`'Montserrat', sans-serif`}}>
+        <Card style={{position:'sticky',top:20,alignContent:'flex-start',maxHeight:200,fontFamily:`'Montserrat', sans-serif`}}>
         <div style={{width:"100%",padding:20}}>{`Subtotal(${cart.numberOfItems} items): GHS ${subtotal}.00`}</div>
         <Button primary style={{minWidth:"fit-content",width:300}}><Link to='/checkout'> Check Out</Link></Button>
       </Card>  

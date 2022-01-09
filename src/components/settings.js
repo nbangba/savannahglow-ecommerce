@@ -52,7 +52,7 @@ const Accordion = styled.div`
 const AccordionButtonWrapper = styled.div`
   max-width:900px;
   width:100%;
-.accordion-enter{
+ .accordion-enter{
     max-height:0;
     opacity:0;
     
@@ -498,9 +498,10 @@ function AccordionButton({active,setActive,name,title,children}){
 }
 
 export function Addresses({wrap,selectable,selected,setSelected}){
+  const { data: user } = useUser()
   const firestore = useFirestore();
   const addressesCollection = collection(firestore, 'addresses');
-  const addressesQuery = query(addressesCollection,orderBy('dateCreated', 'desc'))
+  const addressesQuery = query(addressesCollection,orderBy('dateCreated', 'desc'),where('user','==',user.uid))
   const getDefault = (addresses)=> addresses.filter((address)=> address.isDefault)
   const { status, data:addresses } = useFirestoreCollectionData(addressesQuery);
   const[defaultAddress,setDefaultAddress] = useState(null)

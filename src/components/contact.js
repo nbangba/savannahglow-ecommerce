@@ -47,9 +47,7 @@ const Contact = styled.div`
 `
 export const ContactItem = styled.div`
   display:flex;
-  
   height:50px;
-  width:400px;
   max-width:500px;
   padding:${props => props.padding || "0px"};
   justify-content:flex-start;

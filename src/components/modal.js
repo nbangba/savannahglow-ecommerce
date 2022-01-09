@@ -83,7 +83,7 @@ const Modal = styled.div`
     
       
     return(
-        <Modal onMouseLeave={()=>{if(type != 'form' && setShowModal) setShowModal(false)}}>
+        <Modal /*onMouseLeave={()=>{if(type != 'form' && setShowModal) setShowModal(false)}}*/>
             <ModalContent width={width}>
                 <h3>Enter Your Address</h3>
                 <FormWrapper>
