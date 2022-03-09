@@ -7,7 +7,7 @@ module.exports = {
     title: "New Gatsby Site",
   },
   plugins: ["gatsby-plugin-styled-components",
-   "gatsby-plugin-gatsby-cloud","gatsby-plugin-react-svg","gatsby-plugin-gatsby-cloud",
+   "gatsby-plugin-gatsby-cloud","gatsby-plugin-react-svg","gatsby-plugin-gatsby-cloud","gatsby-plugin-mdx",
    {
     resolve: `gatsby-source-contentful`,
     options: {

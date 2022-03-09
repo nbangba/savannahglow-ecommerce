@@ -3,7 +3,8 @@ import { usePopper} from 'react-popper';
 import styled from 'styled-components'
 import { CSSTransition } from 'react-transition-group';
 import fb from '../firebase/fbconfig'
-
+import { Link } from 'gatsby';
+import useRole from './useRole';
 
 export const MenuContent = styled.ul`
       display:flex;
@@ -45,11 +46,11 @@ const Popper = ({subMenuItems,children}) => {
   const [popperElement, setPopperElement] = useState(null);
   const [arrowElement, setArrowElement] = useState(null);
   const { styles, attributes ,update, } = usePopper(referenceElement, popperElement, {
-    modifiers: [{ name: 'arrow', options: { element: arrowElement } },{name:'offset',options:{offset:[-18,0]}}],
+    modifiers: [{ name: 'arrow', options: { element: arrowElement } },{name:'offset',options:{offset:[-70,0]}}],
   });
 
   const [open,setOpen] = useState(false)
-
+  const {role} = useRole()
   useEffect(() => {
     if(open && update)
      update()
@@ -72,6 +73,7 @@ const Popper = ({subMenuItems,children}) => {
     }
   }
 
+
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
@@ -80,7 +82,7 @@ const Popper = ({subMenuItems,children}) => {
   }, [open])
 
   const tooltip = {
-    width:'120px',
+    width:'200px',
     backgroundColor:'#EBDDD2',
     fontWeight: 'normal',
     padding:' 4px 8px',
@@ -90,7 +92,8 @@ const Popper = ({subMenuItems,children}) => {
     boxShadow:'2px 2px 20px 5px rgba(0, 0, 0, 0.2)',
   }
   
-  
+  const admin = [{displayName:'User Order',link:'/user/admin/orders'},
+                  {displayName:'Users',link:'/user/admin/users'}]
   return (
     <>
        {children(setReferenceElement,setOpen,open)}
@@ -99,10 +102,25 @@ const Popper = ({subMenuItems,children}) => {
         <MenuContent>
             {subMenuItems.map((item,index)=> 
               <MenuContentList key={index}>
-                  <a href='' >{item}</a>
+                  <Link to={`/user/${item.toLowerCase()}`} >{item}</Link>
               </MenuContentList>
             )}
-            <MenuContentList key={4} onClick={signOut}>
+            {role && 
+              <MenuContentList>
+                 {(role=='admin 1'||role=='admin 2')?'ADMIN':'DISPATCH'}
+                <MenuContent>
+                    <MenuContentList>
+                      <Link to={'/user/admin/orders'} >User Order</Link>
+                    </MenuContentList>
+                   {(role=='admin 1'||role=='admin 2')&& <MenuContentList>
+                      <Link to={'/user/admin/users'} >Users</Link>
+                    </MenuContentList>
+                   }
+                </MenuContent>
+              </MenuContentList>
+
+            }
+            <MenuContentList key={4} onClick={signOut} style={{cursor:'pointer'}}>
                   Sign Out
               </MenuContentList>
         </MenuContent>

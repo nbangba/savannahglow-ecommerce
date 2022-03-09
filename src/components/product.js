@@ -10,6 +10,8 @@ import ModalComponent from './modal';
 import { Formik,Form } from 'formik';
 import { InputWrapper,Label,Input ,Button as Btn} from './addressform';
 import { Rating } from 'react-simple-star-rating'
+import { Link,navigate } from 'gatsby';
+import useRole from './useRole';
 
 const product ={
   width:'100px',
@@ -39,6 +41,7 @@ const ProductImageWrapper= styled.div`
 
 li{
   display:block;
+  cursor:pointer;
 }
 
 
@@ -113,6 +116,15 @@ const ProductWrapper = styled.div`
       min-width:100%;
     }
    }
+
+   .discount{
+     display:flex;
+     flex-wrap:wrap;
+      span{
+        margin: 0 2px;
+        flex: 1 0 150px;
+      }
+   }
 `
 const VarietyList = styled.ul`
  padding:0px;
@@ -139,7 +151,9 @@ export default function Product({data}) {
     
     const db = useFirestore()
     const sgproducts = data.contentfulProduct
-    
+    const { status, data: signInCheckResult } = useSigninCheck();
+    const auth = useAuth();
+    const { role} = useRole()
     console.log(sgproducts)
       const [selectedVariety,setSelectedVariety] = useState(sgproducts.varieties[0])
       const [productRating,setProductRating] = useState(null)
@@ -148,10 +162,11 @@ export default function Product({data}) {
       const [showModal, setShowModal] = useState(false)
       const firestore = useFirestore();
       const ref = doc(firestore, 'product',selectedVariety.id );
-      const { status, data: product } = useFirestoreDocData(ref);
+      const { data: product } = useFirestoreDocData(ref);
       const { data: user } = useUser()
       console.log(selectedVariety)
       const docRef = doc(db, "products", sgproducts.id);
+
        /**/
       useEffect(() => {
        getDoc(docRef).then((data)=> {
@@ -161,9 +176,9 @@ export default function Product({data}) {
        })
       }, [])
 
-      const setAvailableQuantity = (available)=>{
+      const setAvailableQuantity = (settings)=>{
         setDoc(ref,{
-          available:available
+          ...settings
         },{merge:true})
         .then(()=>{console.log("Available quantity set");setShowModal(false)})
         .catch((e)=>console.log(e))
@@ -171,32 +186,57 @@ export default function Product({data}) {
 
       useEffect(() => {
         setSelectedImage(0)
-      }, [selectedVariety])
+      }, [selectedVariety.id])
       
-      const changeItemCount =(changeQty)=>{
-       if(selectedVariety.quantity+changeQty > selectedVariety.available)
-        setQty(selectedVariety.available)
-       else if(selectedVariety.quantity+changeQty < 1) 
+      const changeItemCount = (changeQty) =>{
+       if(selectedVariety.quantity+changeQty > product.available)
+        setQty(product.available)
+       else if((selectedVariety.quantity+changeQty) < 1) 
          setQty(1)
        else
-        setQty(qty+changeQty)
-        
+        setQty(prev=>prev+changeQty)
       }
       
       useEffect(() => {
        setSelectedVariety(prev=> {return {...prev,quantity:qty}})
       }, [qty])
+      
+      const buyNow =()=>{
+        if(!signInCheckResult.signedIn){
+          signInAnonymously(auth)
+          .then(({user}) => {
+            setDoc(doc(db, "buyNow",user.uid), {
+              user:user.uid,
+              items:[selectedVariety],
+              numberOfItems:selectedVariety.quantity,
+              dateCreated:serverTimestamp(),
+            })
+            .then(()=>{
+              navigate('/checkout',{state:{fromFeed:true}})
+            })
+           })
+          }
+          else
+          setDoc(doc(db, "buyNow",user.uid), {
+            user:user.uid,
+            items:[selectedVariety],
+            numberOfItems:selectedVariety.quantity,
+            dateCreated:serverTimestamp(),
+          })
+          .then(()=>{
+            navigate('/checkout',{state:{fromFeed:true}})
+          })
+        }
 
-      return (
-          
+      return(
             <ProductWrapper>
-              <div style={{width:'100%',display:'flex',flexWrap:'wrap',maxWidth:1200,justifyContent:'center'}}>      
+            <div style={{width:'100%',display:'flex',flexWrap:'wrap',maxWidth:1200,justifyContent:'center'}}>      
             <section>
                   <Selected>
                       <ProductImageWrapper>
-                      <img style={bigProduct} src={selectedVariety.images[selectedImage].fluid.src}/>
+                      <img style={bigProduct} src={selectedVariety.images[selectedImage].fluid.src} srcset={selectedVariety.images[selectedImage].fluid.srcset}/>
                       <ul>{selectedVariety.images.map((image,index)=>
-                          <li><img src={image.fluid.src} className={`selectable`}/> </li>
+                          <li onClick={()=>setSelectedImage(index)}><img src={image.fluid.src} srcSet={image.fluid.srcset} className={`selectable`}/> </li>
                         )}
                       </ul>
                       </ProductImageWrapper>
@@ -206,13 +246,20 @@ export default function Product({data}) {
               
                       <h2>{sgproducts.name}</h2>
                       {productRating?
-                      <Rating allowHalfIcon ratingValue={productRating.rating/20.0} readonly size={25} style={{width:'fit-content'}}/>:
-                      <h3>This product has not been rated yet</h3>}
+                      <Rating allowHalfIcon ratingValue={productRating.rating/20.0} readonly={true} size={25} style={{width:'fit-content'}}/>:
+                      <small>This product has not been rated yet</small>}
                       
                       <hr></hr>
                       <div className='description'>{sgproducts.description.description}</div>
                       <hr></hr>
-                      <div className='description price'>{`GHS ${selectedVariety.price}.00`}</div>
+                      {product.discount?
+                        <div className='discount'>
+                          <span ><small>now: </small><span className='price'>{`GHS ${(selectedVariety.price-product.discount).toFixed(2)}`}</span></span>
+                          <span><small>was:</small><span style={{textDecoration:'line-through'}}>{`GHS ${selectedVariety.price.toFixed(2)}`}</span></span>
+                          <span><small>save:</small>{`GHS ${(product.discount).toFixed(2)} (${((product.discount*100)/selectedVariety.price).toFixed(2)}%)`}</span>
+                        </div>:
+                       <div className='description price'>{`GHS ${selectedVariety.price.toFixed(2)}`}</div>
+                      }
                       <VarietyList>
                       {
                         sgproducts.varieties.map((variety,index)=>
@@ -226,38 +273,42 @@ export default function Product({data}) {
                   <div>{
                     product &&
                     <>
-                      <Button secondary onClick={()=> changeItemCount(-1) }>-</Button>
+                      <Button secondary onClick={()=> changeItemCount(-1) } style={{width:50}}>-</Button>
                        <Input onChange={(e)=>{+e.target.value>product.available?setQty(product.available):setQty(+e.target.value)}} 
                                 onBlur={()=>{qty >product.available?setQty(product.available): qty<1?setQty(1):setQty(qty)}}                        
                         min={1} max={product.available} value={qty} type='number' style={{width:50,padding:8}}/>  
-                      <Button secondary onClick={()=>changeItemCount(1)}>+</Button>
+                      <Button secondary onClick={()=>changeItemCount(1)} style={{width:50}}>+</Button>
                       <span>{product?product.available+' available':'Available not set'}</span>
                       </>
                        }
+                      
+                      {(user && role == 'admin 1' || role =='admin 2') &&
+                      <>
                       <Button secondary onClick={()=>setShowModal(true)}>Set Available</Button>
-                      <ProductSetting showModal={showModal} setShowModal={setShowModal} setAvailableQuantity={setAvailableQuantity}/>
+                      <ProductSetting showModal={showModal} price={selectedVariety.price} setShowModal={setShowModal} setAvailableQuantity={setAvailableQuantity} product={product}/>
+                      </>
+                      }
                   </div>
                   <div style={{margin:'10px 0px',display:'flex',flexWrap:'wrap'}}>
-                  <Button primary>Buy Now</Button>
+                  <Link to="/checkout/" state={{fromFeed:true}}>
+                    <Button primary onClick={()=>buyNow()}>Buy Now</Button>
+                  </Link>
                   <Errorwrapper>
-                  <AddtoBagButton selectedVariety={selectedVariety}  user={user} db={db}/>
+                  <AddtoBagButton selectedVariety={selectedVariety}  user={user} db={db} status={status} signInCheckResult={signInCheckResult} auth={auth}/>
                   </Errorwrapper>
-                  </div>  
-                  
+                  </div>   
               </section>
               </div>
               <div style={{width:"100%",maxWidth:1200,display:'flex',flexWrap:'wrap'}}>
                 <Review productName={sgproducts.name} productId={sgproducts.id} user={user}/>
               </div>
-              </ProductWrapper>
+            </ProductWrapper>
       )
   }
 
-  function AddtoBagButton({selectedVariety,user,db}){
-
+  function AddtoBagButton({selectedVariety,user,db,signInCheckResult,auth,status}){
     
-    const { status, data: signInCheckResult } = useSigninCheck();
-    const auth = useAuth();
+    
     console.log(signInCheckResult)
 
     const addCart = (cartUser)=>{
@@ -293,9 +344,9 @@ export default function Product({data}) {
       const cartRef = doc(db, 'carts', user.uid);
       const { data:cart } = useFirestoreDocData(cartRef);
       
-      const addToBag =()=>{
-         if(signInCheckResult.signedIn && !cart){
-          addCart(user)
+      const addToBag = () =>{
+      if(signInCheckResult.signedIn && !cart){
+         addCart(user)
       }
       else if (cart){    
           const findIndexOfVariety = cart.items.findIndex((item)=> item.name == selectedVariety.name)
@@ -304,7 +355,7 @@ export default function Product({data}) {
              const newItems = [...cart.items]
              newItems[findIndexOfVariety].quantity += selectedVariety.quantity
               console.log('newitems',newItems)
-             setDoc(doc(db, "carts", user.uid), {
+             setDoc(doc(db,"carts",user.uid), {
               items:newItems,
             },{merge:true})
             .then(()=>
@@ -329,7 +380,7 @@ export default function Product({data}) {
       }
       return(
         <Button secondary onClick={addToBag}>Add To Bag</Button>
-    )
+      )
     }
     
   if(status=='success'){
@@ -346,34 +397,37 @@ export default function Product({data}) {
     <div>Something went wrong...</div>
   }
 
-  function ProductSetting({setAvailableQuantity,showModal,setShowModal}){
-   return(
-     <ModalComponent showModal={showModal} setShowModal={setShowModal}>
-        <Formik
-        initialValues={{available:''}}
-       
-        onSubmit={(values, { setSubmitting }) => {
-          console.log(values)
-          setTimeout(() => {
-            setAvailableQuantity(values.available)
-            setSubmitting(false);
-          }, 400);
-        }}
-      >
-        {({ isSubmitting,setFieldValue,handleChange,values }) => (
-          <Form style={{width:'500px',display:'flex',flexWrap:'wrap'}}>
-              
-            <InputWrapper style={{minWidth:'100%'}}>
-                <Label for='name' > Available</Label>
-                <Input min={1} onChange={handleChange} value={values.available} name="available" type='number' style={{width:50,padding:8}}/> 
-            </InputWrapper>
-            <Btn secondary onClick={()=>setShowModal(false)} type='button'
-              style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Btn>
-            <Btn primary type='submit'  disabled={isSubmitting}
-              style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >DONE</Btn>
-          </Form>
-        )}
-      </Formik>
-     </ModalComponent>
-   )
-  }
+  function ProductSetting({setAvailableQuantity,showModal,setShowModal,product,price}){
+    const {available='',discount=0}= product
+    return(
+      <ModalComponent showModal={showModal} setShowModal={setShowModal}>
+          <Formik
+          initialValues={{available:available,discount:discount}}
+          onSubmit={(values, { setSubmitting }) => {
+            console.log(values)
+            setTimeout(() => {
+              setAvailableQuantity(values)
+              setSubmitting(false);
+            }, 400);
+          }}
+        >
+          {({isSubmitting,setFieldValue,handleChange,values}) => (
+            <Form style={{width:'500px',display:'flex',flexWrap:'wrap'}}>  
+              <InputWrapper style={{minWidth:'100%'}}>
+                  <Label for='available' > Available</Label>
+                  <Input min={1} onChange={handleChange} value={values.available} name="available" type='number' style={{width:50,padding:8}}/> 
+              </InputWrapper>
+              <InputWrapper style={{minWidth:'100%'}}>
+                  <Label for='discount' > Discount</Label>
+                  <Input min={0} max={price} step="0.01" onChange={handleChange} value={values.discount} name="discount" type='number' style={{width:50,padding:8}}/> 
+              </InputWrapper>
+              <Btn secondary onClick={()=>setShowModal(false)} type='button'
+                style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Btn>
+              <Btn primary type='submit'  disabled={isSubmitting}
+                style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >DONE</Btn>
+            </Form>
+          )}
+        </Formik>
+      </ModalComponent>
+    )
+}

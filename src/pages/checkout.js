@@ -5,7 +5,7 @@ import Errorwrapper from '../components/errorwrapper'
 import {Helmet} from "react-helmet";
 import { getAnalytics, logEvent } from "firebase/analytics";
 
-export default function Checkout() {
+export default function Checkout({location}) {
     const analytics = getAnalytics();
     return (
         <Layout>
@@ -14,7 +14,7 @@ export default function Checkout() {
             </script>
             </Helmet>
             <Errorwrapper>
-            <CheckoutComponent/>
+            <CheckoutComponent location ={location}/>
             </Errorwrapper>
         </Layout>
     )

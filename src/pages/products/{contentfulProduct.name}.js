@@ -32,6 +32,7 @@ query ($name: String) {
       images {
         fluid {
           src
+          srcSet
         }
       }
     }

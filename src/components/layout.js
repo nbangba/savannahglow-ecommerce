@@ -4,7 +4,7 @@ import Footer from './footer'
 import { getAuth } from 'firebase/auth'; // Firebase v9+
 import { doc, getFirestore } from 'firebase/firestore';
 import { FirestoreProvider, AuthProvider, useFirebaseApp ,SuspenseWithPerf} from 'reactfire';
-
+import {Helmet} from "react-helmet";
 
 export default function Layout({children}) {
     const auth = getAuth()

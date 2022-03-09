@@ -11,6 +11,7 @@ import { Card } from './card';
 import { CardItem } from './addresscard';
 import { Button as Butt } from './navbar'
 import Edit from '../images/edit.svg'
+import * as Yup from 'yup'
 
 export default function Review({productName,productId,user}) {
     const fs = useFirestore()
@@ -30,7 +31,6 @@ export default function Review({productName,productId,user}) {
       review:yourReviewArray[0]&&yourReviewArray[0].review?yourReviewArray[0].review:''
     }) 
     const [editReview, setEditReview] = useState(false)
-
      useEffect(() => {
        if(user){
         setReviewQuery(query(ref,where('userId','==',user.uid))) 
@@ -50,6 +50,12 @@ export default function Review({productName,productId,user}) {
       }
      }, [yourReviewArray])
     
+     const ratingSchema = Yup.object().shape({
+      rating: Yup.number().min(1).required('Rating Required'),
+      name: Yup.string().required('Name required'),
+    });
+
+    
     return (
       <>
         <section className='bottom'>
@@ -57,29 +63,18 @@ export default function Review({productName,productId,user}) {
             {allOtherReviews && allOtherReviews.map((review)=> <UserReview review={review} key={review.NO_ID_FIELD}/>)}
         </section>
         <section style={{width:'100%'}} className='top'>
-          <div className='description' style={{paddingInlineStart:10}}>Your Review</div>
+          <div className='description' style={{paddingInlineStart:10}}>{editReview?"Your Rating":"Your review"}</div>
           {
           yourReviewArray.length>0 && !editReview?
           <UserReview review={yourReviewArray[0]} user={user} setEditReview={setEditReview}/>:
           <Formik
           enableReinitialize = {true}
           initialValues = {yourReview}
-          validate = {values => {
-          const errors = {};
-          if (!values.email) {
-            errors.email = 'Required';
-          } else if (
-            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-          ) {
-            errors.email = 'Invalid email address';
-          }
-          return errors;
-        }}
+          validationSchema={ratingSchema}
         onSubmit={(values, { setSubmitting }) => {
           setTimeout(() => {
             values.productName =  productName;
             values.productId = productId;
-            
             console.log(JSON.stringify(values, null, 2));
             if(!yourReview.reviewId){
               console.log(yourReview)
@@ -104,38 +99,39 @@ export default function Review({productName,productId,user}) {
             rateProduct(values)
           }
           setEditReview(false)
-            setSubmitting(false);
+          setSubmitting(false);
           }, 400);
         }}
       >
-        {({ isSubmitting,setFieldValue,handleChange,values }) => (
-          
+        {({isSubmitting,setFieldValue,handleChange,values,handleReset }) => (
           <Form style={{maxWidth:'500px',display:'flex',flexWrap:'wrap'}}>
               <InputWrapper>
               {<Rating onClick={(r)=>setFieldValue('rating',r)} transition  ratingValue={values.rating/20.0} style={{width:'fit-content'}} key={values.review} />}
+              <ErrorMessage name="rating" component="div" />
               </InputWrapper>
              { (!user || user.isAnonymous) &&
-             <>
-            <InputWrapper style={{minWidth:'100%'}}>
-                <Label for='name' > Name</Label>
-                <Input onChange={handleChange} value={values.name} type="text" name="name"  id='name' />
-            </InputWrapper>
-          
-            <InputWrapper wide>
-                <Label for='email' >Email</Label>
-                <Input onChange={handleChange} value={values.email} type="email" name="email" id="email" />
-                <ErrorMessage name="email" component="div" />
-            </InputWrapper>
+            <>
+              <InputWrapper style={{minWidth:'100%'}}>
+                  <Label for='name' > Name</Label>
+                  <Input onChange={handleChange} value={values.name} type="text" name="name"  id='name' />
+                  <ErrorMessage name="name" component="div" />
+              </InputWrapper>
+            
+              <InputWrapper wide>
+                  <Label for='email' >Email</Label>
+                  <Input onChange={handleChange} value={values.email} type="email" name="email" id="email" />
+                  <ErrorMessage name="email" component="div" />
+              </InputWrapper>
             </>
             }
             <InputWrapper style={{minWidth:'100%'}}>
                 <Label for='review' >Your Review</Label>
-               
                 <TextAreaInput onChange={handleChange} value={values.review} rows='5' name="review" id="review" />
             </InputWrapper>
             <div style={{width:'100%',display:'flex'}}>
-            <Button type='button' onClick={()=>setEditReview(false)}>Cancel</Button>
-            <Button type='submit'>Submit</Button>
+            <Button secondary type='button' onClick={handleReset}>Reset</Button>
+            {yourReviewArray.length>0 && <Button secondary type='button' onClick={()=>setEditReview(false)}>Cancel</Button>}
+            <Button primary type='submit'>Submit</Button>
             </div>
             {console.log(values)}
           </Form>
@@ -143,9 +139,8 @@ export default function Review({productName,productId,user}) {
       </Formik>
       } 
       </section>
-      
-        </>
-    )
+    </>
+  )
 }
 
 function UserReview({review,user,setEditReview}){
@@ -153,9 +148,9 @@ function UserReview({review,user,setEditReview}){
   return(
     <Card style={{borderRadius:5 ,maxWidth:500}}>
        <CardItem style={{fontWeight:'bold'}}>{review.name}</CardItem>
-       <Rating ratingValue={rating} size={20} allowHalfIcon readonly style={{width:'fit-content'}} key={review.review}/>
+       <Rating ratingValue={rating} size={20} allowHalfIcon readonly style={{width:'fit-content'}} key={review.review+review.rating}/>
        <CardItem>{review.review}</CardItem>
-       {(user&&user.uid==review.userId)&&<CardItem onClick={()=>setEditReview(true)}><Butt secondary><Edit fill="#474E52" style={{width:20,height:20}}/>Edit</Butt></CardItem>}
+       {(user&&user.uid==review.userId)&&<CardItem ><Butt secondary onClick={()=>setEditReview(true)}><Edit fill="#474E52" style={{width:20,height:20}}/>Edit</Butt></CardItem>}
     </Card>
   )
 }

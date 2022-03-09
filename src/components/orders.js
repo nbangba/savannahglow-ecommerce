@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import CardComponent from './card'
-import { doc, getFirestore,collection,query,orderBy,where} from 'firebase/firestore';
+import { doc, getFirestore,collection,query,orderBy,where, limit} from 'firebase/firestore';
 import { useUser,useFirestoreCollectionData, useFirestore} from 'reactfire';
 import { updateEmail,updatePassword,deleteUser} from 'firebase/auth'; // Firebase v9+
 import { CardItem } from './addresscard'
@@ -14,6 +14,8 @@ import {pdf} from '@react-pdf/renderer';
 import PDFDoc from './pdfdoc';
 import { saveAs } from 'file-saver';
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { LoadMore } from './adminCustomerOrders';
+import { Link } from 'gatsby';
 
 const moment = require('moment')
 
@@ -39,9 +41,11 @@ export default function Orders(){
 function OrdersComponent({user}) {
   const firestore = useFirestore();
   //const { status, data: signInCheckResult } = useSigninCheck()
+  const ORDERS_PER_PAGE = 12
+  const [page, setPage] = useState(1)
   const ordersCollection = collection(firestore, 'orders');
-  const ordersQuery = user && query(ordersCollection,where('user', '==',user.uid),
-                                                   orderBy('orderCreated','desc'))
+  const ordersQuery = user && query(ordersCollection,where('user','==',user.uid),
+                                                   orderBy('orderCreated','desc'),limit(page*ORDERS_PER_PAGE))
   const { status, data:orders } = useFirestoreCollectionData(ordersQuery);
   console.log('orders',orders)
   if(orders.length>0)
@@ -52,10 +56,11 @@ function OrdersComponent({user}) {
             <OrderCard order={order} role='owner'/>
           )
         }
+        <LoadMore setPage={setPage} ORDERS_PER_PAGE={ORDERS_PER_PAGE}  numberOfItems={orders.length}/>
       </OrderWrapper>
     )
   else
-  return <div>nothing found</div>
+  return <div> nothing found </div>
 }
 
 
@@ -66,38 +71,80 @@ export function OrderCard({order,role=null,children}){
                 {moment.unix(order.orderCreated.seconds).calendar(null,{sameElse:'DD/MM/YY [at] hh:mm a'})}
               </CardItem>
               <CardItem>
-              <span style={{fontWeight:'bold'}}>Order Id: </span>
+                <span style={{fontWeight:'bold'}}>Order Id: </span>
                 {leadingZeros(5,order.orderID)}
               </CardItem>
               <CardItem>
               <span style={{fontWeight:'bold'}}> Order status</span>: {order.orderStatus}
               </CardItem>
-              {order.order.items.map(item=> 
-                                       <CardItem>
-                                        <CardItem style={{fontWeight:'bold'}}>Savannah Glow</CardItem> 
-                                        <div style={{display:'flex'}}>
-                                         <img style={{width:100,objectFit:'contain'}} src={item.images[0].fluid.src}/>
-                                         <CardItem>
-                                        <CardItem>{item.name} </CardItem>
-                                        <CardItem>{'GHS '+item.price +' * '+ item.quantity} </CardItem>
-                                        </CardItem>
-                                        </div>
-                                        </CardItem>
-                                      )}
-              <CardItem><span style={{fontWeight:'bold'}}>Quantity</span>: 7</CardItem>     
-              <CardItem><span style={{fontWeight:'bold'}}>Total</span>: GHS {calculateSubTotal(order.order.items)}</CardItem>     
               <CardItem>
-                {(order.orderStatus =='received' &&  role != 'dispatch') && <Button secondary onClick={()=>refund(order.response.reference,(order.order.amount*100)+"")}>Cancel order</Button>} 
+                <span style={{fontWeight:'bold'}}>Deliver To</span>:<div>{order.order.orderAddress.firstname} {order.order.orderAddress.lastname}</div> 
+                {order.order.orderAddress.loc?<div><a style={{textDecoration:'none'}} target="_blank" href={`https://www.google.com/maps/search/?api=1&query=${order.order.orderAddress.loc.lat},${order.order.orderAddress.loc.lng}`}>{order.order.orderAddress.location}</a></div>:
+                <div>{order.order.orderAddress.location}</div>}
+                <div>{order.order.orderAddress.phone}</div>
+              </CardItem>
+              {order.order.items.slice(0,1).map(item=> 
+                                       <CardItem>
+                                          <CardItem style={{fontWeight:'bold'}}>Savannah Glow</CardItem> 
+                                          <div style={{display:'flex'}}>
+                                          <img style={{width:100,objectFit:'contain'}} src={item.images[0].fluid.src}/>
+                                          <CardItem>
+                                          <CardItem>{item.name} </CardItem>
+                                          {item.discount?
+                                            <>
+                                             <CardItem >
+                                               <span>
+                                                <span style={{fontWeight:'bold'}}><small>Original</small> Price: </span>
+                                                <span style={{textDecoration:'line-through',color:'grey'}}>{` GHS ${item.price.toFixed(2)}`}</span>
+                                                </span>
+                                             </CardItem>
+                                             <CardItem>
+                                               <span>
+                                               <span style={{fontWeight:'bold'}}><small>Discounted</small> Price: </span>
+                                               <span >{' GHS '+(item.price-item.discount).toFixed(2)}</span>
+                                               </span>
+                                             </CardItem>
+                                             </>
+                                             :
+                                             <CardItem>
+                                               <span>
+                                               <span style={{fontWeight:'bold'}}>Price:</span>
+                                               <span style={{textDecoration:'strike-through'}}>{' GHS '+(item.price-item.discount).toFixed(2)}</span>
+                                               </span>
+                                             </CardItem>
+                                           }
+                                            
+                                           <CardItem>
+                                             <span>
+                                               <span style={{fontWeight:'bold'}}>Qty: </span>
+                                               <span >{item.quantity}</span>
+                                               </span>
+                                           </CardItem>
+                                           <CardItem>
+                                             <span>
+                                              <span style={{fontWeight:'bold'}}>Sub Total:</span>
+                                              <span style={{textDecoration:'strike-through'}}>{' GHS '+((item.price-item.discount)*item.quantity).toFixed(2)}</span>
+                                              </span>
+                                             </CardItem>
+                                          </CardItem>
+                                          </div>
+                                          {order.order.items.length >1 && <CardItem>{`${order.order.items.length -1 } item(s) not shown`}</CardItem>}
+                                        </CardItem>  
+                                      )}
+              <CardItem><span style={{fontWeight:'bold'}}>Total</span>: GHS {order.order.amount?order.order.amount:calculateSubTotal(order.order.items)}</CardItem>     
+              <CardItem>
+                {(order.orderStatus =='received' &&  role != 'dispatch') && <Button secondary onClick={()=>refund(order)}>Cancel order</Button>} 
                 {order.orderStatus !='cancelled' && <Button onClick={()=>generatePdfDocument(order,`sg-receipt-${leadingZeros(5,order.receiptID)}`)}>
                     Download Receipt
                 </Button>}
+                <Link to={`../../order/${order.NO_ID_FIELD}`}><Button secondary >See More</Button></Link>
                {children && children}
               </CardItem>                 
             </CardComponent>
       )
 }
 
-const generatePdfDocument = async (order,fileName) => {
+export const generatePdfDocument = async (order,fileName) => {
   const blob = await pdf((
       <PDFDoc  order={order}/>
      )).toBlob();

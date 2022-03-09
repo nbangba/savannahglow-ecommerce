@@ -36,8 +36,9 @@ const Navbar = styled.div`
         object-fit: cover;
         @media only screen and (max-width: 899px) {  
             position: absolute;
-            right: 50%;
+            right: 55%;
             width:80px;
+            top:5px;
             }
             
     }
@@ -68,7 +69,7 @@ export const Menu = styled.ul`
   align-items:center;
   padding:0px;
   font-family: 'Ubuntu', sans-serif;
-
+  margin:0px;
   ${props => props.left && css`
   justify-content:flex-end;
   `}
@@ -97,10 +98,10 @@ export const MenuItem = styled.li`
            }
        }
 `
-export const Button = styled.div`
+export const Button = styled.button`
    position:relative;
    color: #35486F;;
-   display:block;
+   border:none;
    cursor:pointer;
    width:100px;
    padding:10px;
@@ -136,17 +137,16 @@ export const Button = styled.div`
      text-align:center;
      display:inline-flex;
      border-radius:5px;
-     width:50px;
+     width:100px;
      margin:5px;
      align-items: center;
      justify-content: center;
      min-width:fit-content;
      &:hover{
-         color:#35486F;
+        color:#35486F;
         background-color:rgba(224,193,175,0.8);
         font-weight:bold;
         transition: background 0.3s ease-out;
-    
     }
   `}
 `
@@ -186,12 +186,11 @@ const MenuIcon = styled.div`
   @media only screen and (max-width: 899px) {
     display:flex;
    }
-
 `
 export default function Nav() {
     const [openDrawer, setOpenDrawer] = useState(false)
     const messaging = getMessaging()
-    const menuItems = ['Home','Catlogue','Blog','Support','Products']
+    const menuItems = ['Home','Blogs','Faq','Products']
     useEffect(() => {
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker
@@ -220,12 +219,10 @@ export default function Nav() {
             }
     }, [])
     
-            
-           
-    
     return (
         <Navbar>
-            <MenuIcon onClick={()=>setOpenDrawer(true)}><HamburgerIcon style={{width:50,height:50}}/></MenuIcon>
+           
+            <MenuIcon onClick={()=>setOpenDrawer(true)}><HamburgerIcon style={{width:40,height:40,zIndex:100}}/></MenuIcon>
             <Drawer openDrawer={openDrawer} setOpenDrawer={setOpenDrawer}>
             <MenuContent >
                 {menuItems.map(item=> 
@@ -234,7 +231,7 @@ export default function Nav() {
             </MenuContent>
             </Drawer>
             <div className='logoMobile'>
-            <Logo  style={{width:100,height:100}}/>
+            <Logo  style={{width:80,height:80}}/>
             </div>
             <Menu className='desktop-menu' style={{flexGrow:10}}>
                 {menuItems.map(item=> <MenuItem><Link to={item==='Home'?'/':`/${item.toLowerCase()}`} >{item}</Link> </MenuItem>)}
@@ -251,7 +248,7 @@ function LoginStatus(){
     const [showModal, setshowModal] = useState(false)
     const [loggedIn, setloggedIn] = useState(null)
     const [showPopper, setshowPopper] = useState(false)
-    const subMenuItems =['Profile','History','Settings']
+    const subMenuItems =['Profile','Orders','Settings']
 
     const { data: user } = useUser()
     const { status, data: signInCheckResult } = useSigninCheck();
@@ -294,7 +291,7 @@ function LoginStatus(){
                         
                     </Popper> 
                     :
-                    <MenuItem><Button primary onClick={()=>window.open('http://localhost:8000/signin', 'Sign In', 'width=985,height=735')}>Sign In</Button></MenuItem>
+                    <MenuItem><Button primary onClick={()=>navigate('/signin')}>Sign In</Button></MenuItem>
                 }
                 </>
                 }  

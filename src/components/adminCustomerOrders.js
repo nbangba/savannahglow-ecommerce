@@ -1,6 +1,6 @@
 import React,{useEffect, useState} from 'react'
 import {useFirestore,useFirestoreCollectionData,useAuth,useUser} from 'reactfire'
-import { collection,query,orderBy,setDoc,doc,serverTimestamp,where,limit,startAt,endAt} from "firebase/firestore";
+import { collection,query,orderBy,setDoc,doc,serverTimestamp,where,limit,startAt,endAt, addDoc} from "firebase/firestore";
 import { OrderCard } from './orders';
 import { Button } from './navbar';
 import ModalComponent from './modal';
@@ -9,6 +9,9 @@ import styled from 'styled-components';
 import CreatableSelect from 'react-select/creatable';
 import useRole from './useRole';
 import QueryOptions from './queryOptions';
+
+const moment = require('moment')
+
 const TA = styled.div`
     display: block;
     width: 100%;
@@ -36,8 +39,10 @@ export default function  AdminCustomers() {
     const { data: user } = useUser()
     const ordersCollection = collection(firestore, 'orders');
     const ordersQuery = query(ordersCollection, orderBy('orderCreated', 'desc'),limit(1));
+    const currentTime = new Date(0)
     const {role} = useRole()
     const [orderStatus, setOrderStatus] = useState('all')
+    const [orderDate, setOrderDate] = useState(currentTime)
     const [queryOptions, setqueryOptions] = useState(ordersQuery)
     const [desc, setdesc] = useState(true)
     const { status, data:orders } = useFirestoreCollectionData(queryOptions);
@@ -46,13 +51,20 @@ export default function  AdminCustomers() {
     console.log('role',role)
 
     useEffect(() => {
+        console.log(orderDate)
         if(orderStatus == 'all' && (role =='admin 1' || role =='admin 2'))
-        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),limit(page*ORDERS_PER_PAGE)))
+        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),
+        where('orderCreated','>=',orderDate),limit(page*ORDERS_PER_PAGE)))
+
         else if(role=='dispatch')
-        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),where('dispatcher.uid','==',user.uid),limit(page*ORDERS_PER_PAGE)))
+        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),
+        where('orderStatus','==',orderStatus),where('dispatcher.uid','==',user.uid),
+        where('orderCreated','>=',orderDate),limit(page*ORDERS_PER_PAGE)))
+
         else
-        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),where('orderStatus','==',orderStatus),limit(page*ORDERS_PER_PAGE)))
-    }, [orderStatus,role,page])
+        setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),
+        where('orderStatus','==',orderStatus),where('orderCreated','>=',orderDate),limit(page*ORDERS_PER_PAGE)))
+    }, [orderStatus,role,page,orderDate])
 
     console.log(orders)
     
@@ -61,7 +73,18 @@ export default function  AdminCustomers() {
             orderStatus:'delivered',
             deliveryTime:serverTimestamp(),
           },{merge:true})
-          .then(()=>console.log('Order delivered'))
+          .then(()=>{
+            addDoc(collection(firestore,'mail'),{
+                to:['nbangba.la@gmail.com'],
+                template: {
+                    name:'orderStatus',
+                    data:{
+                        ...order.order,
+                        orderStatus:'delivered'
+                    }
+                  }
+            }) 
+              console.log('Order delivered')})
           .catch((e)=>console.log(e))
     }
 
@@ -70,7 +93,7 @@ export default function  AdminCustomers() {
   if(role && role != 'none')
   return (
    <div>
-       <QueryOptions setOrderStatus={setOrderStatus}/>
+       <QueryOptions setOrderStatus={setOrderStatus} setOrderDate={setOrderDate}/>
        <AdminOrders>
        {orders.map((order)=>
         <OrderCard order={order} role={role} key= {order.NO_ID_FIELD}>
@@ -94,7 +117,7 @@ export default function  AdminCustomers() {
         </OrderCard>             
        )}
        </AdminOrders>
-       <button onClick={()=>setPage(prev=>prev+1)}>Load more</button>
+       <LoadMore numberOfItems={orders.length}  setPage={setPage} ORDERS_PER_PAGE={ORDERS_PER_PAGE}/>
    </div>
   )
   else 
@@ -111,6 +134,7 @@ function Delivery({order,user}){
     const [selected, setselected] = useState([])
     const options =[{label:'Couldnt reach customer'},{label:'Wrong Order'},{label:'Other'}]
     const [showModal, setshowModal] = useState(false)
+
     const onDeliveryFailed =(order,selected)=>{
         const failedReason = {reason:selected.label,loggedBy:user.displayName,uid:user.uid}
         const newReasonDeliveryFailed = order.reasonsDeliveryFailed?[failedReason,...order.reasonsDeliveryFailed]:
@@ -120,7 +144,7 @@ function Delivery({order,user}){
             reasonsDeliveryFailed:newReasonDeliveryFailed,
             failedDeliveryTime:serverTimestamp(),
           },{merge:true})
-          .then(()=>console.log('Order dispatched'))
+          .then(()=>{console.log('Order dispatched')})
           .catch((e)=>console.log(e))
     }
     
@@ -134,11 +158,13 @@ function Delivery({order,user}){
                 Delivery Failed
               </Button>
     <ModalComponent showModal={showModal}>
+        <div style={{minHeight:300}}>
        <CreatableSelect
        styles={{container: base => ({
         ...base,
-        flex: '1 1 ',
-        maxWidth:500
+        flex: '1 1 200px',
+        maxWidth:500,
+        minWidth: 200,
       })}}
        className="basic-single"
        classNamePrefix="select"
@@ -148,9 +174,10 @@ function Delivery({order,user}){
        onChange={setselected}
        selected={selected}
        />
-       <div style={{width:'100%',textAlign:'center'}}>
-           <button onClick={()=>{onDeliveryFailed(order,selected);setshowModal(false)}}>Submit</button>
-       <button onClick={()=>setshowModal(false)}>Cancel</button>
+       <div style={{width:'100%',textAlign:'center',marginTop:100}}>
+           <Button style={{display:'initial'}} primary onClick={()=>{onDeliveryFailed(order,selected);setshowModal(false)}}>Submit</Button>
+           <Button style={{width:'100px'}} secondary onClick={()=>setshowModal(false)}>Cancel</Button>
+       </div>
        </div>
     </ModalComponent>
     </>
@@ -164,7 +191,7 @@ function Dispatch({order}){
     const usersQuery = query(usersCollection,where('deleted','==',false),where('role','==','dispatch'))
     const { status, data:users } = useFirestoreCollectionData(usersQuery);
 
-    const options =users && users.map((user)=>{return {label:user.displayName,uid:user.uid}})
+    const options = users && users.map((user)=>{return {label:user.displayName,uid:user.uid}})
 
     const [showModal, setshowModal] = useState(false)
 
@@ -179,7 +206,19 @@ function Dispatch({order}){
             dispatcher:dispatcher,
             dispatcherHistory:newDispatcherHistory,
           },{merge:true})
-          .then((r)=>console.log('Order dispatched',r))
+          .then((r)=>{
+              console.log('result',r)
+            addDoc(collection(firestore,'mail'),{
+                to:['nbangba.la@gmail.com'],
+                template: {
+                    name:'orderStatus',
+                    data:{
+                        ...order.order,
+                        orderStatus:'dispatched'
+                    }
+                  }
+            }) 
+            console.log('Order dispatched',r)})
           .catch((e)=>console.log(e))
     }
 
@@ -187,6 +226,13 @@ function Dispatch({order}){
         console.log(selected)
     }, [selected])
     
+    const handleChange = (selected) =>{
+      if(selected.uid)
+      setselected(selected)
+      else
+      setselected({label:selected.label,uid:null})
+    }
+
     return(
         <>
          <Button onClick={()=>setshowModal(true)}>
@@ -204,7 +250,7 @@ function Dispatch({order}){
        isClearable={true}
        options={options}
        placeholder={'Search or Enter a dispatch name'}
-       onChange={setselected}
+       onChange={handleChange}
        selected={selected}
        />
        <div style={{width:'100%',textAlign:'center'}}>
@@ -215,3 +261,16 @@ function Dispatch({order}){
     </>
     )
 }
+
+export function LoadMore({numberOfItems,setPage,ORDERS_PER_PAGE}){
+    if(numberOfItems == 0)
+    return <div style={{width:'100%',display:'flex',justifyContent:'center',fontFamily:'Montserrat'}}> No Results</div>
+    if(numberOfItems%ORDERS_PER_PAGE == 0)
+    return(
+        <div style={{width:'100%',display:'flex',justifyContent:'center',fontFamily:'Montserrat'}}>
+        <Button secondary onClick={()=>setPage(prev=>prev+1)} >Load more</Button>
+        </div>
+    )
+    return <div style={{width:'100%',display:'flex',justifyContent:'center',fontFamily:'Montserrat'}}> End of results</div>
+}
+

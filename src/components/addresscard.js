@@ -6,8 +6,8 @@ import Edit from '../images/edit.svg'
 import { Button } from './navbar'
 import ModalComponent from './modal'
 import AddressForm from './addressform'
-import { doc, deleteDoc,getFirestore,setDoc } from "firebase/firestore";
-import {  useFirebaseApp,useSigninCheck,useUser} from 'reactfire';
+import {doc,deleteDoc,getFirestore,setDoc } from "firebase/firestore";
+import {useFirebaseApp,useSigninCheck,useUser} from 'reactfire';
 
 
 export const CardItem = styled.div`
@@ -100,13 +100,13 @@ export function AddressCardOptions({setDefaultAddress,defaultAddress,addressInfo
   )
 }
 
-export function DeleteDialog({setShowDialog,deleteItem,showModal}){
+export function DeleteDialog({setShowDialog,deleteItem,showModal,title}){
   return(
     <ModalComponent showModal={showModal}>
     <div>
-      <div>Are you sure you want to delete this address</div>
-      <button onClick={()=>{deleteItem(); setShowDialog(false)}} >YES</button>
-      <button onClick={()=>setShowDialog(false)}>NO</button>
+      <div>{title}</div>
+      <Button primary onClick={()=>{deleteItem(); setShowDialog(false)}} >YES</Button>
+      <Button  secondary  onClick={()=>setShowDialog(false)}>NO</Button>
     </div>
     </ModalComponent>
   )

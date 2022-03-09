@@ -3,7 +3,7 @@ import { Page, Text, View, Document, StyleSheet ,PDFViewer,Font} from '@react-pd
 import { leadingZeros } from '../helperfunctions';
 import Regular from '../fonts/Montserrat/Montserrat-Regular.ttf'
 import Bold from '../fonts/Montserrat/Montserrat-Bold.ttf'
-import { calculateSubTotal } from '../helperfunctions';
+import { calculateDiscountedSubTotal } from '../helperfunctions';
 const styles =StyleSheet.create({
     body: {
       paddingTop: 35,
@@ -89,7 +89,7 @@ export default function PDFDoc({order}) {
         alert('An error has occurred: '+e.message)
     }
 
-    const subTotal = calculateSubTotal(order.order.items)
+    const subTotal = calculateDiscountedSubTotal(order.order.items)
     return (
         <Document>
         <Page size="A4" style={styles.body}>
@@ -119,11 +119,9 @@ export default function PDFDoc({order}) {
             </View>
             <Text>Order Summary</Text>
             <View style={styles.view}>
+                
                 <View>
                 <Text style={styles.headerText}>Product</Text>
-                </View>
-                <View>
-                <Text style={styles.headerText}>Variety</Text>
                 </View>
                 <View>
                 <Text style={styles.headerText}>Quantity</Text>
@@ -132,14 +130,15 @@ export default function PDFDoc({order}) {
                 <Text style={styles.headerText}>Unit Price (GHS)</Text>
                 </View>
                 <View>
+                <Text style={styles.headerText}>Unit Discount (GHS)</Text>
+                </View>
+                <View>
                 <Text style={styles.headerText}>Total Price (GHS)</Text>
                 </View>
               </View>
             { order.order.items.map((item)=>
               <View style={styles.view}>
-                <View>
-                <Text style={styles.text}>Savannah Glow Shea Butter</Text>
-                </View>
+                
                 <View>
                 <Text style={styles.text}>{item.name}</Text>
                 </View>
@@ -150,13 +149,16 @@ export default function PDFDoc({order}) {
                 <Text style={{...styles.text,textAlign:'right',paddingRight:15}}>{(item.price).toFixed(2)}</Text>
                 </View>
                 <View>
-                <Text style={{...styles.text,textAlign:'right',paddingRight:15}}>{(item.quantity*item.price).toFixed(2)}</Text>
+                <Text style={{...styles.text,textAlign:'right',paddingRight:15}}>{(item.discount?item.discount:0).toFixed(2)}</Text>
+                </View>
+                <View>
+                <Text style={{...styles.text,textAlign:'right',paddingRight:15}}>{(item.quantity*(item.price-item.discount)).toFixed(2)}</Text>
                 </View>
               </View>
             )}
                 <View style={{...styles.view,justifyContent:'flex-end'}}>
                 <Text style={{...styles.text,fontWeight:'bold',}}>Sub Total:</Text>
-                <Text style={{...styles.text,textAlign:'right',paddingRight:17}}>{(subTotal).toFixed(2)}</Text>
+                <Text style={{...styles.text,textAlign:'right',paddingRight:17}}>{(subTotal)}</Text>
                 </View>
                 <View style={{...styles.view,justifyContent:'flex-end'}}>
                 <Text style={{...styles.text,fontWeight:'bold'}}>Shipping:</Text>
@@ -164,7 +166,7 @@ export default function PDFDoc({order}) {
                 </View>
                 <View style={{...styles.view,justifyContent:'flex-end'}}>
                 <Text style={{...styles.text,fontWeight:'bold'}}>Total:</Text>
-                <Text style={{...styles.text,textAlign:'right',paddingRight:17}}>{(subTotal).toFixed(2)}</Text>
+                <Text style={{...styles.text,textAlign:'right',paddingRight:17}}>{(subTotal)}</Text>
                 </View>
               </View>
           <View style={styles.header}>

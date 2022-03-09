@@ -14,7 +14,7 @@ export default function useRole() {
            setRole(idTokenResult.claims.role)
          } else {
            // Show regular user UI.
-          setRole('none')
+          setRole('')
          }
         })
         .catch((error) => {

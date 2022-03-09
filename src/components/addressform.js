@@ -4,9 +4,9 @@ import styled,{css} from 'styled-components'
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import Autocomplete from "react-google-autocomplete";
-import { useSigninCheck,useUser,useFirestore} from 'reactfire';
-import { collection, addDoc, serverTimestamp,doc, setDoc } from "firebase/firestore";
-
+import { useSigninCheck,useUser,useFirestore,useFirestoreCollectionData} from 'reactfire';
+import { collection, addDoc, serverTimestamp,doc, setDoc,where,query,orderBy } from "firebase/firestore";
+import * as Yup from 'yup'
 
 const textInput = `width: 100%;
   padding: 12px 20px;
@@ -141,18 +141,23 @@ export const Button = styled.button`
                                       street:'',
                                       city:'',
                                       state:'',
-                                      country:''}}) {
+                                      country:'',loc:{lat:'',lng:''}}}) {
    
     const db = useFirestore()
     const { status, data: signInCheckResult } = useSigninCheck();
     const {status:info, data: user } = useUser()
     const addressId = addressInfo.NO_ID_FIELD
+    const addressesCollection = collection(db, 'addresses');
+    const addressesQuery = query(addressesCollection,orderBy('dateCreated', 'desc'),where('user','==',user.uid))
+    const {data:addresses } = useFirestoreCollectionData(addressesQuery);
+   
+    console.log(addresses)
     const setAddress =(place,setFieldValue,values)=>{
       let address1=''
       let postcode=''
       for (const component of place.address_components) {
         const componentType = component.types[0];
-        
+
         switch (componentType) {
           case "street_number": {
             address1 = `${component.long_name} ${address1}`;
@@ -193,23 +198,22 @@ export const Button = styled.button`
       // prediction, set cursor focus on the second address line to encourage
       // entry of subpremise information such as apartment, unit, or floor number.
     }
- 
+
+    const phoneRegExp = /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/
+
+    const addressSchema = Yup.object().shape({
+      firstname: Yup.string().required('First name is required'),
+      lastname: Yup.string().required('Last name is required'),
+      email: Yup.string().email().required('Email is required'),
+      phone: Yup.string().matches(phoneRegExp, 'Phone number is not valid').required('Phone number required'),
+      location: Yup.string().required('A location is required'),
+    });
+
      return(
-    <>
-        
+    <>   
       <Formik
         initialValues={{...addressInfo}}
-        validate={values => {
-          const errors = {};
-          if (!values.email) {
-            errors.email = 'Required';
-          } else if (
-            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-          ) {
-            errors.email = 'Invalid email address';
-          }
-          return errors;
-        }}
+        validationSchema={addressSchema}
         onSubmit={(values, { setSubmitting }) => {
           setTimeout(() => {
             console.log(JSON.stringify(values, null, 2));
@@ -220,18 +224,28 @@ export const Button = styled.button`
                 setDoc(doc(db, "addresses", addressId), {
                   ...values
                 },{merge:true})
-                .then(()=> console.log('address updated'))
+                .then(()=> {console.log('address updated');setShowModal(false)})
               .catch((e)=>console.log(e))
               }
-              else{
+              else if(addresses && addresses.length == 0){
              addDoc(collection(db, "addresses"), {
                 user:user.uid,
                 dateCreated:serverTimestamp(),
+                isDefault:true,
                 ...values
               })
-              .then(()=> console.log('address added'))
+              .then(()=> {console.log('address added');setShowModal(false)})
               .catch((e)=>console.log(e))
             }
+            else{
+              addDoc(collection(db, "addresses"), {
+                 user:user.uid,
+                 dateCreated:serverTimestamp(),
+                 ...values
+               })
+               .then(()=>{console.log('address updated');setShowModal(false)})
+               .catch((e)=>console.log(e))
+              }
           }
             setSubmitting(false);
           }, 400);
@@ -242,10 +256,12 @@ export const Button = styled.button`
             <InputWrapper>
                 <Label for='firstname' >First Name</Label>
                 <Input onChange={handleChange} value={values.firstname} type="text" name="firstname"  id='firstname' />
+                <ErrorMessage name="firstname" component="div" />
             </InputWrapper>
             <InputWrapper>
                 <Label for='lastname' >Last Name</Label>
                 <Input onChange={handleChange} value={values.lastname} type="text" name="lastname"  id='lastname' />
+                <ErrorMessage name="lastname" component="div" />
             </InputWrapper>
             <InputWrapper wide>
                 <Label for='email' >Email</Label>
@@ -253,10 +269,11 @@ export const Button = styled.button`
                 <ErrorMessage name="email" component="div" />
             </InputWrapper>
             <InputWrapper wide>
-            <Label for='phone' >Phone Number</Label>
-            <PhoneInput country='gh' onChange={(value,country,e)=>handleChange(e)} 
-            value={values.phone} inputProps={{name:"phone"}} type="text"  id="phone" 
-            dropdownStyle={{...dropDownStyle}} inputStyle={{...reactTextInput}}/>
+              <Label for='phone' >Phone Number</Label>
+              <PhoneInput country='gh' onChange={(value,country,e)=>handleChange(e)} 
+              value={values.phone} inputProps={{name:"phone"}} type="text"  id="phone" 
+              dropdownStyle={{...dropDownStyle}} inputStyle={{...reactTextInput}}/>
+              <ErrorMessage name="phone" component="div" />
             </InputWrapper>
             <InputWrapper wide>
             <Label for='location' >Location</Label>
@@ -272,11 +289,13 @@ export const Button = styled.button`
             }}
             onPlaceSelected={(place) =>{
               setFieldValue("location",`${place.name}, ${place.formatted_address}`)
+              setFieldValue("loc",{lat:place.geometry.location.lat(),lng:place.geometry.location.lng()})
               setAddress(place,setFieldValue,values)
-              console.log(values)
+              console.log(place.geometry.location.lat())
             }
             }
             onChange={handleChange}/>
+            <ErrorMessage name="location" component="div" />
             </InputWrapper>
             <InputWrapper>
                 <Label for="street" >Street</Label>
@@ -295,7 +314,7 @@ export const Button = styled.button`
                 <Input onChange={handleChange} value={values.country}  type="text" name="country" id="country"/>
             </InputWrapper>
             <InputWrapper style={{display:'flex',justifyContent:'flex-end'}} >
-            <Button secondary onClick={()=>setShowModal(false)} type='button'
+            <Button secondary  onClick={()=>setShowModal(false)} type='button'
               style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
               <Button primary type='submit'  disabled={isSubmitting}
               style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >DONE</Button>

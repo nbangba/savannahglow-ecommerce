@@ -19,12 +19,17 @@ import * as Yup from 'yup'
 //import { useFirestoreConnect } from 'react-redux-firebase';
 //import { useSelector } from 'react-redux';
 import Addresscard from './addresscard';
-import { doc, getFirestore,collection,query,orderBy,where} from 'firebase/firestore';
-import { useUser,useFirestoreCollectionData, useFirestore} from 'reactfire';
+import { doc, getFirestore,collection,query,orderBy,where, deleteDoc, setDoc} from 'firebase/firestore';
+import { useUser,useFirestoreCollectionData,useFirestoreDocData, useFirestore} from 'reactfire';
 import { updateEmail,updatePassword,deleteUser} from 'firebase/auth'; // Firebase v9+
 import Errorwrapper from './errorwrapper';
 import { AddressCardOptions } from './addresscard';
+import Cards from 'react-credit-cards'
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { Card } from './card';
+import { Remove } from './addresscard';
+import { CheckBox } from './users';
+
 const dropDownStyle ={
     border:'1px solid #556585',
     backgroudColor:'#f4ece6',
@@ -52,6 +57,8 @@ const Accordion = styled.div`
 const AccordionButtonWrapper = styled.div`
   max-width:900px;
   width:100%;
+  font-family: 'Montserrat', sans-serif;
+  margin:auto;
  .accordion-enter{
     max-height:0;
     opacity:0;
@@ -206,25 +213,25 @@ const CardWrapper = styled.div`
     const [changePassword,setChangePassword] = useState(false)
     const [deleteAccount,setDeleteAccount] = useState(false)
     return(
-      <div>
-      <LinkButton onClick={()=>setChangeEmail(true)}>
-        Change Email
-      </LinkButton>
-      <LinkButton onClick={()=>setChangePassword(true)}>
-        Change Password
-      </LinkButton>
-      <LinkButton onClick={()=>setDeleteAccount(true)}>
-      Delete Account
-    </LinkButton>
-    <ModalComponent width="600px" showModal={changeEmail}>
-      <ChangeEmail setShowModal={setChangeEmail}/>
-    </ModalComponent>
-    <ModalComponent width="600px" showModal={changePassword}>
-      <ChangePassword setShowModal={setChangePassword}/>
-    </ModalComponent>
-    <ModalComponent showModal={deleteAccount}>
-      <DeleteAccount setShowModal={setDeleteAccount}/>
-    </ModalComponent>
+    <div>
+        <LinkButton onClick={()=>setChangeEmail(true)}>
+          Change Email
+        </LinkButton>
+        <LinkButton onClick={()=>setChangePassword(true)}>
+          Change Password
+        </LinkButton>
+        <LinkButton onClick={()=>setDeleteAccount(true)} >
+        Delete Account
+        </LinkButton>
+        <ModalComponent width="600px" showModal={changeEmail} title='Change Email'>
+          <ChangeEmail setShowModal={setChangeEmail}/>
+        </ModalComponent>
+        <ModalComponent width="600px" showModal={changePassword} title='Change Password'>
+          <ChangePassword setShowModal={setChangePassword}/>
+        </ModalComponent>
+        <ModalComponent showModal={deleteAccount} title="Delete Account">
+          <DeleteAccount setShowModal={setDeleteAccount} />
+        </ModalComponent>
     </div>
     )
 }
@@ -264,13 +271,13 @@ function ChangeEmail({setShowModal}){
         setSubmitting(false);
       }, 400);
     }}
-  >{({ isSubmitting,setFieldValue,handleChange,values }) => (
+  >{({ isSubmitting,handleChange,values })=>(
     success?
     <div>
       You successfully changed your email to {values.email}
     </div>
     :
-    <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',maxWidth:500}}>
+    <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',maxWidth:500,justifyContent:'center'}}>
       <InputWrapper wide>
         <Label for='email' >New Email</Label>
         <Input onChange={handleChange} value={values.email} type="email" name="email"/>
@@ -335,7 +342,7 @@ function ChangePassword({setShowModal}){
       You successfully changed your password
     </div>
     :
-    <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',maxWidth:'500px'}}>
+    <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',maxWidth:'500px',justifyContent:'center'}}>
       <InputWrapper style={{maxWidth:'80%'}}>
         <Label for='password' >New Password</Label>
         <Input onChange={handleChange} value={values.password} type={showPassword?'text':'password'} name="password"/>
@@ -404,14 +411,20 @@ function DeleteAccount({setShowModal}){
       You successfully deleted your account
     </div>
     :
-    <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden'}}>
-       <div>By agreeing to this action, ypur account and all information associated with it will be deleted</div>
-      <InputWrapper>
+    <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',justifyContent:'center'}}>
+       <div style={{textAlign:'center'}}>By agreeing to this action, your account will be deleted forever</div>
+      <InputWrapper style={{display:'flex',justifyContent:'center',width:'100%',flex:'1 0 100%'}}>
+       <label class="container">
+            <input type="checkbox"  onChange={handleChange} value={values.agree} type="checkbox" name="agree"/>
+            <span class="checkmark"></span>
+        </label>
         <Label for='agree' >I agree</Label>
-        <Input onChange={handleChange} value={values.agree} type="checkbox" name="agree"/>
-        {errors && errors.agree}
+        
         </InputWrapper>
-      <InputWrapper style={{display:'flex',justifyContent:'flex-end'}} >
+        <div style={{display:'flex',justifyContent:'center',width:'100%',flex:'1 0 100%'}}>
+        {errors && errors.agree}
+        </div>
+      <InputWrapper style={{display:'flex',justifyContent:'center'}} >
        <Button secondary onClick={()=>setShowModal(false)} type='button'
         style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
         <Button primary type='submit'  disabled={isSubmitting}
@@ -481,7 +494,7 @@ function Notifications(){
     )
 }
 
-function AccordionButton({active,setActive,name,title,children}){
+export function AccordionButton({active,setActive,name,title,children}){
     
     return(
         <AccordionButtonWrapper>
@@ -514,45 +527,111 @@ export function Addresses({wrap,selectable,selected,setSelected}){
   }, [addresses])
   
   
+  
   return(
     <div>
       <Button secondary onClick={()=> setShowModal(true)}>Add Address</Button>
       <ModalComponent showModal={showModal} setShowModal={setShowModal}>
                 <AddressForm setShowModal={setShowModal}/>
       </ModalComponent>
-   <CardWrapper wrap={wrap}>
-      {
-        addresses && addresses.map((addressInfo)=> {
-          return(
-        <Addresscard selectable={selectable} selected={selectable&&(selected.NO_ID_FIELD == addressInfo.NO_ID_FIELD)} setSelected={setSelected}  addressInfo={addressInfo} key={addressInfo.NO_ID_FIELD}>
-          <AddressCardOptions defaultAddress={defaultAddress} setDefaultAddress={setDefaultAddress} addressInfo={addressInfo}/>
-        </Addresscard>
-          )
-        }
-        )
-      }
-   </CardWrapper>
+      <CardWrapper wrap={wrap}>
+          {
+            addresses && addresses.map((addressInfo)=> {
+              return(
+            <Addresscard selectable={selectable} selected={selectable&&(selected.NO_ID_FIELD == addressInfo.NO_ID_FIELD)} setSelected={setSelected}  addressInfo={addressInfo} key={addressInfo.NO_ID_FIELD}>
+              <AddressCardOptions defaultAddress={defaultAddress} setDefaultAddress={setDefaultAddress} addressInfo={addressInfo}/>
+            </Addresscard>
+              )
+            }
+            )
+          }
+      </CardWrapper>
    </div>
   )
 }
+
+function PaymentCards(){
+    const db = useFirestore()
+    const{data:user} = useUser()
+    const cardsCollection = collection(db, 'cards');
+    const cardsQuery =  query(cardsCollection,where('owner','==',user.uid))
+    const {status, data:cards } = useFirestoreCollectionData(cardsQuery);
+    const useFsRef = doc(db, 'users', user.uid);
+    const {data: userFs } = useFirestoreDocData(useFsRef);
+    const [showModal, setShowModal] = useState(false)
+    const [saveCard, setSaveCard] = useState(userFs.saveCard)
+    console.log(saveCard)
+    
+    
+    useEffect(() => {
+     
+        if(saveCard != userFs.saveCard)
+          setDoc(useFsRef,{saveCard:saveCard},{merge:true})
+          .then(()=>console.log('save cards',saveCard))
+          .catch((e)=>console.log(e))
+     
+    }, [saveCard,userFs])
+    
+    const deleteCard = (card)=> deleteDoc(doc(db, "cards", card.NO_ID_FIELD))
+                                .then(()=> console.log('Card deleted'))
+                                .catch((e)=>console.log(e))
+   
+    function DeleteCardDialog({card}){
+      return(
+        <ModalComponent showModal={showModal} setShowModal={setShowModal}>
+          <div>
+          <div>Are you sure you want to delete this card?</div>
+          <button onClick={()=>setShowModal(false)}>No</button><button onClick={()=>{deleteCard(card);setShowModal(false)}}>Yes</button>
+          </div>
+        </ModalComponent>
+      )
+    }                            
+    return(
+      <div style={{display:'flex',flexWrap:'wrap'}} >{
+      cards && cards.map((card)=>
+        <Card>
+          <Remove style={{zIndex:100}} onClick={()=>setShowModal(true)}/>
+          <DeleteCardDialog card={card}/>
+          <Cards  cvc='***'
+          expiry={`${card.authorization.exp_month}/${card.authorization.exp_year}`} 
+          name={card.authorization.account_name?card.authorization.account_name:'CARD HOLDER'}
+          number={`${card.authorization.bin}******${card.authorization.last4}`} />
+        </Card>
+        ) 
+      }
+      <InputWrapper style={{display:'flex',flexWrap:'wrap',width:'100%',flex:'1 1 100px',justifyContent:'space-between',maxWidth:200,minWidth:200}}>
+              <Label for='firstname'  >Save cards</Label>
+              <Switch>
+              <Input onChange={()=> {setSaveCard(prev=>!prev)}} checked={saveCard} type="checkbox" name="firstname"  id='firstname' />
+              <Slider></Slider>
+              </Switch> 
+          </InputWrapper>
+      </div>
+    )
+}
 export default function Settings(){
-    const [active,setActive] = useState(null)
+  const [active,setActive] = useState(null)
   return(
-      <SettingsWrapper>
-     <AccordionButton name='account' title="Account" active={active} setActive={setActive}>
-         <Account/>
-     </AccordionButton>
-     <AccordionButton name='password' title="Password" active={active} setActive={setActive}>
-        <Password/>
-    </AccordionButton>
-     <AccordionButton name='address' title="Address" active={active} setActive={setActive}>
-       <Errorwrapper>
-       <Addresses wrap/>
-       </Errorwrapper>
-    </AccordionButton>
-    <AccordionButton name='notifications' title="Notifications" active={active} setActive={setActive}>
-        <Notifications/>
-    </AccordionButton>
+    <SettingsWrapper>
+      <AccordionButton name='account' title="Account" active={active} setActive={setActive}>
+          <Account/>
+      </AccordionButton>
+      <AccordionButton name='password' title="Password" active={active} setActive={setActive}>
+          <Password/>
+      </AccordionButton>
+      <AccordionButton name='address' title="Address" active={active} setActive={setActive}>
+        <Errorwrapper>
+         <Addresses wrap/>
+        </Errorwrapper>
+      </AccordionButton>
+      <AccordionButton name='notifications' title="Notifications" active={active} setActive={setActive}>
+          <Notifications/>
+      </AccordionButton>
+      <AccordionButton name='cards' title="Cards" active={active} setActive={setActive}>
+        <Errorwrapper>
+          <PaymentCards/>
+          </Errorwrapper>
+      </AccordionButton>
     </SettingsWrapper>
   )
 }

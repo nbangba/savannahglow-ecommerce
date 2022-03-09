@@ -20,8 +20,9 @@ const Modal = styled.div`
 
   const ModalContent = styled.div`
     width:${props=>props.width||'800px'};
-    overflow-y:scroll;
-    height:90vh;
+    overflow-y:auto;
+    min-height:100px;
+    max-height:100vh;
     background-color:#EBDDD2;
     border-radius:5px;
     z-index:200 !important;
@@ -67,7 +68,7 @@ const Modal = styled.div`
      }
 
   `
- export default function ModalComponent({showModal,setShowModal,children,width,type}){
+ export default function ModalComponent({showModal,setShowModal,children,width,title}){
   
   useEffect(() => {
     if(showModal)
@@ -79,17 +80,15 @@ const Modal = styled.div`
 
     if(!showModal)
       return null
-      
-    
-      
+  
     return(
         <Modal /*onMouseLeave={()=>{if(type != 'form' && setShowModal) setShowModal(false)}}*/>
             <ModalContent width={width}>
-                <h3>Enter Your Address</h3>
+                <h3>{title?title:''}</h3>
                 <FormWrapper>
                 {children}
                 </FormWrapper>
             </ModalContent>
         </Modal>
     )
-  }
+}

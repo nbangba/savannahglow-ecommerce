@@ -9,6 +9,7 @@ import Errorwrapper from '../../components/errorwrapper';
 import { verifyPaystack } from '../../helperfunctions/cloudfunctions';
 import PDFDoc from '../../components/pdfdoc';
 import { getAnalytics, logEvent } from "firebase/analytics";
+
 export const Loading = styled.div`
   width:100px;
   height:100px;

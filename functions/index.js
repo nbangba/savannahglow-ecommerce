@@ -120,11 +120,13 @@ exports.payStackTransctionVerification = functions
             ...result,
             user:context.auth.uid,
           })
-          .then(()=>admin.firestore().collection("carts").doc(context.auth.uid).set({
+          .then(()=>admin.firestore().collection(info.collection).doc(context.auth.uid).set({
           items:[],
           numberOfItems:0,
           },{merge:true})
           ).then(()=>{
+            if(info.isAnonymous)
+            return
             const secret = functions.config().paystack.key;
             const options = {
               baseURL: 'https://api.paystack.co',
@@ -198,14 +200,8 @@ exports.payStackTransctionVerification = functions
                  console.log('RESPONSE',response.data);
                  const data = response.data.data
                  if(data.status == 'success'){
-
-                  
-
                  try {
-                  
-          
                     info.items.map((item)=>{
-                      
                           fs.runTransaction(async (transaction)=>{
                           const itemRef  = fs.collection('product').doc(item.id);
                           const itemDoc = await transaction.get(itemRef)
@@ -221,7 +217,6 @@ exports.payStackTransctionVerification = functions
               
 
                 return  await fs.runTransaction(async (transaction) => {
-                    
                     const docRef = fs.collection("ordersMetadata").doc("ordersMetadata");
                     const ordersMetaDataDoc  = await transaction.get(docRef);
           
@@ -244,11 +239,8 @@ exports.payStackTransctionVerification = functions
                       newNumberOfReceipts = ordersMetaDataDoc.data().numberOfReceipts + 1;
                       transaction.update(docRef, { numberOfOrders: newNumberOfOrders });
                       transaction.update(docRef, { numberOfReceipts: newNumberOfReceipts });
-          
                       return{orderID:newNumberOfOrders,receiptID:newNumberOfReceipts}
                     }
-                    
-                  
                   })
                   .then((result)=>
                      admin.firestore().collection("orders").doc(data.reference).set({
@@ -259,7 +251,7 @@ exports.payStackTransctionVerification = functions
                       ...result,
                       user:context.auth.uid,
                     })
-                    .then(()=>admin.firestore().collection("carts").doc(context.auth.uid).set({
+                    .then(()=>admin.firestore().collection(info.collection).doc(context.auth.uid).set({
                     items:[],
                     numberOfItems:0,
                     },{merge:true})
@@ -294,9 +286,7 @@ exports.payStackTransctionVerification = functions
                 console.log('Error', error.message);
               }
               console.log(error.config)
-              return 'unsuccessful';})
-              
-              
+              return 'unsuccessful';})             
   } else {
       // doc.data() will be undefined in this case
       console.log("No such document!");
@@ -375,7 +365,7 @@ exports.payOnDelivery = functions
         ...result,
         user:context.auth.uid,
       })
-      .then(()=>admin.firestore().collection("carts").doc(context.auth.uid).set({
+      .then(()=>admin.firestore().collection(info.collection).doc(context.auth.uid).set({
         items:[],
         numberOfItems:0,
       },{merge:true})
@@ -399,7 +389,6 @@ exports.createRefund = functions
     memory: '2GB',
   })
   .https.onCall(async (data, context) => {
-
     const {transactionID,amount} = data
     const secret = functions.config().paystack.key;
     const options = {
@@ -488,6 +477,7 @@ exports.createRefund = functions
 
   exports.createUserInFirestore = functions.auth.user().onCreate((user) => {
     
+    if(!user.providerData.length > 0)
    return admin.auth().getUser(user.uid)
           .then((user)=>{
             console.log('user',user.displayName)
@@ -504,6 +494,8 @@ exports.createRefund = functions
           .catch(e=>console.log(e))
           })
           .catch(e=>console.log(e))
+
+    return      
   })
 
   exports.deleteUsers = functions.runWith({
@@ -583,7 +575,7 @@ exports.createRefund = functions
       },{merge:true})
     }
     try{
-      fs.runTransaction(async (transaction)=>{
+     await fs.runTransaction(async (transaction)=>{
         const itemRef  = fs.collection('products').doc(values.productId);
         const itemDoc = await transaction.get(itemRef)
         if (!itemDoc.exists) {
@@ -602,7 +594,7 @@ exports.createRefund = functions
         let newRating
         let newNumberOfRating 
         if(values.reviewId){
-        newRating  = parseFloat(((itemDoc.data().rating + values.rating - values.previousRating)/numberOfRating).toFixed(2))
+        newRating  = parseFloat((((itemDoc.data().rating*itemDoc.data().numberOfRating) + values.rating - values.previousRating)/itemDoc.data().numberOfRating).toFixed(2))
         }
         else{
         newNumberOfRating = itemDoc.data().numberOfRating + 1

@@ -19,7 +19,7 @@ import { CardItem } from './addresscard'
 import { verifyPaystack } from '../helperfunctions/cloudfunctions'
 import { calculateSubTotal } from '../helperfunctions'
 import Cards from 'react-credit-cards'
-import { chargeCard } from '../helperfunctions/cloudfunctions'
+import { chargeCard,payOnDelivery } from '../helperfunctions/cloudfunctions'
 import 'react-credit-cards/es/styles-compiled.css';
 
 const RadioButtonsContainer = styled.label`
@@ -28,7 +28,8 @@ const RadioButtonsContainer = styled.label`
     padding-left: 35px;
     margin-bottom: 12px;
     cursor: pointer;
-    font-size: 22px;
+    font-size: 18px;
+    color:#35486F;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -99,88 +100,89 @@ const CheckoutWrapper = styled.div`
 }
 `
 
-export default function Checkout() {
+
+export default function Checkout({location}) {
     
     const { status, data: signInCheckResult } = useSigninCheck();
     const { data: user } = useUser()
-    const firestore = useFirestore();
-
-    const [subtotal,setSubtotal] = useState(0)
-    const cartRef = user && doc(firestore, 'carts', user.uid);
+    const db = useFirestore();
+    const cartRef = user && doc(db, location&&location.state.fromFeed?'buyNow':'carts', user.uid);
     const { data:cart } = useFirestoreDocData(cartRef);
+
     const items =cart && cart.items
     
-    const cardsCollection = collection(firestore, 'cards');
+    const cardsCollection = collection(db, 'cards');
     const cardsQuery = user && query(cardsCollection,where('owner','==',user.uid))
     const { data:cards } = useFirestoreCollectionData(cardsQuery);
     const card = (cards && cards[0]) && cards[0].authorization
     console.log(card)
     
-    useEffect(() => {
-        if(cart && cart.items )
-        setSubtotal(calculateSubTotal(items))
-        }, [cart])
-
-    const addressesCollection = collection(firestore, 'addresses');
-    const addressesQuery = query(addressesCollection,where('isDefault','==',true))
-    const { status:info, data:addresses } = useFirestoreCollectionData(addressesQuery);    
     
+    const addressesCollection = collection(db, 'addresses');
+    const addressesQuery = query(addressesCollection,where('isDefault','==',true),where('user','==',user.uid))
+    const { status:info, data:addresses } = useFirestoreCollectionData(addressesQuery);    
+    const [selected, setSelected] = useState(addresses[0])
     const orderSchema = Yup.object().shape({
-    orderAddress: Yup.object().required('An address is required'),
-    payment:Yup.string().required('Select a payment option')
+        orderAddress: Yup.object().required('An address is required'),
+        payment:Yup.string().required('Select a payment option')
     });
 
+    if(items.length > 0)
     return (
         <CheckoutWrapper >
             <div className='checkout-form'>
-            <UserAddress address={addresses&&addresses[0]} />
+            <UserAddress selected={selected} setSelected={setSelected} />
             <Formik 
                 initialValues={{orderAddress:addresses[0],payment:'paystack',paystackOptions:''}}
                 validationSchema={orderSchema}
-                onSubmit={(values, { setSubmitting }) => {
+                onSubmit={(values,{setSubmitting}) => {
+                    const thereIsQty = window.localStorage.getItem('quantity');
+                    console.log(thereIsQty)
                   setTimeout(() => {
                       console.log('verifying')
-                      values.amount = subtotal
-                      values.items = [...items]
-                      values.orderAddress = addresses[0]
+                        values.amount = cart.discountedTotal?cart.discountedTotal:cart.totalAmount
+                        values.items = [...items]
+                        values.collection = location&&location.state.fromFeed?'buyNow':'carts'
+                      values.orderAddress = selected
+                      values.isAnonymous = user.isAnonymous
                     console.log(JSON.stringify(values, null, 2));
                     if(values.paystackOptions=='defaultCard')
                     chargeCard({...values},cards[0].NO_ID_FIELD)
                     else if(values.payment=='paystack')
                     payWithPaystack({...values});
+                    else
+                    payOnDelivery({...values})
                     setSubmitting(false);
                   }, 400);
+                  return false;
                 }}>
-                {({ isSubmitting,setFieldValue,handleChange,values,errors }) => (
-                <Form id='checkout'>
-                    
-                    <PaymentSegment card={card} values={values}/>
-                    <CartItems/> 
-  
+                {({ isSubmitting,setFieldValue,handleChange,handleSubmit,values,errors }) => (
+                <Form id='checkout'> 
+                    <PaymentSegment card={card} values={values} db={db} user={user}/>
+                    <CartItems location={location} /> 
                 </Form>
                 )}
             </Formik>
             </div>
-            <Subtotal cart={cart} subtotal={subtotal}/>
+            <Subtotal cart={cart}/>
+        </CheckoutWrapper>
+    )
+
+    else
+    return(
+        <CheckoutWrapper>
+            <div>
+                No items to checkout.
+            </div>
         </CheckoutWrapper>
     )
 }
 
 
-function UserAddress({address}){
+function UserAddress({selected,setSelected}){
     const [showModal, setShowModal] = useState(false)
-    const [selected, setSelected] = useState(address)
     const [changeAddress, setchangeAddress] = useState(false)
     const { status, data: signInCheckResult } = useSigninCheck();
-    const firestore = useFirestore();
-    const addressesCollection = collection(firestore, 'addresses');
-    const addressesQuery = query(addressesCollection,where('isDefault','==',true))
-    const { status:info, data:addresses } = useFirestoreCollectionData(addressesQuery);
-    
-    console.log(addresses)
-    
-    
-    
     return(
         <>
         {signInCheckResult&&signInCheckResult.signedIn && selected? 
@@ -194,7 +196,7 @@ function UserAddress({address}){
                }
               <ModalComponent showModal={changeAddress} >
                     <Addresses wrap selected={selected} setSelected={setSelected} selectable  />
-                    <button onClick={()=>setchangeAddress(false)}>CLOSE</button>
+                    <Button secondary onClick={()=>setchangeAddress(false)}>CLOSE</Button>
               </ModalComponent>
                </>
                  :
@@ -204,14 +206,14 @@ function UserAddress({address}){
                 <AddressForm setShowModal={setShowModal} setOrderAddress={setSelected}/>
                </ModalComponent>
                 </>
-             }
-             
+             }   
         </>
     )
 }
 
-function PaymentSegment({card,values}){
-    
+function PaymentSegment({card,values,db,user}){
+    const useFsRef = doc(db, 'users', user.uid);
+    const {data: userFs } = useFirestoreDocData(useFsRef);
     return(
         <Card maxWidth='400px' style={{margin:'10px 0px',maxWidth:900}}>
             <div role='group' aria-labelledby="my-radio-group">
@@ -224,7 +226,7 @@ function PaymentSegment({card,values}){
                </div>
                 <Field type="radio" name="payment" value='paystack'/>
                 <span class="checkmark"></span>
-                {(card && values.payment == 'paystack') &&
+                {(card && userFs.saveCard && values.payment == 'paystack') &&
                     <>
                     <RadioButtonsContainer> Mobile Money or New Card
                         <Field type="radio"  name="paystackOptions" value='momo'/>
@@ -246,19 +248,20 @@ function PaymentSegment({card,values}){
              <Field type="radio" name="payment" value='POD'/>
              <span class="checkmark"></span>
            </RadioButtonsContainer>
-           <div>payment: {values.payment}</div>
-           <div>opyions: {values.paystackOptions}</div>
            </div>
         </Card>
     )
 }
 
-function Subtotal({cart,subtotal}){
+function Subtotal({cart}){
+    
     return(
-      <Card style={{alignContent:'flex-start',maxHeight:200,fontFamily:`'Montserrat', sans-serif`}}>
-        <div style={{width:"100%",padding:20}}>{`Subtotal(${cart.numberOfItems} items): GHS ${subtotal}.00`}</div>
-        <button type='submit' form='checkout' primary style={{minWidth:"fit-content",width:300}}>Place Order</button>
-      </Card>  
+        <Card style={{alignContent:'flex-start',maxHeight:200,fontFamily:`'Montserrat',sans-serif`}}>
+            <div style={{width:"100%",padding:20}}>
+                {`Subtotal(${cart.numberOfItems} items): GHS ${cart.discountedTotal?cart.discountedTotal:cart.totalAmount}`}
+            </div>
+            <Button primary type='submit' form='checkout' primary style={{minWidth:"fit-content",width:300}}>Place Order</Button>
+        </Card>
     )
 }
 

@@ -1,24 +1,40 @@
 import { getFunctions,httpsCallable } from 'firebase/functions';
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { collection,addDoc,getFirestore} from "firebase/firestore";
 
 export function verifyPaystack(info,response){
     const functions =  getFunctions();
     const verify = httpsCallable(functions, 'payStackTransctionVerification');
-    
+    const firestore = getFirestore()
     verify({info:info,response:response })
     .then((result) => {
         console.log(response.status)
         console.log(result)
         if(response.status === 'success'){
-         const items =   info.items.map((item)=>{ return {item_name:item.name,price:item.price,quantity:item.quantity,currency:'GHS'}})
+         const items =   info.items.map((item)=>{
+             
+              return {item_name:item.name,price:item.price,discount:item.discount,quantity:item.quantity,currency:'GHS'}
+            })
          const analytics = getAnalytics();
          logEvent(analytics,'purchase',{currency:'GHS',transaction_id:response.reference,value:info.amount,items:items})
-         console.log('success')
+         
+         console.log(info)
+         addDoc(collection(firestore,'mail'),{
+            to:['nbangba.la@gmail.com'],
+            template: {
+                name:'orderStatus',
+                data:{
+                    ...info,
+                    orderStatus:'received'
+                }
+            }
+        }) 
+        .catch((e)=>console.log(e))
+        console.log('success')
         }
-        //window.location = "http://localhost:8000/verification/" + response.reference;
+        //window.location = "http://localhost:8000/verification/" + response.reference;   
     })
-    .catch((err)=>console.log(err))
-    
+    .catch((err)=>console.log(err))  
 }
 
 export function chargeCard(info,cardId){
@@ -39,14 +55,24 @@ export function payOnDelivery(info){
     .catch((e)=>console.log(e))
 }
 
-export  function refund(transactionID,amount){
+export  function refund(order){
     const functions =  getFunctions();
     const createRefund = httpsCallable(functions, 'createRefund');
+    const firestore = getFirestore()
 
- createRefund({transactionID,amount})
- .then((result)=>{console.log(result)})
- .catch((e)=>console.log(e))
-  
+ createRefund({transactionID:order.response.reference,amount:(order.order.amount*100)+""})
+ .then((result)=>{ addDoc(collection(firestore,'mail'),{
+    to:['nbangba.la@gmail.com'],
+    template: {
+        name:'orderStatus',
+        data:{
+            ...order.order,
+            orderStatus:'cancelled'
+        }
+      }
+}) 
+console.log(result)})
+ .catch((e)=>console.log(e))  
 }
 
 export async function deleteUsers(selectedRows){
@@ -59,8 +85,7 @@ export async function deleteUsers(selectedRows){
    console.log(data)
    if(data.data && data.data.result.length>0)    
     return 'success'
-   
-    else
+   else
     return 'error'
 }
 

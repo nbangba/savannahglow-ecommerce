@@ -5,7 +5,7 @@ import Mail from  '../images/mail.svg'
 import Phone from  '../images/phone.svg'
 import Time from  '../images/time.svg'
 import Location from  '../images/location.svg'
-
+import Whatsapp from '../images/whatsapp.svg'
 
 const Contact = styled.div`
     display:flex;
@@ -58,6 +58,25 @@ export const ContactItem = styled.div`
   color:#35486F;
 `
 
+export const ContactLink = styled.a`
+  display:flex;
+  height:50px;
+  width:fit-content;
+  max-width:100%;
+  padding:${props => props.padding || "0px"};
+  justify-content:flex-start;
+  align-items:center;
+  font-family: 'Montserrat', sans-serif;
+  font-size:16px;
+  font-weight:400;
+  color:#35486F;
+  text-decoration:none;
+  hyphens:'auto';
+  &:hover{
+    color:#1e52bc;
+  }
+`
+
 export default function ContactComp() {
     return (
         <Contact>
@@ -77,8 +96,11 @@ export function ContactUs(){
     return(
       <>
         <h3>Contact Us</h3>
-        <ContactItem><Mail fill='#474E52' className='icon' /> geniusmain@yahoo.com</ContactItem>
-        <ContactItem><Phone fill='#474E52' className='icon'/> (+233) 0244569221</ContactItem>
+        <ContactLink href='mailto:customerservice@savannahglow.com'><Mail fill='#474E52' className='icon' style={{minWidth:30}}/>
+        <span lang='en' style={{hyphens:'auto',overflowWrap:'break-word',maxWidth: 'calc(100% - 50px)',}}>customerservice@savannahglow.com</span>
+        </ContactLink>
+        <ContactLink href='tel:00233242372715'><Phone fill='#474E52' className='icon'/> (+233) 0244569221</ContactLink>
+        <ContactLink href='https://wa.me/233242372715'><Whatsapp fill='#474E52' className='icon'/> (+233) 0244569221</ContactLink>
         <ContactItem><Location fill='#474E52' className='icon'/> sp4, Nkrumah Flats</ContactItem>
         <ContactItem><Time fill='#474E52' className='icon'/> 9:00am - 5:00pm</ContactItem>
       </>

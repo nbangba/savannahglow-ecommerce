@@ -14,6 +14,7 @@ import AdminOrders from "../admin/orders"
 import AdminUsers from "../admin/users"
 import PrivateRoute,{PrivateRouteAdmin,PrivateRouteAdmin12} from "../../components/privateroutes"
 import Errorwrapper from "../../components/errorwrapper"
+import OrderComponent from "../../components/order"
 
 const SideMenu = styled.div`
   display:flex;
@@ -53,6 +54,7 @@ const App = (props) => {
         <PrivateRoute path="/profile" component={Profile} />
         <PrivateRoute path="/settings" component={Settings} />
         <PrivateRoute path="/orders" component={Orders} />
+        <PrivateRoute path={`order/${props.id}`} component={OrderComponent} />
         <PrivateRoute path="admin/orders" component={AdminOrders} />
         <PrivateRoute path="admin/users" component={AdminUsers} />
         <Home path="/" />

@@ -10,7 +10,7 @@ import HealthyLifestyle from  '../images/healthy-lifestyle.svg'
 import Buy from './buy'
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel';
-
+import { Link } from 'gatsby'
 const HomeWrapper = styled.div`
 .gradient{
   background:linear-gradient(250deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%);
@@ -45,6 +45,9 @@ const Top= styled.div`
         margin:2rem 0rem;
         font-size: 3rem;
       }
+      h3{
+        font-size:24px;
+      }
     }
    }
 
@@ -65,11 +68,31 @@ const Top= styled.div`
   }
 
   h3{
-    font-family: 'Niconne', cursive;
-    font-size:48px;
+    font-family: 'Montserrat', sans-serif;
+    font-size:36px;
     text-align:center;
     color:#35486F;
     width:100%;
+    margin: 0px;
+  }
+
+  li{
+    margin: 15px 0px;
+  }
+
+  .glow {
+    text-align: center;
+    animation: glow 1s ease-in-out infinite alternate;
+  }
+  
+  @keyframes glow {
+    to {
+      text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff8e1, 0 0 40px #fff3e0, 0 0 50px #f4e2b7, 0 0 60px #ff9218, 0 0 10px #fffde7;
+    }
+    
+    from {
+      text-shadow: 0 0 2px #ebddd2, 0 0 30px #ebddd2, 0 0 40px #ebddd2, 0 0 50px #ebddd2, 0 0 60px #ebddd2, 0 0 70px #ebddd2, 0 0 80px #ebddd2;
+    }
   }
 
   .sub{
@@ -122,6 +145,7 @@ const Benefits = styled.div`
     @media only screen and (max-width: 700px) {
       padding: 2rem;
     }
+
     h2{
       min-width:100%;
       font-family: 'Montserrat', sans-serif;
@@ -243,13 +267,16 @@ export default function Home() {
         <HomeWrapper>
             <Top>
                 <section className='first' style={{display:'flex',flexWrap:'wrap',justifyContent:'center', alignItems:'center'}}>
-                  <h1>
+                  <h1 className='glow'>
                       SAVANNAH GLOW
                   </h1>
-                  <h3>
-                      Enrich your skin
-                  </h3>
-                  <Button primary style={{width:280,display:'flex',marginBottom:'5vw',  fontSize:24,alignItems:'center',justifyContent:'center'}} >BUY NOW FOR $2.00</Button>
+                  
+                  <ul style={{width:'100%',listStyleType:'none'}}>
+                    <li><h3>Enriches your skin</h3></li>
+                    <li><h3>Moisturizes and protects skin</h3></li>
+                    <li><h3>Prevents hairloss</h3></li>
+                  </ul>
+                  <Link style={{textDecoration:'none'}} to="/products/savannah-glow-shea-butter"><Button primary style={{width:280,display:'flex',marginBottom:'5vw',  fontSize:24,alignItems:'center',justifyContent:'center'}} >BUY NOW </Button></Link>
                 </section>
                 <section className='second'>
                   <img   src={pomade}></img>  

@@ -5,8 +5,9 @@ import firebase from '../firebase/fbconfig';
 import { getAnalytics, logEvent } from "firebase/analytics";
 
   export default function SignIn() {
+    
     var uiConfig = {
-        //signInSuccessUrl: 'http://localhost:8000/',
+        signInSuccessUrl: `${process.env.REDIRECT_AFTER_SIGN_IN}`,
         signInOptions: [
           // Leave the lines as is for the providers you want to offer your users.
           {
@@ -20,15 +21,12 @@ import { getAnalytics, logEvent } from "firebase/analytics";
             }
           },
           firebase.auth.FacebookAuthProvider.PROVIDER_ID,
-          firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-          firebase.auth.GithubAuthProvider.PROVIDER_ID,
           firebase.auth.EmailAuthProvider.PROVIDER_ID,
           firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-          firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
         ],
 
         callbacks:{
-          'signInSuccessWithAuthResult': function(authResult) {
+          'signInSuccessWithAuthResult': function(authResult,redirectURL) {
             const analytics = getAnalytics();
             console.log(authResult)
             if(!authResult.additionalUserInfo.isNewUser)
@@ -38,14 +36,14 @@ import { getAnalytics, logEvent } from "firebase/analytics";
             logEvent(analytics,'sign_up',{method:authResult.additionalUserInfo.providerId})
 
             console.log(authResult)
-            return false;
+            return true;
           }
         },
         // tosUrl and privacyPolicyUrl accept either url string or a callback
         // function.
         // Terms of service url/callback.
         //signInFlow: 'popup',
-        signInFlow: 'popup',
+        //signInFlow: 'popup',
         tosUrl: '<your-tos-url>',
         // Privacy policy url/callback.
         privacyPolicyUrl: function() {

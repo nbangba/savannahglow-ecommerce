@@ -9,7 +9,7 @@ import { getAnalytics, logEvent } from "firebase/analytics";
 const ProductsWrapper = styled.div`
   margin:20px;
   font-family: 'Montserrat', sans-serif;
-    color:#35486F;
+  color:#35486F;
   ul{
     display:flex;
     width:100%;
@@ -47,23 +47,23 @@ export default function Products({data}) {
 }
 
 export const query = graphql`
-query {
-  allContentfulProduct {
-    nodes {
-      name
-      description {
-        description
-      }
-      varieties {
-        name
-        price
-        images {
-          fluid {
-            src
+    query {
+      allContentfulProduct {
+        nodes {
+          name
+          description {
+            description
+          }
+          varieties {
+            name
+            price
+            images {
+              fluid {
+                src
+              }
+            }
           }
         }
       }
     }
-  }
-  }
 `
