@@ -5,7 +5,6 @@ import { useUser,useFirestoreCollectionData, useFirestore,useFirestoreDocData} f
 import { CardItem } from './addresscard'
 import Errorwrapper from './errorwrapper';
 import { leadingZeros } from '../helperfunctions';
-import { CardActionArea } from '@material-ui/core';
 
 const moment = require('moment')
 

@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import CardComponent from './card'
 import { doc, getFirestore,collection,query,orderBy,where, limit} from 'firebase/firestore';
 import { useUser,useFirestoreCollectionData, useFirestore} from 'reactfire';
-import { updateEmail,updatePassword,deleteUser} from 'firebase/auth'; // Firebase v9+
 import { CardItem } from './addresscard'
 import Errorwrapper from './errorwrapper';
 import { leadingZeros } from '../helperfunctions';
@@ -13,7 +12,6 @@ import styled from 'styled-components';
 import {pdf} from '@react-pdf/renderer';
 import PDFDoc from './pdfdoc';
 import { saveAs } from 'file-saver';
-import { getAnalytics, logEvent } from "firebase/analytics";
 import { LoadMore } from './adminCustomerOrders';
 import { Link } from 'gatsby';
 
