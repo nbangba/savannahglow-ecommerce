@@ -82,7 +82,7 @@ const CartLabel = styled.div`
 export default function CartComponent({location}){
     return(
         <CartItems location={location}>
-            {(cart,location)=> <Subtotal cart={cart} location={location}/>}
+            {(cart)=> <Subtotal cart={cart}/>}
         </CartItems>
     )
 }
@@ -170,13 +170,13 @@ export function CartItems({children,location}) {
             }
         </ul>
         {
-            location &&location.state.items?
+           location && location.state &&location.state.items?
         <div style={{width:'100%',textAlign:'right'}}></div>:
         <div style={{width:'100%',textAlign:'right'}}>{`Subtotal: GHS ${cart.discountedTotal}`}</div>
         }
         </ProductImageWrapper>
         </Card>
-        {children && children(cart,location)}
+        {children && children(cart)}
         </CartWrapper>
        )
        else return(
@@ -192,7 +192,7 @@ export function CartItems({children,location}) {
             </div>
         )
     }
-    else return <LoggedInCart collection={location &&location.state.fromFeed?'buyNow':'carts'}/>
+    else return <LoggedInCart collection={location && location.state &&location.state.fromFeed?'buyNow':'carts'}/>
 }
 
 function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}){
@@ -203,7 +203,6 @@ function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}){
     
     const availableRef = doc(db,'product',item.id)
     const { status, data:product } = useFirestoreDocData(availableRef);
-    const thereIsQty = window.localStorage.getItem('quantity');
     console.log(product.available)
     const increaseItems = ()=>{
         if((qty+1) <= product.available)
@@ -215,12 +214,7 @@ function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}){
        setQty((prev)=> prev-1)
     }
 
-    useEffect(() => {
-        console.log(thereIsQty)
-        if(thereIsQty){
-        window.localStorage.setItem('quantity', qty);
-        }
-    }, [qty]);
+    
 
    useEffect(() => {
         if(updateDiscount && product.discount != item.discount)
@@ -270,9 +264,11 @@ function Subtotal({cart}){
     return( 
         <Card style={{position:'sticky',top:20,alignContent:'flex-start',maxHeight:200,fontFamily:`'Montserrat', sans-serif`}}>
             <div style={{width:"100%",padding:20}}>{`Subtotal(${cart.numberOfItems} items): GHS ${cart.discountedTotal}`}</div>
-            <Button primary style={{minWidth:"fit-content",width:300}}>
-                <Link style={{textDecoration:'none',color:'white'}} to='/checkout'> Check Out</Link>
-            </Button>
+            <Link style={{textDecoration:'none',color:'white'}} to='/checkout' state={{fromFeed:false}}>
+                <Button primary style={{minWidth:"fit-content",width:300}}>
+                    Check Out
+                </Button>
+            </Link>
         </Card>  
     )
 }

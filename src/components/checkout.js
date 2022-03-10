@@ -106,7 +106,7 @@ export default function Checkout({location}) {
     const { status, data: signInCheckResult } = useSigninCheck();
     const { data: user } = useUser()
     const db = useFirestore();
-    const cartRef = user && doc(db, location&&location.state.fromFeed?'buyNow':'carts', user.uid);
+    const cartRef = user && doc(db, location && location.state&&location.state.fromFeed?'buyNow':'carts', user.uid);
     const { data:cart } = useFirestoreDocData(cartRef);
 
     const items =cart && cart.items
@@ -131,7 +131,7 @@ export default function Checkout({location}) {
     return (
         <CheckoutWrapper >
             <div className='checkout-form'>
-            <UserAddress selected={selected} setSelected={setSelected} />
+            
             <Formik 
                 initialValues={{orderAddress:addresses[0],payment:'paystack',paystackOptions:''}}
                 validationSchema={orderSchema}
@@ -142,7 +142,7 @@ export default function Checkout({location}) {
                       console.log('verifying')
                         values.amount = cart.discountedTotal?cart.discountedTotal:cart.totalAmount
                         values.items = [...items]
-                        values.collection = location&&location.state.fromFeed?'buyNow':'carts'
+                        values.collection =location && location.state&&location.state.fromFeed?'buyNow':'carts'
                       values.orderAddress = selected
                       values.isAnonymous = user.isAnonymous
                     console.log(JSON.stringify(values, null, 2));
@@ -158,7 +158,10 @@ export default function Checkout({location}) {
                 }}>
                 {({ isSubmitting,setFieldValue,handleChange,handleSubmit,values,errors }) => (
                 <Form id='checkout'> 
+                    <UserAddress selected={selected} setSelected={setSelected} />
+                      <ErrorMessage  name="orderAddress" component="div"/>
                     <PaymentSegment card={card} values={values} db={db} user={user}/>
+                    <ErrorMessage  name="payment" component="div"/>
                     <CartItems location={location} /> 
                 </Form>
                 )}
@@ -226,7 +229,7 @@ function PaymentSegment({card,values,db,user}){
                </div>
                 <Field type="radio" name="payment" value='paystack'/>
                 <span class="checkmark"></span>
-                {(card && userFs.saveCard && values.payment == 'paystack') &&
+                {(card && userFs&& userFs.saveCard && values.payment == 'paystack') &&
                     <>
                     <RadioButtonsContainer> Mobile Money or New Card
                         <Field type="radio"  name="paystackOptions" value='momo'/>
@@ -260,7 +263,7 @@ function Subtotal({cart}){
             <div style={{width:"100%",padding:20}}>
                 {`Subtotal(${cart.numberOfItems} items): GHS ${cart.discountedTotal?cart.discountedTotal:cart.totalAmount}`}
             </div>
-            <Button primary type='submit' form='checkout' primary style={{minWidth:"fit-content",width:300}}>Place Order</Button>
+            <Button primary type='submit' form ='checkout' primary style={{minWidth:"fit-content",width:300}}>Place Order</Button>
         </Card>
     )
 }
