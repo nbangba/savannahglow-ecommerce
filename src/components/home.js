@@ -272,9 +272,9 @@ export default function Home() {
                   </h1>
                   
                   <ul style={{width:'100%',listStyleType:'none'}}>
-                    <li><h3>Enriches your skin</h3></li>
                     <li><h3>Moisturizes and protects skin</h3></li>
-                    <li><h3>Prevents hairloss</h3></li>
+                    <li><h3>Enriches your skin</h3></li>
+                    <li><h3>Perfect for your hair</h3></li>
                   </ul>
                   <Link style={{textDecoration:'none'}} to="/products/savannah-glow-shea-butter"><Button primary style={{width:280,display:'flex',marginBottom:'5vw',  fontSize:24,alignItems:'center',justifyContent:'center'}} >BUY NOW </Button></Link>
                 </section>
