@@ -6,7 +6,7 @@
 Savannah glow is a responsive single product ecommerce website that sells a shea butter product with 
 the potential to grow and sell more products.
 It was built with [Gatsby](https://www.gatsbyjs.com/) (A react static site generator) but has dynamic component. It uses 
-[Contentful](https://www.contentful.com/) as a headless CMS and data stored in firebase for the dynamic components.
+[Contentful](https://www.contentful.com/) as a headless CMS and data stored in [Firebase firestore](https://firebase.google.com/) for the dynamic components.
 [Styled-components](https://styled-components.com/) is used for the styling. 
 [Google cloud functions](https://developers.google.com/learn/topics/functions) is used for hosting and executing serverless functions.
 [React-pdf](https://react-pdf.org/) was used for creating the receipts.
@@ -48,6 +48,7 @@ It was built with [Gatsby](https://www.gatsbyjs.com/) (A react static site gener
 4.  **Learn more**
 
     - [Gatsby](https://www.gatsbyjs.com/)
+    - - [Firebse firestore](https://firebase.google.com/)
 
     - [Contentful](https://www.contentful.com/)
 
@@ -56,4 +57,5 @@ It was built with [Gatsby](https://www.gatsbyjs.com/) (A react static site gener
     - [Google cloud functions](https://developers.google.com/learn/topics/functions)
 
     - [React-pdf](https://react-pdf.org/)
+    - 
 
