@@ -5,11 +5,11 @@
 1.  **A single product ecommerce website**.
 Savannah glow is a responsive single product ecommerce website that sells a shea butter product with 
 the potential to grow and sell more products.
-It was built with Gatsby (A react static site generator) but has dynamic component. It uses 
-Contentful as a headless CMS and data stored in firebase for the dynamic components.
-React Styles is used for the styling. 
-Google cloud functions is used for hosting and executing serverless functions.
-React-pdf was used for creating the receipts.
+It was built with [Gatsby](https://www.gatsbyjs.com/) (A react static site generator) but has dynamic component. It uses 
+[Contentful](https://www.contentful.com/) as a headless CMS and data stored in firebase for the dynamic components.
+[Styled-components](https://styled-components.com/) is used for the styling. 
+[Google cloud functions](https://developers.google.com/learn/topics/functions) is used for hosting and executing serverless functions.
+[React-pdf](https://react-pdf.org/) was used for creating the receipts.
  
 2.  **Logic**
  It consists of a homepage, product, blog and faq page for non logged in users,
@@ -23,35 +23,37 @@ React-pdf was used for creating the receipts.
  
  On completion of an order it appears in the list of user orders of an admin. Admin has the option to dispatch received orders,and this changes
  the status of an order from received to dispatch and buyer automatically receives an email. 
- Dispatched items can assigned to users who have been ssigned the role of dispatchers.
+ Dispatched items can be assigned to users who have been given the role of dispatchers. Once an item is delivered, admin or dispatcher can update order 
+ status to delivered after which order is completed.
+ 
+ Roles can be assigned to users on the user page by admin1 and admin2. Admin2 can also delete users on the users page.
+ 
+ On the settings page, logged in users have the option of adding address, changing email and password,changing name and deleting account.
+ Static components (products and blogs) of the page are created with data from Contentful CMS whiles the dynamic components are created by 
+ querying data from firestore.
+ 
+ Play around website to see how it works 😀 .
+ 
+ 
  
  
  
 
     
 
-3.  **Open the code and start customizing!**
+3.  **Open the code and start playing around 😀!**
 
-    Your site is now running at https://www.savannahglow.com/!
-
-    Edit `src/pages/index.js` to see your site update in real-time!
+   Site is running at https://www.savannahglow.com/!
 
 4.  **Learn more**
 
-    - [Savannah Glow](https://www.savannahglow.com/)
+    - [Gatsby](https://www.gatsbyjs.com/)
 
-    - [Tutorials](https://www.gatsbyjs.com/tutorial/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
+    - [Contentful](https://www.contentful.com/)
 
-    - [Guides](https://www.gatsbyjs.com/tutorial/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
+    - [Styled-components](https://styled-components.com/)
 
-    - [API Reference](https://www.gatsbyjs.com/docs/api-reference/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
+    - [Google cloud functions](https://developers.google.com/learn/topics/functions)
 
-    - [Plugin Library](https://www.gatsbyjs.com/plugins?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
+    - [React-pdf](https://react-pdf.org/)
 
-    - [Cheat Sheet](https://www.gatsbyjs.com/docs/cheat-sheet/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
-
-## 🚀 Quick start (Gatsby Cloud)
-
-Deploy this starter with one click on [Gatsby Cloud](https://www.gatsbyjs.com/cloud/):
-
-[<img src="https://www.gatsbyjs.com/deploynow.svg" alt="Deploy to Gatsby Cloud">](https://www.gatsbyjs.com/dashboard/deploynow?url=https://github.com/gatsbyjs/gatsby-starter-minimal)
