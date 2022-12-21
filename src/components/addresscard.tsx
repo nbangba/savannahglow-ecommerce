@@ -1,11 +1,11 @@
 import React, { Children, useState } from 'react'
 import Card from './card'
 import styled from 'styled-components'
-import RemoveIcon from '../images/remove.svg'
-import Edit from '../images/edit.svg'
+import RemoveIcon from '../images/svgs/remove.svg'
+import Edit from '../images/svgs/edit.svg'
 import { Button } from './navbar'
 import ModalComponent from './modal'
-import AddressForm from './addressform'
+import AddressForm, { AddressInfoProps } from './addressform'
 import {doc,deleteDoc,getFirestore,setDoc } from "firebase/firestore";
 import {useFirebaseApp,useSigninCheck,useUser} from 'reactfire';
 
@@ -34,9 +34,18 @@ export const CardItem = styled.div`
        fill:black;
    }
 `
+interface AddressCardProps{
+  children:JSX.Element,
+  selected?:boolean,
+  setSelected?:(selected:AddressInfoProps)=> void,
+  selectable?:boolean,
+  addressInfo: AddressInfoProps,
+  maxWidth?:string,
+  minWidth?:string,
+  style?:React.CSSProperties
+}
 
-
-export default function AddressCard({addressInfo,children,selected,setSelected,selectable,maxWidth,style}) {
+export default function AddressCard({addressInfo,children,selected,setSelected,selectable,maxWidth,style}:AddressCardProps) {
     
     const {firstname='',lastname='',email='',phone='',location='',street='',city='',state='',country=''} = addressInfo
     
@@ -52,7 +61,13 @@ export default function AddressCard({addressInfo,children,selected,setSelected,s
     )
 }
 
-export function AddressCardOptions({setDefaultAddress,defaultAddress,addressInfo}){
+interface AddressCardOptionsProps{
+  setDefaultAddress:(deafaultAddress:string|null)=>void,
+  defaultAddress:string|null,
+  addressInfo:AddressInfoProps
+}
+
+export function AddressCardOptions({setDefaultAddress,defaultAddress,addressInfo}:AddressCardOptionsProps){
     const [showDeletDialog,setShowDeleteDialog] = useState(false)
     const [editAddress,setEditAddress]= useState(false)
     
@@ -61,11 +76,11 @@ export function AddressCardOptions({setDefaultAddress,defaultAddress,addressInfo
     console.log(defaultAddress)
 
     const db = getFirestore(useFirebaseApp())
-    const deleteItem = ()=> deleteDoc(doc(db, "addresses", addressInfo.NO_ID_FIELD))
+    const deleteItem = ()=> deleteDoc(doc(db, "addresses",addressInfo.NO_ID_FIELD?addressInfo.NO_ID_FIELD:''))
                       .then(()=>console.log("Address  deleted"))
                       .catch((e)=>console.log(e))
     
-    const addressRef = doc(db, 'addresses', addressInfo.NO_ID_FIELD);                  
+    const addressRef = doc(db,'addresses', addressInfo.NO_ID_FIELD?addressInfo.NO_ID_FIELD:'');                  
     
     const setAsDefault = ()=> {
       if(defaultAddress){
@@ -88,9 +103,9 @@ export function AddressCardOptions({setDefaultAddress,defaultAddress,addressInfo
    <>
    <Remove onClick={()=>setShowDeleteDialog(true)} />
    <CardItem>
-    <Button secondary onClick={()=>setEditAddress(true)}><Edit fill='#474E52' style={{width:20,height:20}}/>edit</Button> 
+    <Button type='button' secondary onClick={()=>setEditAddress(true)}><Edit fill='#474E52' style={{width:20,height:20}}/>edit</Button> 
     {isDefault?<div style={{display:'flex',justifyContent:'center',alignItems:'center'}}>default</div>:
-    <Button secondary onClick={setAsDefault}>set as default</Button>}
+    <Button type='button' secondary onClick={setAsDefault}>set as default</Button>}
   </CardItem>
   <ModalComponent showModal={editAddress}>
       <AddressForm setShowModal={setEditAddress} addressInfo={addressInfo}/>
@@ -100,13 +115,41 @@ export function AddressCardOptions({setDefaultAddress,defaultAddress,addressInfo
   )
 }
 
-export function DeleteDialog({setShowDialog,deleteItem,showModal,title}){
+interface DeleteDialogProps{
+  setShowDialog:(showDialog:boolean)=>void,
+  deleteItem:()=>void
+  showModal:boolean,
+  title?:string,
+  
+}
+
+interface DeleteDialogWithIndex {
+  setShowDialog:(showDialog:boolean)=>void,
+  deleteItem:(index:number)=>void
+  showModal:boolean,
+  title?:string
+  index:number;
+}
+
+type DeleteProps = DeleteDialogProps|DeleteDialogWithIndex
+export function DeleteDialog({setShowDialog,deleteItem,showModal,title}:DeleteDialogProps){
   return(
     <ModalComponent showModal={showModal}>
     <div>
       <div>{title}</div>
-      <Button primary onClick={()=>{deleteItem(); setShowDialog(false)}} >YES</Button>
-      <Button  secondary  onClick={()=>setShowDialog(false)}>NO</Button>
+      <Button type='button' primary onClick={()=>{deleteItem(); setShowDialog(false)}} >YES</Button>
+      <Button type='button' secondary  onClick={()=>setShowDialog(false)}>NO</Button>
+    </div>
+    </ModalComponent>
+  )
+}
+export function DeleteCartItem({setShowDialog,deleteItem,showModal,title,index}:DeleteDialogWithIndex){
+  return(
+    <ModalComponent showModal={showModal}>
+    <div>
+      <div>{title}</div>
+      <Button type='button' primary onClick={()=>{deleteItem(index); setShowDialog(false)}} >YES</Button>
+      <Button type='button'  secondary  onClick={()=>setShowDialog(false)}>NO</Button>
     </div>
     </ModalComponent>
   )

@@ -1,7 +1,7 @@
 import React, { useState,useEffect } from 'react'
 import styled,{css} from 'styled-components'
-import Logo from '../images/logo.svg'
-import User from '../images/user.svg'
+import Logo from '../images/svgs/logo.svg'
+import User from '../images/svgs/user.svg'
 import SignIn from './signin'
 import Popper from './popper'
 import ModalComponent from './modal'
@@ -9,12 +9,13 @@ import { useUser,useSigninCheck,useFirestore,useFirestoreDocData,useFirebaseApp 
 import {doc} from '@firebase/firestore'
 import Errorwrapper from './errorwrapper';
 import { Link, navigate } from 'gatsby'
-import ShoppingBag from '../images/bag.svg'
-import HamburgerIcon from '../images/hamburger-menu.svg'
+import ShoppingBag from '../images/svgs/bag.svg'
+import HamburgerIcon from '../images/svgs/hamburger-menu.svg'
 import { getMessaging, getToken, } from "firebase/messaging";
 import Drawer from './drawer'
 import { MenuContent } from './popper'
 import { MenuContentList } from './popper'
+import { DocumentData} from 'firebase/firestore'
 
 const Navbar = styled.div`
    display: flex;
@@ -43,23 +44,23 @@ const Navbar = styled.div`
             
     }
 
-   .tooltip-enter{
-     opacity:0;
-   }
+    .tooltip-enter{
+        opacity:0;
+    }
 
-   .tooltip-enter-active{
-    opacity:1;
-    transition: opacity 200ms;
-  }
+    .tooltip-enter-active{
+        opacity:1;
+        transition: opacity 200ms;
+    }
 
-  .tooltip-exit{
-      opacity:1;
-  }
-  
-  .tooltip-exit-active{
-    opacity:0;
-    transition: opacity 200ms;
-  }
+    .tooltip-exit{
+        opacity:1;
+    }
+    
+    .tooltip-exit-active{
+        opacity:0;
+        transition: opacity 200ms;
+    }
 `
 export const Menu = styled.ul` 
   position: relative; 
@@ -70,11 +71,9 @@ export const Menu = styled.ul`
   padding:0px;
   font-family: 'Ubuntu', sans-serif;
   margin:0px;
-  ${props => props.left && css`
+  ${(props:{left?:boolean}) => props.left && css`
   justify-content:flex-end;
-  `}
- 
-  
+  `}  
 `
 
 export const MenuItem = styled.li`
@@ -116,10 +115,10 @@ export const Button = styled.button`
     background:#13213D;
     transition: background 0.3s ease-out;
     mix-blend-mode: normal;
-}
+   }
 
  
-   ${props => props.primary && css`
+   ${(props:{primary?:boolean, secondary?:boolean,onClick:()=>any}) => props.primary && css`
    background-color:#35486F;
    color: white;
    margin:5px;
@@ -132,7 +131,7 @@ export const Button = styled.button`
    }
   `}
 
-  ${props => props.secondary && css`
+  ${(props) => props.secondary && css`
      background:rgba(224,193,175,0.5);
      text-align:center;
      display:inline-flex;
@@ -187,11 +186,17 @@ const MenuIcon = styled.div`
     display:flex;
    }
 `
+
+interface NavProps{
+
+}
 export default function Nav() {
     const [openDrawer, setOpenDrawer] = useState(false)
-    const messaging = getMessaging()
-    const menuItems = ['Home','Blogs','Faq','Products']
+    
+    const menuItems:string[] = ['Home','Blogs','Faq','Products']
+
     useEffect(() => {
+        const messaging = getMessaging()
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker
               .register("./firebase-messaging-sw.js")
@@ -255,16 +260,17 @@ function LoginStatus(){
     console.log(user)
     console.log(status,signInCheckResult)
     const firestore = useFirestore()
-    const cartRef = user && doc(firestore, 'carts', user.uid);
+    
     
 
     const CartComponent = ()=>{
+        const cartRef = doc(firestore, 'carts', user?user.uid:"nocart");
         const { data:cart } = useFirestoreDocData(cartRef);
         console.log('cart',cart)
         return(
             <CartNumber>
                 <Link to='/cart'>
-                <small>{cart && cart.numberOfItems?cart.numberOfItems:'0'}</small>
+                 <small>{cart && cart.numberOfItems?cart.numberOfItems:'0'}</small>
                 </Link>
            </CartNumber>
         )
@@ -283,7 +289,7 @@ function LoginStatus(){
                    (signInCheckResult && signInCheckResult.signedIn === true)&&(user&&!user.isAnonymous)?
                     <Popper subMenuItems={subMenuItems}>
                         {
-                            (setReferenceElement,setOpen,open)=>
+                            (setReferenceElement:any,setOpen:(open:boolean)=>void,open:boolean)=>
                             <MenuItem  ref={setReferenceElement} tabIndex={-1} onClick={()=>setOpen(!open)}>
                             <UserWrapper><User fill='#474E52' style={{width:30,height:30}}/></UserWrapper>
                             </MenuItem>
@@ -302,4 +308,8 @@ function LoginStatus(){
                 </ModalComponent>
             </Menu>
     )
+}
+
+function DocumentReference<T>(): import("reactfire").ReactFireOptions<import("@firebase/firestore").DocumentData> | undefined {
+    throw new Error('Function not implemented.')
 }

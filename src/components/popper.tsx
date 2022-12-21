@@ -21,7 +21,7 @@ export const MenuContent = styled.ul`
       display:block;
       font-family: 'Montserrat', sans-serif;
       color:#35486F;
-      background-color:${props=> props.bg||''};
+      background-color:${(props:{bg?:string,padding?:string,children:any,key?:number})=> props.bg||''};
       margin:5px;
       font-size:18px;
       text-align:left;   
@@ -39,12 +39,15 @@ export const MenuContent = styled.ul`
         }
     }
   `
-
-const Popper = ({subMenuItems,children}) => {
+interface PopperProps {
+  subMenuItems: string[],
+  children: (setReferenceElement:React.Dispatch<React.SetStateAction<null>>,setOpen:React.Dispatch<React.SetStateAction<boolean>>,open:boolean)=>void
+}
+const Popper = ({subMenuItems,children}:PopperProps) => {
 
   const [referenceElement, setReferenceElement] = useState(null);
-  const [popperElement, setPopperElement] = useState(null);
-  const [arrowElement, setArrowElement] = useState(null);
+  const [popperElement, setPopperElement] = useState<any>();
+  const [arrowElement, setArrowElement] = useState<any>(null);
   const { styles, attributes ,update, } = usePopper(referenceElement, popperElement, {
     modifiers: [{ name: 'arrow', options: { element: arrowElement } },{name:'offset',options:{offset:[-70,0]}}],
   });
@@ -63,7 +66,7 @@ const Popper = ({subMenuItems,children}) => {
   }
   
 // used to close menu on click outside. replaced with tab ondex and onblur
-  const handleClickOutside = (e)=>{
+  const handleClickOutside = (e:any)=>{
     if(open){
      const tooltip = document.getElementsByClassName('tooltip-enter-done')[0]
      console.log(e.target)

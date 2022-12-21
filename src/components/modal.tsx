@@ -19,7 +19,7 @@ const Modal = styled.div`
   `
 
   const ModalContent = styled.div`
-    width:${props=>props.width||'800px'};
+    width:${(props:{width?:string})=>props.width||'800px'};
     overflow-y:auto;
     min-height:100px;
     max-height:100vh;
@@ -68,7 +68,14 @@ const Modal = styled.div`
      }
 
   `
- export default function ModalComponent({showModal,setShowModal,children,width,title}){
+  interface ModalProps{
+    showModal: boolean;
+    setShowModal?: (show:boolean)=>void;
+    children: any;
+    width?: string;
+    title?: string;
+}
+ export default function ModalComponent({showModal,setShowModal,children,width,title}:ModalProps){
   
   useEffect(() => {
     if(showModal)

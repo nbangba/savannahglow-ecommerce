@@ -1,6 +1,6 @@
 import React,{useEffect, useState} from 'react'
-import {useFirestore,useFirestoreCollectionData,useAuth,useUser} from 'reactfire'
-import { collection,query,orderBy,setDoc,doc,serverTimestamp,where,limit,startAt,endAt, addDoc} from "firebase/firestore";
+import {useFirestore,useFirestoreCollectionData,useAuth,useUser, ObservableStatus} from 'reactfire'
+import { collection,query,orderBy,setDoc,doc,serverTimestamp,where,limit,startAt,endAt, addDoc, Timestamp} from "firebase/firestore";
 import { OrderCard } from './orders';
 import { Button } from './navbar';
 import ModalComponent from './modal';
@@ -9,6 +9,9 @@ import styled from 'styled-components';
 import CreatableSelect from 'react-select/creatable';
 import useRole from './useRole';
 import QueryOptions from './queryOptions';
+import { VarietyProps } from './product';
+import { AddressInfoProps } from './addressform';
+import { User } from 'firebase/auth';
 
 const moment = require('moment')
 
@@ -34,6 +37,41 @@ const AdminOrders = styled.div`
    max-width:1400px;
    margin:auto;
 `
+
+interface OrderProps{
+    amount:number,
+    items: VarietyProps[],
+    orderAddress: AddressInfoProps,
+    payment:string,
+    paystackOptions:string,
+    NO_ID_FIELD:string,
+}
+
+export interface OrderInfoProps{
+  order:OrderProps,
+  orderCreated:Timestamp,
+  orderStatus:string,
+  orderID:number,
+  user:string,
+  response:any,
+  reasonsDeliveryFailed?:string[],
+  dispatchTime?:Timestamp,
+  dispatcherHistory?:{label:string,uid:string}[]
+  NO_ID_FIELD:string,
+}
+
+interface OrderInfoWithInvoice extends OrderInfoProps{
+  receiptID?:never,
+  invoiceID:number,
+}
+
+interface OrderInfoWithReceipt extends OrderInfoProps{
+   receiptID:number,
+   invoiceID?:never,
+ }
+
+export type OrderInfoWithReceiptOrInvoice = OrderInfoWithInvoice|OrderInfoWithReceipt
+
 export default function  AdminCustomers() {
     const firestore = useFirestore();
     const { data: user } = useUser()
@@ -41,11 +79,11 @@ export default function  AdminCustomers() {
     const ordersQuery = query(ordersCollection, orderBy('orderCreated', 'desc'),limit(1));
     const currentTime = new Date(0)
     const {role} = useRole()
-    const [orderStatus, setOrderStatus] = useState('all')
-    const [orderDate, setOrderDate] = useState(currentTime)
+    const [orderStatus, setOrderStatus] = useState<string|null>('all')
+    const [orderDate, setOrderDate] = useState<Date|null>(currentTime)
     const [queryOptions, setqueryOptions] = useState(ordersQuery)
     const [desc, setdesc] = useState(true)
-    const { status, data:orders } = useFirestoreCollectionData(queryOptions);
+    const { status, data:orders } = useFirestoreCollectionData(queryOptions) as ObservableStatus<OrderInfoWithReceiptOrInvoice[]>;
     const ORDERS_PER_PAGE = 12;
     const [page,setPage] = useState(1)
     console.log('role',role)
@@ -56,7 +94,7 @@ export default function  AdminCustomers() {
         setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),
         where('orderCreated','>=',orderDate),limit(page*ORDERS_PER_PAGE)))
 
-        else if(role=='dispatch')
+        else if(user && role=='dispatch')
         setqueryOptions(query(ordersCollection, orderBy('orderCreated',desc? 'desc':'asc'),
         where('orderStatus','==',orderStatus),where('dispatcher.uid','==',user.uid),
         where('orderCreated','>=',orderDate),limit(page*ORDERS_PER_PAGE)))
@@ -68,8 +106,8 @@ export default function  AdminCustomers() {
 
     console.log(orders)
     
-    const  delivered = (order) => {        
-        setDoc(doc(firestore, "orders", order.NO_ID_FIELD), {
+    const  delivered = (order:OrderProps,orderID:string) => {        
+        setDoc(doc(firestore, "orders", orderID), {
             orderStatus:'delivered',
             deliveryTime:serverTimestamp(),
           },{merge:true})
@@ -79,7 +117,7 @@ export default function  AdminCustomers() {
                 template: {
                     name:'orderStatus',
                     data:{
-                        ...order.order,
+                        ...order,
                         orderStatus:'delivered'
                     }
                   }
@@ -95,14 +133,14 @@ export default function  AdminCustomers() {
    <div>
        <QueryOptions setOrderStatus={setOrderStatus} setOrderDate={setOrderDate}/>
        <AdminOrders>
-       {orders.map((order)=>
+       {orders.map((order:OrderInfoWithReceiptOrInvoice)=>
         <OrderCard order={order} role={role} key= {order.NO_ID_FIELD}>
-            {(order.orderStatus != 'cancelled' && order.orderStatus != 'delivered') &&
+            {(order.orderStatus != 'cancelled' && order.orderStatus != 'delivered') ?
             <>
-            {(role && order.orderStatus == 'dispatched')?
+            {(role && user && order.orderStatus == 'dispatched')?
             <>
               <Delivery order={order} user={user}/>
-              <Button onClick={()=>delivered(order)}>
+              <Button onClick={()=>delivered(order.order,order.NO_ID_FIELD)}>
                   Delivered    
               </Button>
             </>:
@@ -112,8 +150,9 @@ export default function  AdminCustomers() {
             }
             </>
             }
-            </>
-           }
+            </>:
+            <></>
+           }       
         </OrderCard>             
        )}
        </AdminOrders>
@@ -128,14 +167,19 @@ export default function  AdminCustomers() {
   )
 }
 
-function Delivery({order,user}){
+interface DeliveryProps{
+    order:OrderInfoProps,
+    user:User,
+}
+
+function Delivery({order,user}:DeliveryProps){
     const firestore = useFirestore();
     
-    const [selected, setselected] = useState([])
+    const [selected, setselected] = useState<any>([])
     const options =[{label:'Couldnt reach customer'},{label:'Wrong Order'},{label:'Other'}]
     const [showModal, setshowModal] = useState(false)
 
-    const onDeliveryFailed =(order,selected)=>{
+    const onDeliveryFailed =(order:OrderInfoProps,selected:any)=>{
         const failedReason = {reason:selected.label,loggedBy:user.displayName,uid:user.uid}
         const newReasonDeliveryFailed = order.reasonsDeliveryFailed?[failedReason,...order.reasonsDeliveryFailed]:
                                            [failedReason]                                  
@@ -172,7 +216,6 @@ function Delivery({order,user}){
        options={options}
        placeholder={'Enter a reason(less than 50 letters)'}
        onChange={setselected}
-       selected={selected}
        />
        <div style={{width:'100%',textAlign:'center',marginTop:100}}>
            <Button style={{display:'initial'}} primary onClick={()=>{onDeliveryFailed(order,selected);setshowModal(false)}}>Submit</Button>
@@ -183,9 +226,11 @@ function Delivery({order,user}){
     </>
     )
 }
-
-function Dispatch({order}){
-    const [selected, setselected] = useState([])
+interface DispatchProps{
+    order:OrderInfoProps,
+}
+function Dispatch({order}:DispatchProps){
+    const [selected, setselected] = useState<any>([])
     const firestore = useFirestore();
     const usersCollection = collection(firestore, 'users');
     const usersQuery = query(usersCollection,where('deleted','==',false),where('role','==','dispatch'))
@@ -195,7 +240,7 @@ function Dispatch({order}){
 
     const [showModal, setshowModal] = useState(false)
 
-    const  onDispatch = (order,dispatcher) => {
+    const  onDispatch = (order:OrderInfoProps,dispatcher:{label:string,uid:string|null}) => {
         
         const newDispatcherHistory = order.dispatcherHistory?[dispatcher,...order.dispatcherHistory]:
                                     [dispatcher]
@@ -226,7 +271,7 @@ function Dispatch({order}){
         console.log(selected)
     }, [selected])
     
-    const handleChange = (selected) =>{
+    const handleChange = (selected:any) =>{
       if(selected.uid)
       setselected(selected)
       else
@@ -251,7 +296,6 @@ function Dispatch({order}){
        options={options}
        placeholder={'Search or Enter a dispatch name'}
        onChange={handleChange}
-       selected={selected}
        />
        <div style={{width:'100%',textAlign:'center'}}>
            <button onClick={()=>{onDispatch(order,selected)}}>Submit</button>
@@ -262,13 +306,22 @@ function Dispatch({order}){
     )
 }
 
-export function LoadMore({numberOfItems,setPage,ORDERS_PER_PAGE}){
+interface SetPage{
+    (prev:number):number;
+}
+
+interface LoadMoreProps{
+    numberOfItems:number;
+    setPage:(param:SetPage)=>void ;
+    ORDERS_PER_PAGE:number
+}
+export function LoadMore({numberOfItems,setPage,ORDERS_PER_PAGE}:LoadMoreProps){
     if(numberOfItems == 0)
     return <div style={{width:'100%',display:'flex',justifyContent:'center',fontFamily:'Montserrat'}}> No Results</div>
     if(numberOfItems%ORDERS_PER_PAGE == 0)
     return(
         <div style={{width:'100%',display:'flex',justifyContent:'center',fontFamily:'Montserrat'}}>
-        <Button secondary onClick={()=>setPage(prev=>prev+1)} >Load more</Button>
+        <Button secondary onClick={()=>setPage((prev:number)=> prev+1)} >Load more</Button>
         </div>
     )
     return <div style={{width:'100%',display:'flex',justifyContent:'center',fontFamily:'Montserrat'}}> End of results</div>

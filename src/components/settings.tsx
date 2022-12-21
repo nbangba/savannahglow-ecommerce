@@ -12,15 +12,15 @@ import { CSSTransition } from 'react-transition-group';
 import Reauth from './reauth';
 import  ModalComponent from './modal';
 //import firebase from '../firebase/fbconfig';
-import ShowPassword from '../images/show-password.svg'
-import HidePassword from '../images/hide-password.svg'
+import ShowPassword from '../images/svgs/show-password.svg'
+import HidePassword from '../images/svgs/hide-password.svg'
 import AddressForm from './addressform';
 import * as Yup from 'yup'
 //import { useFirestoreConnect } from 'react-redux-firebase';
 //import { useSelector } from 'react-redux';
 import Addresscard from './addresscard';
 import { doc, getFirestore,collection,query,orderBy,where, deleteDoc, setDoc} from 'firebase/firestore';
-import { useUser,useFirestoreCollectionData,useFirestoreDocData, useFirestore} from 'reactfire';
+import { useUser,useFirestoreCollectionData,useFirestoreDocData, useFirestore, ObservableStatus} from 'reactfire';
 import { updateEmail,updatePassword,deleteUser} from 'firebase/auth'; // Firebase v9+
 import Errorwrapper from './errorwrapper';
 import { AddressCardOptions } from './addresscard';
@@ -28,7 +28,7 @@ import Cards from 'react-credit-cards'
 import { getAnalytics, logEvent } from "firebase/analytics";
 import { Card } from './card';
 import { Remove } from './addresscard';
-import { CheckBox } from './users';
+import { AddressInfoProps } from './addressform';
 
 const dropDownStyle ={
     border:'1px solid #556585',
@@ -158,20 +158,11 @@ const CardWrapper = styled.div`
 `
   function Account(){
       const { data: user } = useUser()
+
       return(
         <Formik
-        initialValues={{ displayName:user.displayName||'',email:user.email||'',phone:user.phoneNumber||''}}
-        validate={values => {
-          const errors = {};
-          if (!values.email) {
-            errors.email = 'Required';
-          } else if (
-            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-          ) {
-            errors.email = 'Invalid email address';
-          }
-          return errors;
-        }}
+        initialValues={{ displayName:user&&user.displayName||'',email:user&&user.email||'',phone:user&&user.phoneNumber||''}}
+        //Remember to add yup for  validation check.
         onSubmit={(values, { setSubmitting }) => {
           setTimeout(() => {
             console.log(JSON.stringify(values, null, 2));
@@ -179,26 +170,26 @@ const CardWrapper = styled.div`
           }, 400);
         }}
       >
-        {({ isSubmitting,setFieldValue,handleChange,values }) => (
+        {({ isSubmitting, setFieldValue, handleChange, values}) => (
           <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden'}}>
             <InputWrapper>
-                <Label for='firstname' >Display Name</Label>
+                <Label>Display Name</Label>
                 <Input onChange={handleChange} value={values.displayName} type="text" name="displayName"  id='displayName' />
             </InputWrapper>
             <InputWrapper>
-                <Label for='email' >Email</Label>
+                <Label>Email</Label>
                 <Input onChange={handleChange} value={values.email} type="email" name="email" id="email" />
                 <ErrorMessage name="email" component="div" />
             </InputWrapper>
             <InputWrapper>
-            <Label for='phone' >Phone Number</Label>
-            <PhoneInput onChange={handleChange} value={values.phone} type="text" name="phone" id="phone" dropdownStyle={{...dropDownStyle}} inputStyle={{...reactTextInput}}/>
+                <Label>Phone Number</Label>
+                <PhoneInput onChange={handleChange} value={values.phone} dropdownStyle={{...dropDownStyle}} inputStyle={{...reactTextInput}}/>
             </InputWrapper>
             
             <InputWrapper style={{display:'flex',justifyContent:'flex-end'}} >
-            <Button secondary  type='button'
+            <Button secondary  type='button' onClick={()=>{}}
               style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
-              <Button primary type='submit'  disabled={isSubmitting}
+              <Button primary type='submit'  disabled={isSubmitting} onClick={()=>{}}
               style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >SEND</Button>
               </InputWrapper>
               
@@ -221,7 +212,7 @@ const CardWrapper = styled.div`
           Change Password
         </LinkButton>
         <LinkButton onClick={()=>setDeleteAccount(true)} >
-        Delete Account
+          Delete Account
         </LinkButton>
         <ModalComponent width="600px" showModal={changeEmail} title='Change Email'>
           <ChangeEmail setShowModal={setChangeEmail}/>
@@ -236,7 +227,10 @@ const CardWrapper = styled.div`
     )
 }
 
-function ChangeEmail({setShowModal}){
+interface ChangeMailProps{
+  setShowModal:(showModal:boolean)=>void
+}
+function ChangeEmail({setShowModal}:ChangeMailProps){
   //const user = firebase.auth().currentUser;
 
   const { data: user } = useUser()
@@ -245,20 +239,11 @@ function ChangeEmail({setShowModal}){
    return(
     <Formik
     initialValues={{ email: '',}}
-    validate={values => {
-      const errors = {};
-      if (!values.email) {
-        errors.email = 'Required';
-      } else if (
-        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-      ) {
-        errors.email = 'Invalid email address';
-      }
-      return errors;
-    }}
+    //Remember to validate with YUP
     onSubmit={(values, { setSubmitting }) => {
       setTimeout(() => {
         console.log(JSON.stringify(values, null, 2));
+        if(user)
         updateEmail(user,values.email).then(() => {
           setSuccess(true)
           console.log(`email updated to ${values.email} successfully`)
@@ -279,14 +264,14 @@ function ChangeEmail({setShowModal}){
     :
     <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',maxWidth:500,justifyContent:'center'}}>
       <InputWrapper wide>
-        <Label for='email' >New Email</Label>
+        <Label >New Email</Label>
         <Input onChange={handleChange} value={values.email} type="email" name="email"/>
       </InputWrapper>
       <InputWrapper style={{display:'flex',justifyContent:'flex-end'}} wide >
             <Button secondary onClick={()=>setShowModal(false)} type='button'
               style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
-              <button primary type='submit'  disabled={isSubmitting}
-              style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >SEND</button>
+              <Button primary type='submit'  disabled={isSubmitting} onClick={()=>{}}
+              style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >SEND</Button>
               </InputWrapper>
               {reauth && 
                 <InputWrapper>
@@ -302,7 +287,7 @@ function ChangeEmail({setShowModal}){
 
 }
 
-function ChangePassword({setShowModal}){
+function ChangePassword({setShowModal}:ChangeMailProps){
   //const user = firebase.auth().currentUser;
   const { data: user } = useUser()
   const [reauth,setReauth] = useState(false)
@@ -323,6 +308,7 @@ function ChangePassword({setShowModal}){
     onSubmit={(values, { setSubmitting }) => {
       setTimeout(() => {
         console.log(JSON.stringify(values, null, 2));
+        if(user)
         updatePassword(user,values.password).then(() => {
           setSuccess(true)
           // Update successful.
@@ -344,7 +330,7 @@ function ChangePassword({setShowModal}){
     :
     <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',maxWidth:'500px',justifyContent:'center'}}>
       <InputWrapper style={{maxWidth:'80%'}}>
-        <Label for='password' >New Password</Label>
+        <Label >New Password</Label>
         <Input onChange={handleChange} value={values.password} type={showPassword?'text':'password'} name="password"/>
         {errors && errors.password}
       </InputWrapper>
@@ -354,14 +340,14 @@ function ChangePassword({setShowModal}){
         <ShowPassword onClick={()=> setShowPassword(!showPassword)} fill='#474E52' style={{width:60,height:60}}/>}
      </div>
       <InputWrapper style={{maxWidth:'80%'}}>
-        <Label for='confirmPassword' >Confirm Password</Label>
+        <Label  >Confirm Password</Label>
         <Input onChange={handleChange} value={values.confirmPassword} type="password" name="confirmPassword"/>
         {errors && errors.confirmPassword}
       </InputWrapper>
       <InputWrapper style={{display:'flex',justifyContent:'flex-end',maxWidth:'80%'}} wide >
        <Button secondary onClick={()=>setShowModal(false)} type='button'
         style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
-        <Button primary type='submit'  disabled={isSubmitting}
+        <Button primary type='submit'  disabled={isSubmitting} onClick={()=>{}}
         style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >SEND</Button>
       </InputWrapper>
               <>{reauth && 
@@ -376,22 +362,23 @@ function ChangePassword({setShowModal}){
    )
 }
 
-function DeleteAccount({setShowModal}){
+function DeleteAccount({setShowModal}:ChangeMailProps){
   //const user = firebase.auth().currentUser;
   const { data: user } = useUser()
   const [reauth,setReauth] = useState(false)
   const[success,setSuccess] =useState(false)
   const termsSchema = Yup.object().shape({
-    agree: Yup.boolean()
-            .oneOf([true], "You must accept the terms and conditions")
+    agree: Yup.string()
+            .required("You must accept the terms and conditions")
   }) 
   return(
     <Formik
-    initialValues={{agree:false}}
+    initialValues={{agree:'agree'}}
     validationSchema={termsSchema}
     onSubmit={(values, { setSubmitting }) => {
       setTimeout(() => {
         console.log(JSON.stringify(values, null, 2));
+        if(user)
         deleteUser(user).then(() => {
           setSuccess(true)
           // User deleted.
@@ -414,11 +401,11 @@ function DeleteAccount({setShowModal}){
     <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden',justifyContent:'center'}}>
        <div style={{textAlign:'center'}}>By agreeing to this action, your account will be deleted forever</div>
       <InputWrapper style={{display:'flex',justifyContent:'center',width:'100%',flex:'1 0 100%'}}>
-       <label class="container">
-            <input type="checkbox"  onChange={handleChange} value={values.agree} type="checkbox" name="agree"/>
-            <span class="checkmark"></span>
+       <label className="container">
+            <input type="checkbox"  onChange={handleChange} value={values.agree} name="agree"/>
+            <span className="checkmark"></span>
         </label>
-        <Label for='agree' >I agree</Label>
+        <Label >I agree</Label>
         
         </InputWrapper>
         <div style={{display:'flex',justifyContent:'center',width:'100%',flex:'1 0 100%'}}>
@@ -427,7 +414,7 @@ function DeleteAccount({setShowModal}){
       <InputWrapper style={{display:'flex',justifyContent:'center'}} >
        <Button secondary onClick={()=>setShowModal(false)} type='button'
         style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
-        <Button primary type='submit'  disabled={isSubmitting}
+        <Button primary type='submit'  disabled={isSubmitting} onClick={()=>{}}
         style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >SEND</Button>
       </InputWrapper>
               <>{reauth && 
@@ -445,18 +432,8 @@ function DeleteAccount({setShowModal}){
 function Notifications(){
     return(
       <Formik
-      initialValues={{ fisrtname:'',lastname:'',email: '',phone:''}}
-      validate={values => {
-        const errors = {};
-        if (!values.email) {
-          errors.email = 'Required';
-        } else if (
-          !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-        ) {
-          errors.email = 'Invalid email address';
-        }
-        return errors;
-      }}
+      initialValues={{ newsletter:'newsletter',notifications:'notifications'}}
+      //add functionality
       onSubmit={(values, { setSubmitting }) => {
         setTimeout(() => {
           console.log(JSON.stringify(values, null, 2));
@@ -467,24 +444,24 @@ function Notifications(){
       {({ isSubmitting,setFieldValue,handleChange,values }) => (
         <Form style={{maxWidth:'500px'}}>
           <InputWrapper style={{display:'flex',flexWrap:'wrap',width:'100%',flex:'1 1 100px',justifyContent:'space-between',minWidth:200}}>
-              <Label for='firstname'  >Subscribe to newsletters</Label>
+              <Label  >Subscribe to newsletters</Label>
               <Switch>
-              <Input onChange={handleChange} value={values.firstname} type="checkbox" name="firstname"  id='firstname' />
+              <Input onChange={handleChange} value={values.newsletter} type="checkbox" name="firstname"  id='firstname' />
               <Slider></Slider>
               </Switch> 
           </InputWrapper>
           <InputWrapper style={{display:'flex',flexWrap:'wrap',width:'100%',flex:'1 1 100px',justifyContent:'space-between',minWidth:200}}>
-              <Label for='lastname' >Recieve Notifications</Label>
+              <Label >Recieve Notifications</Label>
               <Switch>
-              <Input onChange={handleChange} value={values.firstname} type="checkbox" name="firstname"  id='firstname' />
+              <Input onChange={handleChange} value={values.notifications} type="checkbox" name="firstname"  id='firstname' />
               <Slider></Slider>
               </Switch>
           </InputWrapper>
          
           <InputWrapper wide style={{display:'flex',justifyContent:'flex-end'}} >
-          <Button secondary  type='button'
+          <Button secondary  type='button'onClick={()=>{}}
             style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
-            <Button primary type='submit'  disabled={isSubmitting}
+            <Button primary type='submit'  disabled={isSubmitting} onClick={()=>{}}
             style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >SEND</Button>
             </InputWrapper>
             
@@ -494,11 +471,18 @@ function Notifications(){
     )
 }
 
-export function AccordionButton({active,setActive,name,title,children}){
+interface AccordionButtonProps{
+  active:string,
+  setActive:(active:string)=>void,
+  name:string,
+  title:string,
+  children:JSX.Element|JSX.Element[]
+}
+export function AccordionButton({active,setActive,name,title,children}:AccordionButtonProps){
     
     return(
         <AccordionButtonWrapper>
-        <Accordion onClick={()=>(active==name)?setActive(null):setActive(name)}>
+        <Accordion onClick={()=>(active==name)?setActive(""):setActive(name)}>
             {title}
         </Accordion>
         <CSSTransition in={active==name} timeout={1000} unmountOnExit  classNames='accordion'>
@@ -510,19 +494,25 @@ export function AccordionButton({active,setActive,name,title,children}){
     )
 }
 
-export function Addresses({wrap,selectable,selected,setSelected}){
+interface AddressesProps{
+  wrap:boolean,
+  selectable?:boolean,
+  selected?:AddressInfoProps,
+  setSelected?:(selected:AddressInfoProps)=>void,
+}
+export function Addresses({wrap,selectable,selected,setSelected}:AddressesProps){
   const { data: user } = useUser()
   const firestore = useFirestore();
   const addressesCollection = collection(firestore, 'addresses');
-  const addressesQuery = query(addressesCollection,orderBy('dateCreated', 'desc'),where('user','==',user.uid))
-  const getDefault = (addresses)=> addresses.filter((address)=> address.isDefault)
-  const { status, data:addresses } = useFirestoreCollectionData(addressesQuery);
-  const[defaultAddress,setDefaultAddress] = useState(null)
+  const addressesQuery = query(addressesCollection,orderBy('dateCreated', 'desc'),where('user','==',user?user.uid:''))
+  const getDefault = (addresses:AddressInfoProps[])=> addresses.filter((address)=> address.isDefault)
+  const { status, data:addresses } = useFirestoreCollectionData(addressesQuery) as ObservableStatus<AddressInfoProps[]>;
+  const[defaultAddress,setDefaultAddress] = useState<string|null>(null)
   const [showModal, setShowModal] = useState(false)
   
   useEffect(() => {
     const currentDefault = getDefault(addresses)
-    if(currentDefault.length == 1)
+    if((currentDefault.length == 1) && currentDefault[0].NO_ID_FIELD)
     setDefaultAddress(currentDefault[0].NO_ID_FIELD)
   }, [addresses])
   
@@ -530,15 +520,15 @@ export function Addresses({wrap,selectable,selected,setSelected}){
   
   return(
     <div>
-      <Button secondary onClick={()=> setShowModal(true)}>Add Address</Button>
+      <Button type='button' secondary onClick={()=> setShowModal(true)}>Add Address</Button>
       <ModalComponent showModal={showModal} setShowModal={setShowModal}>
                 <AddressForm setShowModal={setShowModal}/>
       </ModalComponent>
-      <CardWrapper wrap={wrap}>
+      <CardWrapper >
           {
             addresses && addresses.map((addressInfo)=> {
               return(
-            <Addresscard selectable={selectable} selected={selectable&&(selected.NO_ID_FIELD == addressInfo.NO_ID_FIELD)} setSelected={setSelected}  addressInfo={addressInfo} key={addressInfo.NO_ID_FIELD}>
+            <Addresscard selectable={selectable} selected={selectable&&((selected&&selected.NO_ID_FIELD) == addressInfo.NO_ID_FIELD)} setSelected={setSelected}  addressInfo={addressInfo} key={addressInfo.NO_ID_FIELD}>
               <AddressCardOptions defaultAddress={defaultAddress} setDefaultAddress={setDefaultAddress} addressInfo={addressInfo}/>
             </Addresscard>
               )
@@ -554,9 +544,9 @@ function PaymentCards(){
     const db = useFirestore()
     const{data:user} = useUser()
     const cardsCollection = collection(db, 'cards');
-    const cardsQuery =  query(cardsCollection,where('owner','==',user.uid))
+    const cardsQuery =  query(cardsCollection,where('owner','==',user?user.uid:''))
     const {status, data:cards } = useFirestoreCollectionData(cardsQuery);
-    const useFsRef = doc(db, 'users', user.uid);
+    const useFsRef = doc(db, 'users',user?user.uid:'');
     const {data: userFs } = useFirestoreDocData(useFsRef);
     const [showModal, setShowModal] = useState(false)
     const [saveCard, setSaveCard] = useState(userFs.saveCard)
@@ -572,11 +562,11 @@ function PaymentCards(){
      
     }, [saveCard,userFs])
     
-    const deleteCard = (card)=> deleteDoc(doc(db, "cards", card.NO_ID_FIELD))
+    const deleteCard = (card:any)=> deleteDoc(doc(db, "cards", card.NO_ID_FIELD))
                                 .then(()=> console.log('Card deleted'))
                                 .catch((e)=>console.log(e))
    
-    function DeleteCardDialog({card}){
+    function DeleteCardDialog({card}:any){
       return(
         <ModalComponent showModal={showModal} setShowModal={setShowModal}>
           <div>
@@ -600,9 +590,9 @@ function PaymentCards(){
         ) 
       }
       <InputWrapper style={{display:'flex',flexWrap:'wrap',width:'100%',flex:'1 1 100px',justifyContent:'space-between',maxWidth:200,minWidth:200}}>
-              <Label for='firstname'  >Save cards</Label>
+              <Label >Save cards</Label>
               <Switch>
-              <Input onChange={()=> {setSaveCard(prev=>!prev)}} checked={saveCard} type="checkbox" name="firstname"  id='firstname' />
+              <Input onChange={()=> {setSaveCard((prev:boolean)=>!prev)}} checked={saveCard} type="checkbox" name="firstname"  id='firstname' />
               <Slider></Slider>
               </Switch> 
           </InputWrapper>
@@ -610,7 +600,7 @@ function PaymentCards(){
     )
 }
 export default function Settings(){
-  const [active,setActive] = useState(null)
+  const [active,setActive] = useState('')
   return(
     <SettingsWrapper>
       <AccordionButton name='account' title="Account" active={active} setActive={setActive}>
@@ -621,7 +611,7 @@ export default function Settings(){
       </AccordionButton>
       <AccordionButton name='address' title="Address" active={active} setActive={setActive}>
         <Errorwrapper>
-         <Addresses wrap/>
+         <Addresses wrap={true} />
         </Errorwrapper>
       </AccordionButton>
       <AccordionButton name='notifications' title="Notifications" active={active} setActive={setActive}>

@@ -1,7 +1,7 @@
 import React,{ useState,useEffect } from 'react'
 import { Button, TextAreaInput } from './addressform';
 import { Formik,Form,Field,ErrorMessage} from 'formik';
-import { useSigninCheck,useUser,useFirestore,useFirestoreCollectionData, useFirestoreCollection,useAuth} from 'reactfire';
+import { useSigninCheck,useUser,useFirestore,useFirestoreCollectionData, useFirestoreCollection,useAuth, ObservableStatus} from 'reactfire';
 import { collection, addDoc, serverTimestamp,doc, setDoc,query,where} from "firebase/firestore";
 import { signInAnonymously } from "firebase/auth";
 import { Input,Label,InputWrapper } from './addressform';
@@ -10,21 +10,43 @@ import { rateProduct } from '../helperfunctions/cloudfunctions';
 import { Card } from './card';
 import { CardItem } from './addresscard';
 import { Button as Butt } from './navbar'
-import Edit from '../images/edit.svg'
+import Edit from '../images/svgs/edit.svg'
 import * as Yup from 'yup'
 
-export default function Review({productName,productId,user}) {
+interface ReviewComponentProps{
+  productName:string,
+  productId:string,
+  user:any,
+} 
+
+export interface ReviewProps{
+  name?:string,
+  email?:string,
+  rating:number,
+  previousRating?:number,
+  review:string,
+  reviewId?:string,
+  userId?:string,
+  NO_ID_FIELD?:string,
+  productName?:string,
+  productId?:string,
+
+}
+
+/* create user reviews and ratings
+*/
+export default function Review({productName,productId,user}:ReviewComponentProps) {
     const fs = useFirestore()
     const auth = useAuth();
     const ref = collection(fs,'reviews')
     const [reviewQuery, setReviewQuery] = useState(query(ref,where('userId','==','none')))
     //const [yourReview, setYourReview] = useState(null)
-    const{data:yourReviewArray} = useFirestoreCollectionData(reviewQuery)
+    const{data:yourReviewArray} = useFirestoreCollectionData(reviewQuery)as ObservableStatus<ReviewProps[]>
     const allOtherReviewsQuery = user? query(ref,where('userId','!=',user.uid)):query(ref)
-    const {data:allOtherReviews} = useFirestoreCollectionData(allOtherReviewsQuery)
+    const {data:allOtherReviews} = useFirestoreCollectionData(allOtherReviewsQuery)as ObservableStatus<ReviewProps[]>
      console.log(yourReviewArray[0])
      console.log(user)
-    const [yourReview, setYourReview] = useState({
+    const [yourReview, setYourReview] = useState<ReviewProps>({
       name:user&&user.displayName?user.displayName:'',
       email:user&&user.email?user.email:'',
       rating:yourReviewArray[0] && yourReviewArray[0].rating?yourReviewArray[0].rating:0,
@@ -112,21 +134,21 @@ export default function Review({productName,productId,user}) {
              { (!user || user.isAnonymous) &&
             <>
               <InputWrapper style={{minWidth:'100%'}}>
-                  <Label for='name' > Name</Label>
+                  <Label  > Name</Label>
                   <Input onChange={handleChange} value={values.name} type="text" name="name"  id='name' />
                   <ErrorMessage name="name" component="div" />
               </InputWrapper>
             
               <InputWrapper wide>
-                  <Label for='email' >Email</Label>
+                  <Label  >Email</Label>
                   <Input onChange={handleChange} value={values.email} type="email" name="email" id="email" />
                   <ErrorMessage name="email" component="div" />
               </InputWrapper>
             </>
             }
             <InputWrapper style={{minWidth:'100%'}}>
-                <Label for='review' >Your Review</Label>
-                <TextAreaInput onChange={handleChange} value={values.review} rows='5' name="review" id="review" />
+                <Label  >Your Review</Label>
+                <TextAreaInput onChange={handleChange} value={values.review} rows={5} name="review" id="review" />
             </InputWrapper>
             <div style={{width:'100%',display:'flex'}}>
             <Button secondary type='button' onClick={handleReset}>Reset</Button>
@@ -143,14 +165,19 @@ export default function Review({productName,productId,user}) {
   )
 }
 
-function UserReview({review,user,setEditReview}){
+interface UserReviewProps{
+  review: ReviewProps,
+  user?:any,
+  setEditReview?:(edtitReview:boolean)=> void
+}
+function UserReview({review,user,setEditReview}:UserReviewProps){
   const rating = review.rating/20.0
   return(
     <Card style={{borderRadius:5 ,maxWidth:500}}>
        <CardItem style={{fontWeight:'bold'}}>{review.name}</CardItem>
        <Rating ratingValue={rating} size={20} allowHalfIcon readonly style={{width:'fit-content'}} key={review.review+review.rating}/>
        <CardItem>{review.review}</CardItem>
-       {(user&&user.uid==review.userId)&&<CardItem ><Butt secondary onClick={()=>setEditReview(true)}><Edit fill="#474E52" style={{width:20,height:20}}/>Edit</Butt></CardItem>}
+       {(user&&user.uid==review.userId)&&<CardItem ><Butt secondary onClick={()=>{if(setEditReview){setEditReview(true)}}}><Edit fill="#474E52" style={{width:20,height:20}}/>Edit</Butt></CardItem>}
     </Card>
   )
 }

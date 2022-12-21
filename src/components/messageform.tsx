@@ -61,7 +61,7 @@ export const Button = styled.button`
 }
 
  
-   ${props => props.primary && css`
+   ${(props:{primary?:boolean,secondary?:boolean}) => props.primary && css`
    background-color:#35486F;
    color: white;
    
@@ -92,7 +92,9 @@ export const Button = styled.button`
       <Formik
         initialValues={{ email: '', password: '' }}
         validate={values => {
-          const errors = {};
+          const errors:{email:string} = {
+            email: ''
+          };
           if (!values.email) {
             errors.email = 'Required';
           } else if (
@@ -112,16 +114,16 @@ export const Button = styled.button`
         {({ isSubmitting }) => (
           <Form style={{width:'500px'}}>
             <InputWrapper>
-                <Label for='name' >Name</Label>
+                <Label htmlFor="name">Name</Label>
                 <Field type="text" name="name"  id='name' component={Input} />
             </InputWrapper>
             <InputWrapper>
-                <Label for='email' >Email</Label>
+                <Label htmlFor="email"  >Email</Label>
                 <Field type="email" name="email" id="email" component={Input} />
                 <ErrorMessage name="email" component="div" />
             </InputWrapper>
             <InputWrapper>
-                <Label for='message' >Message</Label>
+                <Label htmlFor="message">Message</Label>
                 <Field as='textarea' rows='5' type="text" name="message" id="message" component={TextAreaInput} />
             </InputWrapper>
             <InputWrapper style={{display:'flex',justifyContent:'flex-end'}} >

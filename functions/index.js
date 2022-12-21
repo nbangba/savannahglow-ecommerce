@@ -477,7 +477,7 @@ exports.createRefund = functions
 
   exports.createUserInFirestore = functions.auth.user().onCreate((user) => {
     
-    if(!user.providerData.length > 0)
+    if(user.providerData.length > 0)
    return admin.auth().getUser(user.uid)
           .then((user)=>{
             console.log('user',user.displayName)

@@ -84,8 +84,13 @@ const Modal = styled.div`
     transition: background-color 400ms;
  }
  `
+ interface DrawerProps{
+   openDrawer: boolean;
+   setOpenDrawer: (openDrawer:boolean)=> void;
+   children: any;
+ }
  //add on exit function for smooth transition before navigation
-export default function Drawer({openDrawer,setOpenDrawer,children}) {
+export default function Drawer({openDrawer,setOpenDrawer,children}:DrawerProps) {
     
     return (
         <DrawerWrapper>

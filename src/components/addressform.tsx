@@ -5,7 +5,7 @@ import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import Autocomplete from "react-google-autocomplete";
 import { useSigninCheck,useUser,useFirestore,useFirestoreCollectionData} from 'reactfire';
-import { collection, addDoc, serverTimestamp,doc, setDoc,where,query,orderBy } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp,doc, setDoc,where,query,orderBy, FieldValue } from "firebase/firestore";
 import * as Yup from 'yup'
 
 const textInput = `width: 100%;
@@ -35,7 +35,7 @@ const textInput = `width: 100%;
     display: 'inline-block',
     border: '1px solid #35486F',
     borderRadius: '4px',
-    boxSizing: 'border-box',
+    BoxSizing: 'border-box',
     background:'#f4ece6',
     fontFamily: `'Montserrat', sans-serif`,
     fontSize:'16px',
@@ -50,6 +50,7 @@ const textInput = `width: 100%;
     }
 }
 
+  
  export const dropDownStyle ={
     border:'1px solid #556585',
     backgroudColor:'#f4ece6',
@@ -79,7 +80,7 @@ export const InputWrapper = styled.div`
   flex: 1 0 50%;
   min-width:200px;
   box-sizing:border-box;
-  ${props => props.wide && css`
+  ${(props:{wide?:boolean}) => props.wide && css`
   flex: 1 0 100%;
   `}
 `
@@ -105,7 +106,7 @@ export const Button = styled.button`
 }
 
  
-   ${props => props.primary && css`
+   ${(props:{primary?:boolean,secondary?:boolean}) => props.primary && css`
    background-color:#35486F;
    color: white;
    
@@ -130,9 +131,32 @@ export const Button = styled.button`
     }
   `}
 `
+export interface AddressInfoProps{
+  firstname:string,
+  lastname:string,
+  email:string,
+  phone:string,
+  location:string,
+  street?:string,
+  city?:string,
+  state?:string,
+  country:string,
+  NO_ID_FIELD?:string,
+  isDefault?:boolean;
+  loc?:{lat:string,lng:string},
+}
 
+interface AddressFormProps{
+  setShowModal:(showModal:boolean)=>void,
+  addressInfo?:AddressInfoProps,
+}
+
+interface AdrressInfoFSProps extends AddressInfoProps{
+  dateCreated:FieldValue,
+  user:string|null
+
+}
  export default function AddressForm({setShowModal,
-                                      setOrderAddress,
                                       addressInfo={firstname:'',
                                       lastname:'',
                                       email:'',
@@ -141,18 +165,19 @@ export const Button = styled.button`
                                       street:'',
                                       city:'',
                                       state:'',
-                                      country:'',loc:{lat:'',lng:''}}}) {
+                                      country:'',
+                                      loc:{lat:'',lng:''}}}:AddressFormProps) {
    
     const db = useFirestore()
     const { status, data: signInCheckResult } = useSigninCheck();
     const {status:info, data: user } = useUser()
     const addressId = addressInfo.NO_ID_FIELD
     const addressesCollection = collection(db, 'addresses');
-    const addressesQuery = query(addressesCollection,orderBy('dateCreated', 'desc'),where('user','==',user.uid))
+    const addressesQuery = query(addressesCollection,orderBy('dateCreated', 'desc'),where('user','==',user?user.uid:'NO_USER'))
     const {data:addresses } = useFirestoreCollectionData(addressesQuery);
    
     console.log(addresses)
-    const setAddress =(place,setFieldValue,values)=>{
+    const setAddress =(place:any,setFieldValue:(name:string,value:string)=>void,values:any)=>{
       let address1=''
       let postcode=''
       for (const component of place.address_components) {
@@ -217,8 +242,7 @@ export const Button = styled.button`
         onSubmit={(values, { setSubmitting }) => {
           setTimeout(() => {
             console.log(JSON.stringify(values, null, 2));
-            if(setOrderAddress)
-              setOrderAddress({...values})
+            
             if(signInCheckResult.signedIn === true){
               if(addressId){
                 setDoc(doc(db, "addresses", addressId), {
@@ -229,7 +253,7 @@ export const Button = styled.button`
               }
               else if(addresses && addresses.length == 0){
              addDoc(collection(db, "addresses"), {
-                user:user.uid,
+                user:user && user.uid,
                 dateCreated:serverTimestamp(),
                 isDefault:true,
                 ...values
@@ -239,7 +263,7 @@ export const Button = styled.button`
             }
             else{
               addDoc(collection(db, "addresses"), {
-                 user:user.uid,
+                 user:user && user.uid,
                  dateCreated:serverTimestamp(),
                  ...values
                })
@@ -251,36 +275,36 @@ export const Button = styled.button`
           }, 400);
         }}
       >
-        {({ isSubmitting,setFieldValue,handleChange,values }) => (
-          <Form style={{width:'500px',display:'flex',flexWrap:'wrap'}}>
+        {({ isSubmitting,setFieldValue,handleChange,values,handleSubmit,submitForm }) => (
+          <Form onSubmit={handleSubmit} id="address" style={{width:'500px',display:'flex',flexWrap:'wrap'}}>
             <InputWrapper>
-                <Label for='firstname' >First Name</Label>
+                <Label htmlFor='firstname' >First Name</Label>
                 <Input onChange={handleChange} value={values.firstname} type="text" name="firstname"  id='firstname' />
                 <ErrorMessage name="firstname" component="div" />
             </InputWrapper>
             <InputWrapper>
-                <Label for='lastname' >Last Name</Label>
+                <Label htmlFor='lastname' >Last Name</Label>
                 <Input onChange={handleChange} value={values.lastname} type="text" name="lastname"  id='lastname' />
                 <ErrorMessage name="lastname" component="div" />
             </InputWrapper>
             <InputWrapper wide>
-                <Label for='email' >Email</Label>
+                <Label htmlFor='email' >Email</Label>
                 <Input onChange={handleChange} value={values.email} type="email" name="email" id="email" />
                 <ErrorMessage name="email" component="div" />
             </InputWrapper>
             <InputWrapper wide>
-              <Label for='phone' >Phone Number</Label>
+              <Label htmlFor='phone' >Phone Number</Label>
               <PhoneInput country='gh' onChange={(value,country,e)=>handleChange(e)} 
-              value={values.phone} inputProps={{name:"phone"}} type="text"  id="phone" 
+              value={values.phone} inputProps={{name:"phone"}}   
               dropdownStyle={{...dropDownStyle}} inputStyle={{...reactTextInput}}/>
               <ErrorMessage name="phone" component="div" />
             </InputWrapper>
             <InputWrapper wide>
-            <Label for='location' >Location</Label>
+            <Label htmlFor='location' >Location</Label>
             <GSelect
             id="location"
             placeholder="Search Location"
-            value={values.location}
+            
             apiKey='AIzaSyBriNCuhss3BduhnE7R7zAuqxSGFez3vs8'
             options={{
               types: [],
@@ -298,27 +322,27 @@ export const Button = styled.button`
             <ErrorMessage name="location" component="div" />
             </InputWrapper>
             <InputWrapper>
-                <Label for="street" >Street</Label>
+                <Label htmlFor="street" >Street</Label>
                 <Input onChange={handleChange} value={values.street}  type="text" name="street" id="street" />
             </InputWrapper>
             <InputWrapper>
-                <Label for='city' >City</Label>
+                <Label htmlFor='city' >City</Label>
                 <Input onChange={handleChange} value={values.city} type="text" name="city" id="city"  />
             </InputWrapper>
             <InputWrapper>
-                <Label for='state' >State</Label>
+                <Label htmlFor='state' >State</Label>
                 <Input onChange={handleChange} value={values.state} type="text" name="state" id="state"/>
             </InputWrapper>
             <InputWrapper>
-                <Label for='country' >Country</Label>
+                <Label htmlFor='country' >Country</Label>
                 <Input onChange={handleChange} value={values.country}  type="text" name="country" id="country"/>
             </InputWrapper>
             <InputWrapper style={{display:'flex',justifyContent:'flex-end'}} >
-            <Button secondary  onClick={()=>setShowModal(false)} type='button'
-              style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
-              <Button primary type='submit'  disabled={isSubmitting}
+              <Button secondary  onClick={()=>setShowModal(false)} type='button'
+                style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
+              <Button primary  disabled={isSubmitting} form="address" onClick={submitForm}
               style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >DONE</Button>
-              </InputWrapper>       
+            </InputWrapper>       
           </Form>
         )}
       </Formik>

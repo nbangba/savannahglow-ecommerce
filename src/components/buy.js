@@ -1,5 +1,5 @@
 import React, { useState,useRef, useEffect } from 'react'
-import pomade from '../images/shea-butter.png'
+import pomade from '../images/non-svg/shea-butter.png'
 import styled from 'styled-components'
 import { Button } from './navbar'
 import AddressForm from './addressform'

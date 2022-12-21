@@ -1,11 +1,11 @@
 import React from 'react'
 import styled from 'styled-components'
 import MessageForm from './messageform'
-import Mail from  '../images/mail.svg'
-import Phone from  '../images/phone.svg'
-import Time from  '../images/time.svg'
-import Location from  '../images/location.svg'
-import Whatsapp from '../images/whatsapp.svg'
+import Mail from  '../images/svgs/mail.svg'
+import Phone from  '../images/svgs/phone.svg'
+import Time from  '../images/svgs/time.svg'
+import Location from  '../images/svgs/location.svg'
+import Whatsapp from '../images/svgs/whatsapp.svg'
 
 const Contact = styled.div`
     display:flex;

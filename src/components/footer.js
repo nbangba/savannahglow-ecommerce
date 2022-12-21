@@ -1,10 +1,8 @@
 import React,{useState} from 'react'
 import styled from 'styled-components'
-import Instagram from '../images/icon-instagram.svg'
-import Facebook from '../images/icon-facebook.svg'
-import Pinterest from '../images/icon-pinterest.svg'
+import Instagram from '../images/svgs/icon-instagram.svg'
 import {ContactUs} from './contact'
-import Logo from '../images/logo.svg'
+import Logo from '../images/svgs/logo.svg'
 import { Helmet } from 'react-helmet'
 import { ContactLink } from './contact'
 const Foot = styled.footer`

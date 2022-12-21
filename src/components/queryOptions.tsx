@@ -1,8 +1,12 @@
 import React from 'react'
-import Select from 'react-select';
+import Select, { SingleValue } from 'react-select';
 
+interface QueryOptionsProps{
+  setOrderStatus: (value:string|null)=>void,
+  setOrderDate: (value:Date|null)=>void,
+}
 
-export default function QueryOptions({orderStatus,setOrderStatus,setStartDate,setOrderDate}) {
+export default function QueryOptions({setOrderStatus,setOrderDate}:QueryOptionsProps) {
     const options1 = [
         { value: 'all', label: 'All' },
         { value: 'received', label: 'Received' },
@@ -18,14 +22,15 @@ export default function QueryOptions({orderStatus,setOrderStatus,setStartDate,se
 
     return (
         <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',fontFamily:'Montserrat'}}>
-            <Select options={options2} onChange={(value)=>setOrderDate(value.value)} defaultValue={options2[0]}
+            <Select options={options2} 
+            onChange={(value)=>setOrderDate(value?value.value:null)} defaultValue={options2[0]}
             styles={{container: base => ({
               ...base,
               flex: '1 1 ',
               maxWidth:200,
               margin:10
             })}} />
-            <Select options={options1} defaultValue={options1[0]} onChange={(value)=>setOrderStatus(value.value)}
+            <Select options={options1} defaultValue={options1[0]} onChange={(value)=>setOrderStatus(value?value.value:null)}
             styles={{container: base => ({
               ...base,
               flex: '1 1 ',

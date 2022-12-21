@@ -1,9 +1,9 @@
 import React, { useState,useEffect } from 'react'
 import styled from 'styled-components'
 import { Button } from './navbar'
-import { useUser,useSigninCheck,useFirestore ,useAuth,useFirestoreDocData} from 'reactfire'
-import { serverTimestamp,doc, setDoc,updateDoc,increment,arrayUnion,getDoc} from "firebase/firestore";
-import { signInAnonymously } from "firebase/auth";
+import { useUser,useSigninCheck,useFirestore ,useAuth,useFirestoreDocData, ObservableStatus, SigninCheckResult} from 'reactfire'
+import { serverTimestamp,doc, setDoc,updateDoc,increment,arrayUnion,getDoc, DocumentData, Firestore, FieldValue, FieldPath} from "firebase/firestore";
+import { Auth, signInAnonymously, User } from "firebase/auth";
 import Errorwrapper from './errorwrapper';
 import Review from './review';
 import ModalComponent from './modal';
@@ -20,11 +20,10 @@ const product ={
 
 const bigProduct={
   minWidth:'200px',
-  width:'100%',
   objectFit: 'cover',
   width:'auto',
   maxHeight:400,
-}
+} as React.CSSProperties
 
 const ProductImageWrapper= styled.div`
  position:relative;
@@ -145,9 +144,27 @@ const VarietyListItem = styled.li`
     background:#e0cbba;
   }
   `
+interface ProductProps{
+  name:string,
+  id:string,
+  description:{description:string},
+  varieties:VarietyProps[]
+}
 
+interface ContentfulProductProps{
+  data:{contentfulProduct:ProductProps}
+}
 
-export default function Product({data}) {
+export interface VarietyProps{
+  name:string,
+  price:number,
+  discount:number,
+  id:string, 
+  quantity:number,
+  images:{fluid:{src:string,srcset:string}}[],
+  total:number,
+}
+export default function Product({data}:ContentfulProductProps) {
     
     const db = useFirestore()
     const sgproducts = data.contentfulProduct
@@ -155,14 +172,14 @@ export default function Product({data}) {
     const auth = useAuth();
     const { role} = useRole()
     console.log(sgproducts)
-      const [selectedVariety,setSelectedVariety] = useState(sgproducts.varieties[0])
-      const [productRating,setProductRating] = useState(null)
+      const [selectedVariety,setSelectedVariety] = useState<VarietyProps>(sgproducts.varieties[0])
+      const [productRating,setProductRating] = useState<number|null>(null)
       const [selectedImage,setSelectedImage]=useState(0)
       const [qty,setQty] = useState(1)
       const [showModal, setShowModal] = useState(false)
       const firestore = useFirestore();
       const ref = doc(firestore, 'product',selectedVariety.id );
-      const { data: product } = useFirestoreDocData(ref);
+      const { data: product} = useFirestoreDocData(ref) as ObservableStatus<ProductSettingProps>;
       const { data: user } = useUser()
       console.log(selectedVariety)
       const docRef = doc(db, "products", sgproducts.id);
@@ -170,13 +187,13 @@ export default function Product({data}) {
        /**/
       useEffect(() => {
        getDoc(docRef).then((data)=> {
-         const values = data.data() 
-         if(values)
-         setProductRating(values)
+         const productValues = data.data()
+         if(productValues && productValues.rating)
+         setProductRating(productValues.rating)
        })
       }, [])
 
-      const setAvailableQuantity = (settings)=>{
+      const setProductSettings = (settings:ProductSettingProps)=>{
         setDoc(ref,{
           ...settings
         },{merge:true})
@@ -188,10 +205,10 @@ export default function Product({data}) {
         setSelectedImage(0)
       }, [selectedVariety.id])
       
-      const changeItemCount = (changeQty) =>{
-       if(selectedVariety.quantity+changeQty > product.available)
+      const changeItemCount = (changeQty:number) =>{
+       if(qty+changeQty > product.available)
         setQty(product.available)
-       else if((selectedVariety.quantity+changeQty) < 1) 
+       else if((qty+changeQty) < 1) 
          setQty(1)
        else
         setQty(prev=>prev+changeQty)
@@ -208,7 +225,7 @@ export default function Product({data}) {
             setDoc(doc(db, "buyNow",user.uid), {
               user:user.uid,
               items:[selectedVariety],
-              numberOfItems:selectedVariety.quantity,
+              numberOfItems:qty,
               dateCreated:serverTimestamp(),
             })
             .then(()=>{
@@ -216,11 +233,11 @@ export default function Product({data}) {
             })
            })
           }
-          else
+          else if(user && user.uid)
           setDoc(doc(db, "buyNow",user.uid), {
             user:user.uid,
             items:[selectedVariety],
-            numberOfItems:selectedVariety.quantity,
+            numberOfItems:qty,
             dateCreated:serverTimestamp(),
           })
           .then(()=>{
@@ -234,7 +251,7 @@ export default function Product({data}) {
             <section>
                   <Selected>
                       <ProductImageWrapper>
-                      <img style={bigProduct} src={selectedVariety.images[selectedImage].fluid.src} srcset={selectedVariety.images[selectedImage].fluid.srcset}/>
+                      <img style={bigProduct} src={selectedVariety.images[selectedImage].fluid.src} srcSet={selectedVariety.images[selectedImage].fluid.srcset}/>
                       <ul>{selectedVariety.images.map((image,index)=>
                           <li onClick={()=>setSelectedImage(index)}><img src={image.fluid.src} srcSet={image.fluid.srcset} className={`selectable`}/> </li>
                         )}
@@ -246,7 +263,7 @@ export default function Product({data}) {
               
                       <h2>{sgproducts.name}</h2>
                       {productRating?
-                      <Rating allowHalfIcon ratingValue={productRating.rating/20.0} readonly={true} size={25} style={{width:'fit-content'}}/>:
+                      <Rating allowHalfIcon ratingValue={productRating/20.0} readonly={true} size={25} style={{width:'fit-content'}}/>:
                       <small>This product has not been rated yet</small>}
                       
                       <hr></hr>
@@ -285,7 +302,7 @@ export default function Product({data}) {
                       {(user && role == 'admin 1' || role =='admin 2') &&
                       <>
                       <Button secondary onClick={()=>setShowModal(true)}>Set Available</Button>
-                      <ProductSetting showModal={showModal} price={selectedVariety.price} setShowModal={setShowModal} setAvailableQuantity={setAvailableQuantity} product={product}/>
+                      <ProductSetting showModal={showModal} price={selectedVariety.price} setShowModal={setShowModal} setProductSettings={setProductSettings} product={product}/>
                       </>
                       }
                   </div>
@@ -305,13 +322,20 @@ export default function Product({data}) {
             </ProductWrapper>
       )
   }
-
-  function AddtoBagButton({selectedVariety,user,db,signInCheckResult,auth,status}){
+interface AddToBagProps{
+  selectedVariety:VarietyProps,
+  user:User|null,
+  db:Firestore,
+  signInCheckResult:SigninCheckResult,
+  auth:Auth,
+  status:string
+}
+  function AddtoBagButton({selectedVariety,user,db,signInCheckResult,auth,status}:AddToBagProps){
     
     
     console.log(signInCheckResult)
 
-    const addCart = (cartUser)=>{
+    const addCart = (cartUser:User)=>{
       console.log('cart user',cartUser)
       setDoc(doc(db, "carts",cartUser.uid), {
           user:cartUser.uid,
@@ -340,41 +364,50 @@ export default function Product({data}) {
     }
 
     const AddToBag =()=>{
-      console.log(user.uid)
-      const cartRef = doc(db, 'carts', user.uid);
+      console.log(user&&user.uid)
+      const cartRef = doc(db, 'carts', user?user.uid:'NO_USER');
       const { data:cart } = useFirestoreDocData(cartRef);
       
       const addToBag = () =>{
-      if(signInCheckResult.signedIn && !cart){
+      if(signInCheckResult.signedIn && user && !cart){
          addCart(user)
       }
       else if (cart){    
-          const findIndexOfVariety = cart.items.findIndex((item)=> item.name == selectedVariety.name)
+          const findIndexOfVariety = cart.items.findIndex((item:VarietyProps)=> item.name == selectedVariety.name)
           console.log('index',findIndexOfVariety)
           if(findIndexOfVariety > -1){
              const newItems = [...cart.items]
              newItems[findIndexOfVariety].quantity += selectedVariety.quantity
               console.log('newitems',newItems)
-             setDoc(doc(db,"carts",user.uid), {
-              items:newItems,
-            },{merge:true})
-            .then(()=>
-              updateDoc(doc(db,"carts",user.uid), {
-                  numberOfItems:increment(selectedVariety.quantity)
+            if(user && user.uid)
+              setDoc(doc(db,"carts",user.uid), {
+                items:newItems,
               },{merge:true})
-              .then(()=> console.log("quantity increased")) 
+              .then(()=>
+                updateDoc(doc(db,"carts",user.uid), {
+                    numberOfItems:increment(selectedVariety.quantity)
+                })
+                .then(()=> console.log("quantity increased")) 
+                .catch((e)=>console.log(e))
+              )
+              .then(()=> console.log('an item quantity increased'))
               .catch((e)=>console.log(e))
-            )
-            .then(()=> console.log('an item quantity increased'))
-            .catch((e)=>console.log(e))
+
+              else{
+                console.log("User not found ",user)
+              }  
           }
           else{
-          updateDoc(doc(db,"carts",user.uid), {
-              items:arrayUnion(selectedVariety),
-              numberOfItems:increment(selectedVariety.quantity)
-            },{merge:true})
-            .then(()=> console.log('address updated'))
-          .catch((e)=>console.log(e))
+          if(user && user.uid)
+            updateDoc(doc(db,"carts",user.uid), {
+                items:arrayUnion(selectedVariety),
+                numberOfItems:increment(selectedVariety.quantity)
+              })
+              .then(()=> console.log('address updated'))
+            .catch((e)=>console.log(e))
+          else{
+            console.log("User not found ",user)
+          }  
          }
        }
       }
@@ -388,17 +421,30 @@ export default function Product({data}) {
       return(
           <Button secondary onClick={addToBag}>Add To Bag</Button>
       )
-      else if(signInCheckResult.signedIn&&user.uid) return <AddToBag/>
+      else if(signInCheckResult.signedIn&&user&&user.uid) return <AddToBag/>
       else return <div>Loading...</div>
     }
     else if(status == 'loading')
-       <div>Loading...</div>
+      return <div>Loading...</div>
     else
-    <div>Something went wrong...</div>
+    return <div>Something went wrong...</div>
   }
 
-  function ProductSetting({setAvailableQuantity,showModal,setShowModal,product,price}){
-    const {available='',discount=0}= product
+  interface ProductSettingModalProps{
+    showModal:boolean,
+    setShowModal:(showModal:boolean)=>void,
+    setProductSettings:(settings:ProductSettingProps)=>void,
+    product:ProductSettingProps,
+    price:number
+  }
+
+  interface ProductSettingProps {
+    available:number,
+    discount:number;
+  }
+
+  function ProductSetting({setProductSettings,showModal,setShowModal,product,price}:ProductSettingModalProps){
+    const {available=0,discount=0}= product
     return(
       <ModalComponent showModal={showModal} setShowModal={setShowModal}>
           <Formik
@@ -406,7 +452,7 @@ export default function Product({data}) {
           onSubmit={(values, { setSubmitting }) => {
             console.log(values)
             setTimeout(() => {
-              setAvailableQuantity(values)
+              setProductSettings(values)
               setSubmitting(false);
             }, 400);
           }}
@@ -414,11 +460,11 @@ export default function Product({data}) {
           {({isSubmitting,setFieldValue,handleChange,values}) => (
             <Form style={{width:'500px',display:'flex',flexWrap:'wrap'}}>  
               <InputWrapper style={{minWidth:'100%'}}>
-                  <Label for='available' > Available</Label>
+                  <Label htmlFor='available' > Available</Label>
                   <Input min={1} onChange={handleChange} value={values.available} name="available" type='number' style={{width:50,padding:8}}/> 
               </InputWrapper>
               <InputWrapper style={{minWidth:'100%'}}>
-                  <Label for='discount' > Discount</Label>
+                  <Label htmlFor='discount' > Discount</Label>
                   <Input min={0} max={price} step="0.01" onChange={handleChange} value={values.discount} name="discount" type='number' style={{width:50,padding:8}}/> 
               </InputWrapper>
               <Btn secondary onClick={()=>setShowModal(false)} type='button'

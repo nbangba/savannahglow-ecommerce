@@ -1,0 +1,96 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Header renders correctly 1`] = `
+<div
+  className="sc-furwcr gnHaag"
+>
+  <div
+    className="sc-egiyK jLllpU"
+    onClick={[Function]}
+  >
+    <test-file-stub
+      style={
+        Object {
+          "height": 40,
+          "width": 40,
+          "zIndex": 100,
+        }
+      }
+    />
+  </div>
+  <div
+    className="sc-iCfMLu jSVSGn"
+  />
+  <div
+    className="logoMobile"
+  >
+    <test-file-stub
+      style={
+        Object {
+          "height": 80,
+          "width": 80,
+        }
+      }
+    />
+  </div>
+  <ul
+    className="sc-pVTFL ggZkWJ desktop-menu"
+    style={
+      Object {
+        "flexGrow": 10,
+      }
+    }
+  >
+    <li
+      className="sc-jrQzAO cZxuGg"
+    >
+      <a
+        href="/"
+      >
+        Home
+      </a>
+       
+    </li>
+    <li
+      className="sc-jrQzAO cZxuGg"
+    >
+      <a
+        href="/blogs"
+      >
+        Blogs
+      </a>
+       
+    </li>
+    <li
+      className="sc-jrQzAO cZxuGg"
+    >
+      <a
+        href="/faq"
+      >
+        Faq
+      </a>
+       
+    </li>
+    <li
+      className="sc-jrQzAO cZxuGg"
+    >
+      <a
+        href="/products"
+      >
+        Products
+      </a>
+       
+    </li>
+  </ul>
+  <div
+    role="alert"
+  >
+    <p>
+      Error loading projects:
+    </p>
+    <pre>
+      SDK not found. useSdk must be called from within a provider
+    </pre>
+  </div>
+</div>
+`;

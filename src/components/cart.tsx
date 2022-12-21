@@ -1,15 +1,15 @@
 import React, { useEffect, useState,useRef} from 'react'
 import { useUser,useSigninCheck,useFirestore ,useAuth,useFirestoreDocData} from 'reactfire'
-import { doc, setDoc} from "firebase/firestore";
+import { doc, FieldValue, Firestore, setDoc} from "firebase/firestore";
 import styled from 'styled-components';
 import { Button } from './navbar'
 import {Card} from './card';
 import {Remove} from './addresscard'
 import { Input } from './addressform';
-import { DeleteDialog } from './addresscard';
+import { DeleteCartItem } from './addresscard';
 import { Link } from 'gatsby';
 import { calculateSubTotal,calculateDiscountedSubTotal,calculateTotalDiscount } from '../helperfunctions';
-
+import { VarietyProps } from './product';
 const CartWrapper = styled.div`
 display:flex;
 flex-wrap:wrap;
@@ -79,14 +79,26 @@ const CartLabel = styled.div`
   margin: 10px 0px;
 `
 
-export default function CartComponent({location}){
+export default function CartComponent({location}:any){
     return(
         <CartItems location={location}>
+            
             {(cart)=> <Subtotal cart={cart}/>}
         </CartItems>
     )
 }
-export function CartItems({children,location}) {
+
+interface CartItemsProps{
+    children?: {(cart:any):JSX.Element},
+    location:any
+}
+
+interface LoggedInCartProp{
+    collection:string
+}
+
+
+export function CartItems({children,location}:CartItemsProps) {
     const [subtotal,setSubtotal] = useState(0)
     const [discountedSubTotal, setDiscountedSubTotal] = useState(0)
     const [totalDiscount,setTotalDiscount] = useState(0)
@@ -96,17 +108,18 @@ export function CartItems({children,location}) {
     const auth = useAuth();
     console.log(location)
     
-    const LoggedInCart = ({collection})=> {
-        const cartRef = user && doc(db, collection, user.uid);
+    const LoggedInCart = ({collection}:LoggedInCartProp)=> {
+        const cartRef = doc(db, collection,user? user.uid:'');
         const { data:cart } = useFirestoreDocData(cartRef);
         
-        const items = cart && cart.items
+        const items:VarietyProps[] = cart && cart.items
         
         //consider moving to cartItem
-        const deleteCartItem = (index,quantity)=> {
+        const deleteCartItem = (index:number)=> {
             const currentItems = [...items]
             currentItems.splice(index,1)
             const newQuantity = currentItems.reduce((prev,cur)=>prev+cur.quantity,0)
+            if(user)
             setDoc(doc(db,collection,user.uid), {
                 items:currentItems,
                 numberOfItems: newQuantity,
@@ -119,12 +132,13 @@ export function CartItems({children,location}) {
         }
         
         //consider moving to cartItem
-        const updateCart = (index,quantity)=>{
+        const updateCart = (index:number,quantity:number)=>{
             const currentItems = [...items]
             currentItems[index].quantity = quantity
             currentItems[index].total= quantity*currentItems[index].price
             const newQuantity = currentItems.reduce((prev,cur)=>prev+cur.quantity,0)
             console.log(currentItems)
+            if(user)
             setDoc(doc(db, collection, user.uid), {
                 items:currentItems,
                 numberOfItems: newQuantity,
@@ -136,10 +150,11 @@ export function CartItems({children,location}) {
               .catch((e)=>console.log(e))
         }
      
-        const updateDiscount = (index,discount) =>{
+        const updateDiscount = (index:number,discount:number) =>{
             const currentItems = [...items]
             currentItems[index].discount = discount
-            currentItems[index].total = ((currentItems[index].price-discount)*currentItems[index].quantity).toFixed(2)
+            currentItems[index].total = ((currentItems[index].price-discount)*currentItems[index].quantity)
+            if(user)
             setDoc(doc(db,collection, user.uid), {
                 items:currentItems,
                 totalAmount:calculateSubTotal(currentItems),
@@ -195,10 +210,18 @@ export function CartItems({children,location}) {
     else return <LoggedInCart collection={location && location.state &&location.state.fromFeed?'buyNow':'carts'}/>
 }
 
-function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}){
+interface CartItemProps{
+    item:VarietyProps,
+    updateCart:(index:number,quantity:number)=>void,
+    deleteCartItem:(index:number)=>void,
+    updateDiscount:(index:number,quantity:number)=>void,
+    index:number,
+    db:Firestore
+}
+function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}:CartItemProps){
     const imgSrc = item.images[0].fluid.src
     const qtyRef = useRef()
-    const [qty,setQty] = useState(parseInt(item.quantity))
+    const [qty,setQty] = useState(item.quantity)
     const [deleteDialog,setDeleteDialog] = useState(false)
     
     const availableRef = doc(db,'product',item.id)
@@ -228,7 +251,7 @@ function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}){
        <>
        <li>
            <Remove style={{top:-15,}} onClick={()=>setDeleteDialog(true)}/>
-           <DeleteDialog showModal={deleteDialog}  setShowDialog={setDeleteDialog} deleteItem={deleteCartItem}
+           <DeleteCartItem showModal={deleteDialog} index={index} setShowDialog={setDeleteDialog} deleteItem={deleteCartItem}
             title='Are you sure you want to delete this item?' />
            <div style={{margin:10,flex:'0 0 200px'}}><img src={imgSrc}/></div>
        <div>    
@@ -248,7 +271,7 @@ function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}){
                   onBlur={()=>{qty >product.available?setQty(product.available): qty<1?setQty(1):setQty(qty)}}                         
            min={1} max={product.available} value={qty} type='number' style={{width:50,padding:8}}/>
            <Button type="button" style={{width:50}} secondary onClick={increaseItems}>+</Button>
-           {(updateCart && qty != item.quantity) && <Button type="button" onClick={()=>updateCart(index,qty)}>Update Cart</Button>}
+           {(qty != item.quantity) && <Button type="button" onClick={()=>updateCart(index,qty)}>Update Cart</Button>}
        </CartLabel>
        <CartLabel>
            {`Item Total: GHS ${((item.price-product.discount)*qty).toFixed(2)}`}
@@ -260,12 +283,24 @@ function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}){
    )
 }
 
-function Subtotal({cart}){
+export interface CartProps{
+    items:VarietyProps[],
+    numberOfItems:number,
+    totalAmount:number,
+    discountedTotal:number,
+    user:string,
+    dateCreated:FieldValue
+}
+export interface SubTotalProps{
+    cart:CartProps
+}
+
+function Subtotal({cart}:SubTotalProps){
     return( 
         <Card style={{position:'sticky',top:20,alignContent:'flex-start',maxHeight:200,fontFamily:`'Montserrat', sans-serif`}}>
             <div style={{width:"100%",padding:20}}>{`Subtotal(${cart.numberOfItems} items): GHS ${cart.discountedTotal}`}</div>
             <Link style={{textDecoration:'none',color:'white'}} to='/checkout' state={{fromFeed:false}}>
-                <Button primary style={{minWidth:"fit-content",width:300}}>
+                <Button primary style={{minWidth:"fit-content",width:300}} onClick={()=>{}}>
                     Check Out
                 </Button>
             </Link>

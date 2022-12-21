@@ -26,7 +26,7 @@ import { getAnalytics, logEvent } from "firebase/analytics";
         ],
 
         callbacks:{
-          'signInSuccessWithAuthResult': function(authResult,redirectURL) {
+          'signInSuccessWithAuthResult': function(authResult:any,redirectURL:any) {
             const analytics = getAnalytics();
             console.log(authResult)
             if(!authResult.additionalUserInfo.isNewUser)

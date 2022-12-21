@@ -3,11 +3,14 @@ import 'firebaseui/dist/firebaseui.css'
 import React,{useEffect} from 'react'
 import firebase from '../firebase/fbconfig';
 
-
-  export default function Reauth({type,change,setSuccess}) {
+interface ReauthProps{
+  type:string,
+  change?:string
+}
+  export default function Reauth({type,change}:ReauthProps) {
     var uiConfig = {
         callbacks:{
-            signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+            signInSuccessWithAuthResult: function(authResult:any, redirectUrl:string) {
                 var user = authResult.user;
                 var credential = authResult.credential;
                 var isNewUser = authResult.additionalUserInfo.isNewUser;
@@ -48,6 +51,7 @@ import firebase from '../firebase/fbconfig';
         }
       };
       
+      
       useEffect(() => {
        
         var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
@@ -55,7 +59,9 @@ import firebase from '../firebase/fbconfig';
         
         ui.start('#firebaseui-auth-container', uiConfig);
         
-        return ()=> ui.delete().then(()=>console.log('auth instance deleted'))
+        return ()=> {
+          ui.delete().then(()=>console.log('auth instance deleted'))
+        }
       }, [])
       // Initialize the FirebaseUI Widget using Firebase.
       

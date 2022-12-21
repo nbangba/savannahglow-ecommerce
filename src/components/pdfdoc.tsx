@@ -4,6 +4,7 @@ import { leadingZeros } from '../helperfunctions';
 import Regular from '../fonts/Montserrat/Montserrat-Regular.ttf'
 import Bold from '../fonts/Montserrat/Montserrat-Bold.ttf'
 import { calculateDiscountedSubTotal } from '../helperfunctions';
+import { OrderInfoWithReceiptOrInvoice} from './adminCustomerOrders';
 const styles =StyleSheet.create({
     body: {
       paddingTop: 35,
@@ -66,14 +67,14 @@ const styles =StyleSheet.create({
     },
     view:{
       display:'flex',
-      flex:'1 0 ',
+      flex:1,
       width:'100%' ,
       flexDirection: "row",
       alignSelf: "stretch",
     },
     recieptInfo:{
       display:'flex',
-      flex:'1 0 ',
+      flex:1,
       flexDirection: "row",
       alignSelf: "stretch",
       width:'100%',
@@ -81,12 +82,15 @@ const styles =StyleSheet.create({
     
   });
 
-export default function PDFDoc({order}) {
+  interface PDFDOCProps{
+    order:OrderInfoWithReceiptOrInvoice
+  }
+export default function PDFDoc({order}:PDFDOCProps) {
     try{
        Font.register({family:'Montserrat',fonts:[{src:Regular,fontWeight:'normal'},{src:Bold,fontWeight:'bold'}]})
     }
-    catch(e){
-        alert('An error has occurred: '+e.message)
+    catch(e:any){
+        alert('An error has occurred: '+ e.message)
     }
 
     const subTotal = calculateDiscountedSubTotal(order.order.items)
@@ -98,8 +102,8 @@ export default function PDFDoc({order}) {
             <View style={styles.recieptInfo}>
               <View style={{width:'50%'}}>
               <View style={styles.view}>
-                <Text style={{...styles.text,margin:5,fontWeight:'bold'}}>{(order.order.payemnt==='COD')?`Invoice ID:`:'Receipt ID:'}</Text>
-                <Text style={{...styles.text,margin:5}}>{(order.order.payemnt==='COD')?leadingZeros(5,order.invoiceID):leadingZeros(5,order.receiptID)}</Text>
+                <Text style={{...styles.text,margin:5,fontWeight:'bold'}}>{(order.order.payment==='COD')?`Invoice ID:`:'Receipt ID:'}</Text>
+                <Text style={{...styles.text,margin:5}}>{(order.invoiceID)?leadingZeros(5,order.invoiceID):order.receiptID?leadingZeros(5,order.receiptID):'null'}</Text>
                 </View>
                 <View style={styles.view}>
                 <Text style={{...styles.text,margin:5,fontWeight:'bold'}}>Date:</Text>

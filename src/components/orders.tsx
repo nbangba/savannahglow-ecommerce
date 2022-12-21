@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import CardComponent from './card'
 import { doc, getFirestore,collection,query,orderBy,where, limit} from 'firebase/firestore';
-import { useUser,useFirestoreCollectionData, useFirestore} from 'reactfire';
+import { useUser,useFirestoreCollectionData, useFirestore, ObservableStatus} from 'reactfire';
 import { CardItem } from './addresscard'
 import Errorwrapper from './errorwrapper';
 import { leadingZeros } from '../helperfunctions';
@@ -12,8 +12,9 @@ import styled from 'styled-components';
 import {pdf} from '@react-pdf/renderer';
 import PDFDoc from './pdfdoc';
 import { saveAs } from 'file-saver';
-import { LoadMore } from './adminCustomerOrders';
+import { LoadMore, OrderInfoProps, OrderInfoWithReceiptOrInvoice } from './adminCustomerOrders';
 import { Link } from 'gatsby';
+import { User } from 'firebase/auth';
 
 const moment = require('moment')
 
@@ -36,7 +37,11 @@ export default function Orders(){
   return <div>No user</div>
 }
 
-function OrdersComponent({user}) {
+interface OrdersComponentProps{
+  user: User
+}
+
+function OrdersComponent({user}:OrdersComponentProps) {
   const firestore = useFirestore();
   //const { status, data: signInCheckResult } = useSigninCheck()
   const ORDERS_PER_PAGE = 12
@@ -44,13 +49,13 @@ function OrdersComponent({user}) {
   const ordersCollection = collection(firestore, 'orders');
   const ordersQuery = user && query(ordersCollection,where('user','==',user.uid),
                                                    orderBy('orderCreated','desc'),limit(page*ORDERS_PER_PAGE))
-  const { status, data:orders } = useFirestoreCollectionData(ordersQuery);
+  const { status, data:orders } = useFirestoreCollectionData(ordersQuery) as ObservableStatus<OrderInfoWithReceiptOrInvoice[]>;;
   console.log('orders',orders)
   if(orders.length>0)
     return (
       <OrderWrapper>
         {
-          orders.map((order)=>
+          orders.map((order:OrderInfoWithReceiptOrInvoice)=>
             <OrderCard order={order} role='owner'/>
           )
         }
@@ -61,8 +66,13 @@ function OrdersComponent({user}) {
   return <div> nothing found </div>
 }
 
+interface OrderCardProps{
+  order: OrderInfoWithReceiptOrInvoice,
+  role: string|object|null,
+  children?:JSX.Element|JSX.Element[]
+}
 
-export function OrderCard({order,role=null,children}){
+export function OrderCard({order,role=null,children}:OrderCardProps){
   return(
     <CardComponent maxWidth="400px" style={{height:'fit-content'}}>
               <CardItem>
@@ -81,6 +91,7 @@ export function OrderCard({order,role=null,children}){
                 <div>{order.order.orderAddress.location}</div>}
                 <div>{order.order.orderAddress.phone}</div>
               </CardItem>
+              <>
               {order.order.items.slice(0,1).map(item=> 
                                        <CardItem>
                                           <CardItem style={{fontWeight:'bold'}}>Savannah Glow</CardItem> 
@@ -129,20 +140,21 @@ export function OrderCard({order,role=null,children}){
                                           {order.order.items.length >1 && <CardItem>{`${order.order.items.length -1 } item(s) not shown`}</CardItem>}
                                         </CardItem>  
                                       )}
+              </>
               <CardItem><span style={{fontWeight:'bold'}}>Total</span>: GHS {order.order.amount?order.order.amount:calculateSubTotal(order.order.items)}</CardItem>     
               <CardItem>
                 {(order.orderStatus =='received' &&  role != 'dispatch') && <Button secondary onClick={()=>refund(order)}>Cancel order</Button>} 
-                {order.orderStatus !='cancelled' && <Button onClick={()=>generatePdfDocument(order,`sg-receipt-${leadingZeros(5,order.receiptID)}`)}>
+                {order.orderStatus !='cancelled' && <Button onClick={()=>generatePdfDocument(order,`sg-receipt-${leadingZeros(5,order.receiptID?order.receiptID:-1)}`)}>
                     Download Receipt
                 </Button>}
-                <Link to={`../../order/${order.NO_ID_FIELD}`}><Button secondary >See More</Button></Link>
+                <Link to={`../../order/${order.NO_ID_FIELD}`}><Button secondary onClick={()=>{return}}>See More</Button></Link>
                {children && children}
               </CardItem>                 
             </CardComponent>
       )
 }
 
-export const generatePdfDocument = async (order,fileName) => {
+export const generatePdfDocument = async (order:OrderInfoWithReceiptOrInvoice,fileName:string) => {
   const blob = await pdf((
       <PDFDoc  order={order}/>
      )).toBlob();

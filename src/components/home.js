@@ -1,12 +1,12 @@
 import React from 'react'
 import styled from 'styled-components'
-import pomade from '../images/pomade.png'
-import woman from '../images/woman.png'
+import pomade from '../images/non-svg/pomade.png'
+import woman from '../images/non-svg/woman.png'
 import {Button} from './navbar'
-import Vitamins from  '../images/vitamins.svg'
-import Sun from  '../images/sun.svg'
-import EcoFriendly from  '../images/eco-friendly.svg'
-import HealthyLifestyle from  '../images/healthy-lifestyle.svg'
+import Vitamins from  '../images/svgs/vitamins.svg'
+import Sun from  '../images/svgs/sun.svg'
+import EcoFriendly from  '../images/svgs/eco-friendly.svg'
+import HealthyLifestyle from  '../images/svgs/healthy-lifestyle.svg'
 import Buy from './buy'
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel';

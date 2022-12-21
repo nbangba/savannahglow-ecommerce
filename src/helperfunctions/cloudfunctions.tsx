@@ -1,8 +1,11 @@
 import { getFunctions,httpsCallable } from 'firebase/functions';
 import { getAnalytics, logEvent } from "firebase/analytics";
 import { collection,addDoc,getFirestore} from "firebase/firestore";
-
-export function verifyPaystack(info,response){
+import { VarietyProps } from '../components/product';
+import {InfoProps} from '../components/checkout'
+import { OrderInfoProps } from '../components/adminCustomerOrders';
+import { ReviewProps } from '../components/review';
+export function verifyPaystack(info:InfoProps,response:any){
     const functions =  getFunctions();
     const verify = httpsCallable(functions, 'payStackTransctionVerification');
     const firestore = getFirestore()
@@ -11,7 +14,7 @@ export function verifyPaystack(info,response){
         console.log(response.status)
         console.log(result)
         if(response.status === 'success'){
-         const items =   info.items.map((item)=>{
+         const items =   info.items.map((item:VarietyProps)=>{
              
               return {item_name:item.name,price:item.price,discount:item.discount,quantity:item.quantity,currency:'GHS'}
             })
@@ -37,7 +40,7 @@ export function verifyPaystack(info,response){
     .catch((err)=>console.log(err))  
 }
 
-export function chargeCard(info,cardId){
+export function chargeCard(info:InfoProps,cardId:string){
     const functions =  getFunctions();
     const chargeCardFn = httpsCallable(functions, 'chargeCard');
 
@@ -46,7 +49,7 @@ export function chargeCard(info,cardId){
     .catch((e)=>console.log(e))
 }
 
-export function payOnDelivery(info){
+export function payOnDelivery(info:InfoProps){
     const functions =  getFunctions();
     const payOnDeliveryFn = httpsCallable(functions, 'payOnDelivery');
 
@@ -55,7 +58,7 @@ export function payOnDelivery(info){
     .catch((e)=>console.log(e))
 }
 
-export  function refund(order){
+export  function refund(order:OrderInfoProps){
     const functions =  getFunctions();
     const createRefund = httpsCallable(functions, 'createRefund');
     const firestore = getFirestore()
@@ -75,13 +78,13 @@ console.log(result)})
  .catch((e)=>console.log(e))  
 }
 
-export async function deleteUsers(selectedRows){
+export async function deleteUsers(selectedRows:any){
     const functions =  getFunctions();
     console.log(selectedRows)
-    const selected = selectedRows.map(e=>e.original)
+    const selected = selectedRows.map((e:any)=>e.original)
     console.log(selected)
     const deleteUsersFn = httpsCallable(functions, 'deleteUsers');
-   const data = await deleteUsersFn({selectedRows:selected})
+   const data:any = await deleteUsersFn({selectedRows:selected})
    console.log(data)
    if(data.data && data.data.result.length>0)    
     return 'success'
@@ -89,8 +92,8 @@ export async function deleteUsers(selectedRows){
     return 'error'
 }
 
-export  function assignRole(role,selectedRows){
-    const selected = selectedRows.map(e=>e.original)
+export  function assignRole(role:string,selectedRows:any){
+    const selected = selectedRows.map((e:any)=>e.original)
     const functions =  getFunctions();
     const assignRoleFn = httpsCallable(functions, 'assignRole');
     assignRoleFn({role:role,selectedRows:selected})
@@ -98,7 +101,7 @@ export  function assignRole(role,selectedRows){
     .catch((e)=>console.log(e))
 }
 
-export function rateProduct(values){
+export function rateProduct(values:ReviewProps){
     const functions =  getFunctions();
     const rateProductFn = httpsCallable(functions, 'rateProduct');
 

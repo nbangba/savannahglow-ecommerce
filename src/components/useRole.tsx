@@ -2,7 +2,7 @@ import React, { useState ,useEffect} from 'react'
 import { useAuth } from 'reactfire'
 
 export default function useRole() {
-    const [role, setRole] = useState(null)
+    const [role, setRole] = useState<string|object>('')
     const {currentUser} = useAuth()
     
     useEffect(() => {
