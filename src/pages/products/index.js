@@ -7,7 +7,6 @@ import slugify from '@sindresorhus/slugify';
 import { Link } from 'gatsby'
 import { getAnalytics, logEvent } from "firebase/analytics";
 
-import { useFirestore } from 'react-redux-firebase'
 const ProductsWrapper = styled.div`
   margin:20px;
   font-family: 'Montserrat', sans-serif;
