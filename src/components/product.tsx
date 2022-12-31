@@ -42,8 +42,6 @@ li{
   display:block;
   cursor:pointer;
 }
-
-
 `
 
 
@@ -172,17 +170,17 @@ export default function Product({data}:ContentfulProductProps) {
     const auth = useAuth();
     const { role} = useRole()
     console.log(sgproducts)
-      const [selectedVariety,setSelectedVariety] = useState<VarietyProps>(sgproducts.varieties[0])
-      const [productRating,setProductRating] = useState<number|null>(null)
-      const [selectedImage,setSelectedImage]=useState(0)
-      const [qty,setQty] = useState(1)
-      const [showModal, setShowModal] = useState(false)
-      const firestore = useFirestore();
-      const ref = doc(firestore, 'product',selectedVariety.id );
-      const { data: product} = useFirestoreDocData(ref) as ObservableStatus<ProductSettingProps>;
-      const { data: user } = useUser()
-      console.log(selectedVariety)
-      const docRef = doc(db, "products", sgproducts.id);
+    const [selectedVariety,setSelectedVariety] = useState<VarietyProps>(sgproducts.varieties[0])
+    const [productRating,setProductRating] = useState<number|null>(null)
+    const [selectedImage,setSelectedImage]=useState(0)
+    const [qty,setQty] = useState(1)
+    const [showModal, setShowModal] = useState(false)
+    const firestore = useFirestore();
+    const ref = doc(firestore, 'product',selectedVariety.id );
+    const { data: product} = useFirestoreDocData(ref) as ObservableStatus<ProductSettingProps>;
+    const { data: user } = useUser()
+    console.log(selectedVariety)
+    const docRef = doc(db,"products", sgproducts.id);
 
        /**/
       useEffect(() => {
@@ -263,7 +261,7 @@ export default function Product({data}:ContentfulProductProps) {
               
                       <h2>{sgproducts.name}</h2>
                       {productRating?
-                      <Rating allowHalfIcon ratingValue={productRating/20.0} readonly={true} size={25} style={{width:'fit-content'}}/>:
+                      <Rating allowFraction initialValue={productRating?productRating:0} readonly={true} size={25} style={{width:'fit-content'}}/>:
                       <small>This product has not been rated yet</small>}
                       
                       <hr></hr>
@@ -449,7 +447,7 @@ interface AddToBagProps{
       <ModalComponent showModal={showModal} setShowModal={setShowModal}>
           <Formik
           initialValues={{available:available,discount:discount}}
-          onSubmit={(values, { setSubmitting }) => {
+          onSubmit={(values:ProductSettingProps, { setSubmitting }:any) => {
             console.log(values)
             setTimeout(() => {
               setProductSettings(values)
@@ -457,7 +455,7 @@ interface AddToBagProps{
             }, 400);
           }}
         >
-          {({isSubmitting,setFieldValue,handleChange,values}) => (
+          {({isSubmitting,setFieldValue,handleChange,values}:any) => (
             <Form style={{width:'500px',display:'flex',flexWrap:'wrap'}}>  
               <InputWrapper style={{minWidth:'100%'}}>
                   <Label htmlFor='available' > Available</Label>

@@ -36,4 +36,7 @@ declare module 'react-redux';
 declare module 'react-beautiful-dnd'
 declare module 'whatwg-fetch'
 declare module 'file-saver'
+declare module 'formik'
+declare module 'react-simple-star-rating'
 declare module 'react-credit-cards'
+declare module 'firebase'

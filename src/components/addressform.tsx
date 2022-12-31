@@ -103,7 +103,7 @@ export const Button = styled.button`
     background:#13213D;
     transition: background 0.3s ease-out;
     mix-blend-mode: normal;
-}
+   }
 
  
    ${(props:{primary?:boolean,secondary?:boolean}) => props.primary && css`
@@ -239,7 +239,7 @@ interface AdrressInfoFSProps extends AddressInfoProps{
       <Formik
         initialValues={{...addressInfo}}
         validationSchema={addressSchema}
-        onSubmit={(values, { setSubmitting }) => {
+        onSubmit={(values:any, { setSubmitting }:any) => {
           setTimeout(() => {
             console.log(JSON.stringify(values, null, 2));
             
@@ -275,7 +275,7 @@ interface AdrressInfoFSProps extends AddressInfoProps{
           }, 400);
         }}
       >
-        {({ isSubmitting,setFieldValue,handleChange,values,handleSubmit,submitForm }) => (
+        {({ isSubmitting,setFieldValue,handleChange,values,handleSubmit,submitForm }:any) => (
           <Form onSubmit={handleSubmit} id="address" style={{width:'500px',display:'flex',flexWrap:'wrap'}}>
             <InputWrapper>
                 <Label htmlFor='firstname' >First Name</Label>

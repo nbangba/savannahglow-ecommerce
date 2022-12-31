@@ -15,7 +15,7 @@ module.exports = {
           include: /svgs/,
         },
       },
-  },"gatsby-plugin-gatsby-cloud","gatsby-plugin-mdx",`gatsby-plugin-typescript`,
+  },"gatsby-plugin-gatsby-cloud","gatsby-plugin-mdx",`gatsby-plugin-typescript`,"gatsby-plugin-image",
    {
     resolve: `gatsby-source-contentful`,
     options: {

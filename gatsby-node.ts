@@ -4,12 +4,9 @@ const webpack = require('webpack')
 exports.onCreateWebpackConfig = ({ stage, loaders, actions,plugins }:any) => {
     if (stage === "build-html" || stage === "develop-html") {
       actions.setWebpackConfig({
+        
         module: {
           rules: [
-            {
-              test: /firebase/,
-              use: loaders.null(),
-            },
             {
               test: [/\.js$/,/\.tsx?$/,/\.ts?$/],
               exclude: [
@@ -25,6 +22,7 @@ exports.onCreateWebpackConfig = ({ stage, loaders, actions,plugins }:any) => {
             stream: path.resolve('node_modules/stream-browserify/index.js'), 
             zlib: path.resolve('node_modules/browserify-zlib/lib/index.js'), 
             path: path.resolve('node_modules/path-browserify/index.js'), 
+            firebase: false,
            },
          fallback: { fs: false, crypto: false, }, 
         }, 

@@ -93,7 +93,7 @@ export default function Review({productName,productId,user}:ReviewComponentProps
           enableReinitialize = {true}
           initialValues = {yourReview}
           validationSchema={ratingSchema}
-        onSubmit={(values, { setSubmitting }) => {
+        onSubmit={(values:any, { setSubmitting }:any) => {
           setTimeout(() => {
             values.productName =  productName;
             values.productId = productId;
@@ -125,10 +125,10 @@ export default function Review({productName,productId,user}:ReviewComponentProps
           }, 400);
         }}
       >
-        {({isSubmitting,setFieldValue,handleChange,values,handleReset }) => (
+        {({isSubmitting,setFieldValue,handleChange,values,handleReset }:any) => (
           <Form style={{maxWidth:'500px',display:'flex',flexWrap:'wrap'}}>
               <InputWrapper>
-              {<Rating onClick={(r)=>setFieldValue('rating',r)} transition  ratingValue={values.rating/20.0} style={{width:'fit-content'}} key={values.review} />}
+              {<Rating onClick={(rate:number)=>setFieldValue('rating',rate)} transition  initialValue={values.rating} style={{width:'fit-content'}} key={values.review} />}
               <ErrorMessage name="rating" component="div" />
               </InputWrapper>
              { (!user || user.isAnonymous) &&
@@ -152,8 +152,8 @@ export default function Review({productName,productId,user}:ReviewComponentProps
             </InputWrapper>
             <div style={{width:'100%',display:'flex'}}>
             <Button secondary type='button' onClick={handleReset}>Reset</Button>
-            {yourReviewArray.length>0 && <Button secondary type='button' onClick={()=>setEditReview(false)}>Cancel</Button>}
-            <Button primary type='submit'>Submit</Button>
+            {yourReviewArray.length>0 && <Button secondary type='button'  onClick={()=>setEditReview(false)}>Cancel</Button>}
+            <Button primary type='submit' disabled={isSubmitting}>Submit</Button>
             </div>
             {console.log(values)}
           </Form>
@@ -171,13 +171,15 @@ interface UserReviewProps{
   setEditReview?:(edtitReview:boolean)=> void
 }
 function UserReview({review,user,setEditReview}:UserReviewProps){
-  const rating = review.rating/20.0
+  const rating = review.rating
   return(
     <Card style={{borderRadius:5 ,maxWidth:500}}>
        <CardItem style={{fontWeight:'bold'}}>{review.name}</CardItem>
-       <Rating ratingValue={rating} size={20} allowHalfIcon readonly style={{width:'fit-content'}} key={review.review+review.rating}/>
+       <Rating initialValue={rating} size={20} allowHalfIcon readonly style={{width:'fit-content'}} key={review.review+review.rating}/>
        <CardItem>{review.review}</CardItem>
-       {(user&&user.uid==review.userId)&&<CardItem ><Butt secondary onClick={()=>{if(setEditReview){setEditReview(true)}}}><Edit fill="#474E52" style={{width:20,height:20}}/>Edit</Butt></CardItem>}
+       {(user&&user.uid==review.userId)&&<CardItem >
+        <Butt secondary onClick={()=>{if(setEditReview){setEditReview(true)}}}><Edit fill="#474E52" style={{width:20,height:20}}/>Edit</Butt>
+        </CardItem>}
     </Card>
   )
 }

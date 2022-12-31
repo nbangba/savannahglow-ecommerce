@@ -29,6 +29,7 @@ import { getAnalytics, logEvent } from "firebase/analytics";
 import { Card } from './card';
 import { Remove } from './addresscard';
 import { AddressInfoProps } from './addressform';
+import { AnyMessageParams } from 'yup/lib/types';
 
 const dropDownStyle ={
     border:'1px solid #556585',
@@ -163,14 +164,14 @@ const CardWrapper = styled.div`
         <Formik
         initialValues={{ displayName:user&&user.displayName||'',email:user&&user.email||'',phone:user&&user.phoneNumber||''}}
         //Remember to add yup for  validation check.
-        onSubmit={(values, { setSubmitting }) => {
+        onSubmit={(values:any, { setSubmitting }:any) => {
           setTimeout(() => {
             console.log(JSON.stringify(values, null, 2));
             setSubmitting(false);
           }, 400);
         }}
       >
-        {({ isSubmitting, setFieldValue, handleChange, values}) => (
+        {({ isSubmitting, setFieldValue, handleChange, values}:any) => (
           <Form style={{display:'flex',flexWrap:'wrap',width:'100%',overflow:'hidden'}}>
             <InputWrapper>
                 <Label>Display Name</Label>
@@ -240,7 +241,7 @@ function ChangeEmail({setShowModal}:ChangeMailProps){
     <Formik
     initialValues={{ email: '',}}
     //Remember to validate with YUP
-    onSubmit={(values, { setSubmitting }) => {
+    onSubmit={(values:any, { setSubmitting }:any) => {
       setTimeout(() => {
         console.log(JSON.stringify(values, null, 2));
         if(user)
@@ -256,7 +257,7 @@ function ChangeEmail({setShowModal}:ChangeMailProps){
         setSubmitting(false);
       }, 400);
     }}
-  >{({ isSubmitting,handleChange,values })=>(
+  >{({ isSubmitting,handleChange,values }:any)=>(
     success?
     <div>
       You successfully changed your email to {values.email}
@@ -305,7 +306,7 @@ function ChangePassword({setShowModal}:ChangeMailProps){
     <Formik
     initialValues={{password: '',confirmPassword:''}}
     validationSchema={passWordSchema}
-    onSubmit={(values, { setSubmitting }) => {
+    onSubmit={(values:any, { setSubmitting }:any) => {
       setTimeout(() => {
         console.log(JSON.stringify(values, null, 2));
         if(user)
@@ -322,7 +323,7 @@ function ChangePassword({setShowModal}:ChangeMailProps){
         setSubmitting(false);
       }, 400);
     }}>
-    {({ isSubmitting,setFieldValue,handleChange,handleSubmit,values,errors }) => (
+    {({ isSubmitting,setFieldValue,handleChange,handleSubmit,values,errors }:any) => (
     success?
     <div>
       You successfully changed your password
@@ -375,7 +376,7 @@ function DeleteAccount({setShowModal}:ChangeMailProps){
     <Formik
     initialValues={{agree:'agree'}}
     validationSchema={termsSchema}
-    onSubmit={(values, { setSubmitting }) => {
+    onSubmit={(values:any, { setSubmitting }:any) => {
       setTimeout(() => {
         console.log(JSON.stringify(values, null, 2));
         if(user)
@@ -392,7 +393,7 @@ function DeleteAccount({setShowModal}:ChangeMailProps){
         setSubmitting(false);
       }, 400);
     }}>
-    {({ isSubmitting,setFieldValue,handleChange,handleSubmit,values,errors }) => (
+    {({ isSubmitting,setFieldValue,handleChange,handleSubmit,values,errors }:any) => (
     success?
     <div>
       You successfully deleted your account
@@ -434,14 +435,14 @@ function Notifications(){
       <Formik
       initialValues={{ newsletter:'newsletter',notifications:'notifications'}}
       //add functionality
-      onSubmit={(values, { setSubmitting }) => {
+      onSubmit={(values:any, { setSubmitting }:any) => {
         setTimeout(() => {
           console.log(JSON.stringify(values, null, 2));
           setSubmitting(false);
         }, 400);
       }}
     >
-      {({ isSubmitting,setFieldValue,handleChange,values }) => (
+      {({ isSubmitting,setFieldValue,handleChange,values }:any) => (
         <Form style={{maxWidth:'500px'}}>
           <InputWrapper style={{display:'flex',flexWrap:'wrap',width:'100%',flex:'1 1 100px',justifyContent:'space-between',minWidth:200}}>
               <Label  >Subscribe to newsletters</Label>

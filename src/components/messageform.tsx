@@ -91,7 +91,7 @@ export const Button = styled.button`
         <h3>Leave Us A Message</h3>
       <Formik
         initialValues={{ email: '', password: '' }}
-        validate={values => {
+        validate={(values:any) => {
           const errors:{email:string} = {
             email: ''
           };
@@ -104,14 +104,14 @@ export const Button = styled.button`
           }
           return errors;
         }}
-        onSubmit={(values, { setSubmitting }) => {
+        onSubmit={(values:any, { setSubmitting }:any) => {
           setTimeout(() => {
             alert(JSON.stringify(values, null, 2));
             setSubmitting(false);
           }, 400);
         }}
       >
-        {({ isSubmitting }) => (
+        {({ isSubmitting }:any) => (
           <Form style={{width:'500px'}}>
             <InputWrapper>
                 <Label htmlFor="name">Name</Label>
