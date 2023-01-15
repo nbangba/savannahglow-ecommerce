@@ -4,6 +4,9 @@ require("dotenv").config({
 })
 
 module.exports = {
+  flags: {
+    DEV_SSR: true
+  },
   siteMetadata: {
     title: "New Gatsby Site",
   },
@@ -15,7 +18,12 @@ module.exports = {
           include: /svgs/,
         },
       },
-  },"gatsby-plugin-gatsby-cloud","gatsby-plugin-mdx",`gatsby-plugin-typescript`,"gatsby-plugin-image",
+  },
+  {
+    resolve: `gatsby-transformer-remark`,
+    options: {},
+  },"gatsby-plugin-gatsby-cloud","gatsby-plugin-mdx",`gatsby-plugin-typescript`,"gatsby-plugin-image",`gatsby-plugin-sharp`,
+  `gatsby-transformer-sharp`,
    {
     resolve: `gatsby-source-contentful`,
     options: {

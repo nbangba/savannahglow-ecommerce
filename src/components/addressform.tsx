@@ -51,7 +51,7 @@ const textInput = `width: 100%;
 }
 
   
- export const dropDownStyle ={
+export const dropDownStyle ={
     border:'1px solid #556585',
     backgroudColor:'#f4ece6',
 }
@@ -340,7 +340,7 @@ interface AdrressInfoFSProps extends AddressInfoProps{
             <InputWrapper style={{display:'flex',justifyContent:'flex-end'}} >
               <Button secondary  onClick={()=>setShowModal(false)} type='button'
                 style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >CANCEL</Button>
-              <Button primary  disabled={isSubmitting} form="address" onClick={submitForm}
+              <Button primary  disabled={isSubmitting} form="address" onClick={handleSubmit}
               style={{width:100,display:'flex',margin:'10px', height:40, fontSize:16,alignItems:'center',justifyContent:'center'}} >DONE</Button>
             </InputWrapper>       
           </Form>

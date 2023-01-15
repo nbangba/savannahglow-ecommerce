@@ -3,6 +3,7 @@ import { graphql } from 'gatsby'
 import { MDXRenderer } from 'gatsby-plugin-mdx'
 import Layout from '../../components/layout'
 import styled from 'styled-components'
+import { GatsbyImage} from "gatsby-plugin-image"
 
 const Blog = styled.div`
 font-family: 'Montserrat', sans-serif;
@@ -19,62 +20,63 @@ a{
 const BlogWrapper = styled.div`
 background: white;
 `
-const BlogPage = ({ data }) => {
+ export default function BlogPage({ data,children }){
   const blog = data.contentfulBlogPost
   console.log(blog)
+  const bodyRichText = blog.body.childMarkdownRemark.html
   return (
     <Layout >
       <BlogWrapper>
      <div style={{width:'100%',fontFamily:`'Montserrat', sans-serif`}}>
-       <img style={{width:'100%',height:300 ,objectFit:'cover'}}srcSet={blog.heroImage.fluid.srcSet}/>
+       <GatsbyImage style={{width:'100%',height:300 ,objectFit:'cover'}}image={blog.heroImage.gatsbyImageData}/>
      </div>
      <Blog>
        <div style={{display:'flex'}}>
        <div style={{justifyContent:'flex-start',alignItems:'center',display:'flex',}}>
-                           <img style={{width:'50px' ,height:'50px',borderRadius:'50%',objectFit:'cover'}} srcSet={blog.author.image.fluid.srcSet}/>
+                           <GatsbyImage style={{width:'50px' ,height:'50px',borderRadius:'50%',objectFit:'cover'}} image={blog.author.image.gatsbyImageData}/>
                            </div>
                            <div style={{padding:'5px 5px 5px 20px', flex:'1 0 60px'}}>
                            <div style={{fontWeight:'bold',color:'#ad1457'}}>{blog.author.name}</div>
                            <div style={{justifyContent:'space-between',alignItems:'center',display:'flex'}}>
                             <span>{blog.publishDate}</span>
-                            <small style={{color:'#1565c0'}}>{` ${blog.body.childMdx.timeToRead} min read`}</small>
+                            {/*<small style={{color:'#1565c0'}}>{` ${blog.body.childMdx.timeToRead} min read`}</small>*/}
                             </div> 
                           </div> 
        </div>
      <h1 style={{fontFamily:`'Montserrat', sans-serif`}}>{blog.title}</h1>
      <p style={{fontFamily:`'Montserrat', sans-serif`}}>{blog.description.description}</p>
      
-      <MDXRenderer>{blog.body.childMdx.body}</MDXRenderer>
+     <div className="body" dangerouslySetInnerHTML={{__html: bodyRichText,}}/>
      </Blog>
      </BlogWrapper> 
     </Layout>
   )
 }
 
+
 export const query = graphql`
 query ($title: String) {
   contentfulBlogPost(title: {eq: $title}) {
     title
     body {
-      body
-      childMdx {
-        timeToRead
-        slug
-        body
+      childMarkdownRemark {
+        html
       }
     }
     author {
       name
       image {
-        fluid {
-          srcSet
-        }
+        gatsbyImageData(
+          layout: FULL_WIDTH
+          placeholder: BLURRED
+          )
       }
     }
     heroImage {
-      fluid {
-        srcSet
-      }
+      gatsbyImageData(
+        layout: FULL_WIDTH
+        placeholder: BLURRED
+        )
     }
     description {
       description
@@ -84,4 +86,3 @@ query ($title: String) {
   }
 }
 `
-export default BlogPage

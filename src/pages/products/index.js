@@ -40,7 +40,7 @@ export default function Products({data}) {
                      name={node.name} 
                      subName={node.varieties[0].name} 
                      price={`GHS ${node.varieties[0].price}.00`} 
-                     imgSrc={ node.varieties[0].images[0].fluid.src}
+                     imgSrc={ node.varieties[0].images[0].gatsbyImageData}
                      id={node.id}/>
                     </Link>
                              
@@ -64,9 +64,10 @@ export const query = graphql`
             name
             price
             images {
-              fluid {
-                src
-              }
+              gatsbyImageData(
+                layout: FULL_WIDTH
+                placeholder: BLURRED
+                )
             }
           }
         }

@@ -8,6 +8,10 @@ exports.onCreateWebpackConfig = ({ stage, loaders, actions,plugins }:any) => {
         module: {
           rules: [
             {
+              test: /firebase/,
+              use: ['null-loader']
+          },
+            {  
               test: [/\.js$/,/\.tsx?$/,/\.ts?$/],
               exclude: [
                 path.resolve(__dirname, './functions/')
@@ -23,6 +27,10 @@ exports.onCreateWebpackConfig = ({ stage, loaders, actions,plugins }:any) => {
             zlib: path.resolve('node_modules/browserify-zlib/lib/index.js'), 
             path: path.resolve('node_modules/path-browserify/index.js'), 
             firebase: false,
+            'dialog-polyfill':false,
+            'material-design-lite':false,
+            //'styled-components':false,
+           // "@emotion":false,
            },
          fallback: { fs: false, crypto: false, }, 
         }, 

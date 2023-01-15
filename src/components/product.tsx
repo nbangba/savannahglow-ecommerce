@@ -12,6 +12,7 @@ import { InputWrapper,Label,Input ,Button as Btn} from './addressform';
 import { Rating } from 'react-simple-star-rating'
 import { Link,navigate } from 'gatsby';
 import useRole from './useRole';
+import { GatsbyImage} from "gatsby-plugin-image"
 
 const product ={
   width:'100px',
@@ -19,9 +20,9 @@ const product ={
 }
 
 const bigProduct={
-  minWidth:'200px',
+  minWidth:200,
   objectFit: 'cover',
-  width:'auto',
+  width:400,
   maxHeight:400,
 } as React.CSSProperties
 
@@ -159,7 +160,7 @@ export interface VarietyProps{
   discount:number,
   id:string, 
   quantity:number,
-  images:{fluid:{src:string,srcset:string}}[],
+  images:{fluid:{src:string,srcSet:string},gatsbyImageData?:any}[],
   total:number,
 }
 export default function Product({data}:ContentfulProductProps) {
@@ -170,7 +171,13 @@ export default function Product({data}:ContentfulProductProps) {
     const auth = useAuth();
     const { role} = useRole()
     console.log(sgproducts)
-    const [selectedVariety,setSelectedVariety] = useState<VarietyProps>(sgproducts.varieties[0])
+    const  transformImageSource= (a:any[])=>{
+
+     return a.map((x:any) =>{return {...x,images:[...x.images.map((b:any)=> {return {...b,fluid:{src:b.gatsbyImageData.images.fallback.src, srcSet:b.gatsbyImageData.images.sources[0].srcSet}}})]}})
+   }
+    const varietiesTransformed = transformImageSource(sgproducts.varieties )
+    console.log('varieties transforned',varietiesTransformed)
+    const [selectedVariety,setSelectedVariety] = useState<VarietyProps>(varietiesTransformed[0] as VarietyProps)
     const [productRating,setProductRating] = useState<number|null>(null)
     const [selectedImage,setSelectedImage]=useState(0)
     const [qty,setQty] = useState(1)
@@ -243,15 +250,18 @@ export default function Product({data}:ContentfulProductProps) {
           })
         }
 
+        
+       
+
       return(
             <ProductWrapper>
             <div style={{width:'100%',display:'flex',flexWrap:'wrap',maxWidth:1200,justifyContent:'center'}}>      
             <section>
                   <Selected>
                       <ProductImageWrapper>
-                      <img style={bigProduct} src={selectedVariety.images[selectedImage].fluid.src} srcSet={selectedVariety.images[selectedImage].fluid.srcset}/>
+                      <GatsbyImage style={bigProduct} image={selectedVariety.images[selectedImage].gatsbyImageData} alt={selectedVariety.name} />
                       <ul>{selectedVariety.images.map((image,index)=>
-                          <li onClick={()=>setSelectedImage(index)}><img src={image.fluid.src} srcSet={image.fluid.srcset} className={`selectable`}/> </li>
+                          <li onClick={()=>setSelectedImage(index)}><GatsbyImage image={image.gatsbyImageData}  className={`selectable`} alt={selectedVariety.name}/> </li>
                         )}
                       </ul>
                       </ProductImageWrapper>

@@ -1,13 +1,11 @@
 import React from 'react'
 import styled from 'styled-components'
-import pomade from '../images/non-svg/pomade.png'
-import woman from '../images/non-svg/woman.png'
 import {Button} from './navbar'
 import Vitamins from  '../images/svgs/vitamins.svg'
 import Sun from  '../images/svgs/sun.svg'
 import EcoFriendly from  '../images/svgs/eco-friendly.svg'
 import HealthyLifestyle from  '../images/svgs/healthy-lifestyle.svg'
-import Buy from './buy'
+import { StaticImage } from "gatsby-plugin-image"
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel';
 import { Link } from 'gatsby'
@@ -279,12 +277,12 @@ export default function Home() {
                   <Link style={{textDecoration:'none'}} to="/products/savannah-glow-shea-butter"><Button primary style={{width:280,display:'flex',marginBottom:'5vw',  fontSize:24,alignItems:'center',justifyContent:'center'}} >BUY NOW </Button></Link>
                 </section>
                 <section className='second'>
-                  <img   src={pomade}></img>  
+                  <StaticImage   src='../images/non-svg/pomade.png' placeholder="blurred"/>
                 </section>
             </Top>
             <Top className='gradient' style={{borderRadius:50}}>
               <section className='second' >
-              <img   src={woman} style={{objectFit:'cover',objectPosition:'right top'}}></img>
+              <StaticImage   src='../images/non-svg/woman.png' style={{objectFit:'cover',objectPosition:'right top'}}/>
                 </section>
                 <section  className='first' >
                   <h1>

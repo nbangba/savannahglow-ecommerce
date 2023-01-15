@@ -1,5 +1,11 @@
 import firebase from 'firebase/compat/app';
-
+import "firebase/compat/firestore"
+import "firebase/compat/auth"
+import "firebase/compat/analytics"
+import "firebase/compat/functions"
+import "firebase/compat/messaging"
+import "firebase/compat/app"
+import "firebase/compat/performance"
 
   // Your web app's Firebase configuration
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional

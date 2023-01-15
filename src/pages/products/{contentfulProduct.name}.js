@@ -1,9 +1,8 @@
-import React, { useState,useEffect } from 'react'
+import React from 'react'
 import { graphql } from 'gatsby'
 import Layout from '../../components/layout'
-import styled from 'styled-components'
 import Product from '../../components/product'
-import { getAnalytics, logEvent } from "firebase/analytics";
+import { getAnalytics} from "firebase/analytics";
 import Errorwrapper from '../../components/errorwrapper'
 
   export default function ProductComponent({data}) {
@@ -30,10 +29,10 @@ query ($name: String) {
       price
       id
       images {
-        fluid {
-          src
-          srcSet
-        }
+        gatsbyImageData(
+          layout: FULL_WIDTH
+          placeholder: BLURRED
+          )
       }
     }
   }

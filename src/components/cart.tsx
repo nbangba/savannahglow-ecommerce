@@ -219,7 +219,8 @@ interface CartItemProps{
     db:Firestore
 }
 function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}:CartItemProps){
-    const imgSrc = item.images[0].fluid.src
+    console.log('item',item)
+    const imgSrc = item.images[0].fluid.srcSet
     const qtyRef = useRef()
     const [qty,setQty] = useState(item.quantity)
     const [deleteDialog,setDeleteDialog] = useState(false)
@@ -253,7 +254,7 @@ function CartItem({item,updateCart,index,deleteCartItem,db,updateDiscount}:CartI
            <Remove style={{top:-15,}} onClick={()=>setDeleteDialog(true)}/>
            <DeleteCartItem showModal={deleteDialog} index={index} setShowDialog={setDeleteDialog} deleteItem={deleteCartItem}
             title='Are you sure you want to delete this item?' />
-           <div style={{margin:10,flex:'0 0 200px'}}><img src={imgSrc}/></div>
+           <div style={{margin:10,flex:'0 0 200px'}}><img srcSet={imgSrc}/></div>
        <div>    
        <CartLabel><h3 style={{marginTop:0}}>Savannah Glow Shea Butter</h3></CartLabel>
        <CartLabel>{item.name}</CartLabel>

@@ -4,6 +4,7 @@ import styled,{css} from 'styled-components'
 import { collection, where,query as q, getDoc,doc } from "firebase/firestore";
 import { useFirestore, useFirestoreCollectionData } from 'reactfire'
 import Errorwrapper from './errorwrapper';
+import { GatsbyImage} from "gatsby-plugin-image"
 
 const bigProduct:any={
     width:'200px',
@@ -35,7 +36,7 @@ interface ProductItemProps{
     name:string,
     subName:string,
     price:string,
-    imgSrc:string,
+    imgSrc:any,
     id:string
     
 }
@@ -44,7 +45,7 @@ export default function ProductItem({name,subName,price,imgSrc,id}:ProductItemPr
     return (
                 
                     <ProductImageWrapper style={{textDecoration:'none'}}>
-                        <img style={bigProduct} src={imgSrc}/>
+                        <GatsbyImage style={bigProduct} image={imgSrc} alt={name}/>
                         <Errorwrapper>
                             <ProductItemRating name={name} id={id}/>
                         </Errorwrapper>

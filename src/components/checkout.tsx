@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from 'react'
+import React,{useState,useEffect,useCallback} from 'react'
 import { Card } from './card'
 import { useUser,useSigninCheck,useFirestoreDocData, useFirestore, useFirestoreCollectionData,SuspenseWithPerf, ObservableStatus} from 'reactfire'
 import { collection,where,query,doc,orderBy, Firestore} from 'firebase/firestore'
@@ -119,7 +119,6 @@ export default function Checkout({location}:any) {
     const card = (cards && cards[0]) && cards[0].authorization
     console.log(card)
     
-    
     const addressesCollection = collection(db, 'addresses');
     const addressesQuery = query(addressesCollection,where('isDefault','==',true),where('user','==',user?user.uid:''))
     const { status:info, data:addresses } = useFirestoreCollectionData(addressesQuery)as ObservableStatus<AddressInfoProps[]>;;    
@@ -128,14 +127,26 @@ export default function Checkout({location}:any) {
         orderAddress: Yup.object().required('An address is required'),
         payment:Yup.string().required('Select a payment option')
     });
-
-    if(items.length > 0)
+    
+    useCallback(
+      () => {
+        if(addresses.length <= 0)
+        setSelected(addresses[0])
+      },
+      [addresses],
+    )
+    
+    const getSeleted = ()=>{
+        return selected
+    } 
+       
+    if(items&&items.length > 0)
     return (
         <CheckoutWrapper >
             <div className='checkout-form'>
             
             <Formik 
-                initialValues={{orderAddress:addresses[0],
+                initialValues={{orderAddress:selected,
                                 payment:'paystack',
                                 paystackOptions:'',
                                 amount:cart.discountedTotal?cart.discountedTotal:cart.totalAmount,
@@ -143,15 +154,15 @@ export default function Checkout({location}:any) {
                                 collection:location && location.state&&location.state.fromFeed?'buyNow':'carts',
                                 isAnonymous: user?user.isAnonymous:true}}
                 validationSchema={orderSchema}
-                onSubmit={(values,{setSubmitting}) => {
+                onSubmit={(values:any,{setSubmitting}:any) => {
                     const thereIsQty = window.localStorage.getItem('quantity');
                     console.log(thereIsQty)
                   setTimeout(() => {
                       console.log('verifying')
-                        values.amount = cart.discountedTotal?cart.discountedTotal:cart.totalAmount
-                        values.items = [...items]
-                        values.collection =location && location.state&&location.state.fromFeed?'buyNow':'carts'
-                      values.orderAddress = selected
+                      values.amount = cart.discountedTotal?cart.discountedTotal:cart.totalAmount
+                      values.items = [...items]
+                      values.collection =location && location.state&&location.state.fromFeed?'buyNow':'carts'
+                      values.orderAddress = getSeleted()
                       values.isAnonymous = user?user.isAnonymous:true
                     console.log(JSON.stringify(values, null, 2));
                     if(values.paystackOptions=='defaultCard')
@@ -164,9 +175,9 @@ export default function Checkout({location}:any) {
                   }, 400);
                   
                 }}>
-                {({ isSubmitting,setFieldValue,handleChange,handleSubmit,values,errors }) => (
+                {({ isSubmitting,setFieldValue,set ,handleChange,handleSubmit,values,errors }:any) => (
                 <Form id='checkout'> 
-                    <UserAddress selected={selected} setSelected={setSelected} />
+                    <UserAddress selected={selected} setSelected={setSelected} addresses={addresses} setFieldValue={setFieldValue} />
                     <ErrorMessage  name="orderAddress" component="div"/>
                     <PaymentSegment card={card} values={values} db={db} user={user}/>
                     <ErrorMessage  name="payment" component="div"/>
@@ -190,10 +201,24 @@ export default function Checkout({location}:any) {
 }
 
 
-function UserAddress({selected,setSelected}:{selected:AddressInfoProps,setSelected:(selected:AddressInfoProps)=>void}){
+function UserAddress({selected,setSelected,addresses,setFieldValue}:{selected:AddressInfoProps,
+                                                       setSelected:(selected:AddressInfoProps)=>void,
+                                                       setFieldValue:(field:string,value:AddressInfoProps)=>void
+                                                       addresses:AddressInfoProps[]}){
     const [showModal, setShowModal] = useState(false)
     const [changeAddress, setchangeAddress] = useState(false)
     const { status, data: signInCheckResult } = useSigninCheck();
+    
+    useEffect(() => {
+        if(addresses.length <= 1){
+        setSelected(addresses[0]) 
+        }
+      }, [addresses])
+      
+      useEffect(() => {
+        setFieldValue('orderAddress',selected)
+      }, [selected])
+      
     return(
         <>
         {signInCheckResult&&signInCheckResult.signedIn && selected? 
@@ -277,7 +302,7 @@ function Subtotal({cart}:SubTotalProps){
             <div style={{width:"100%",padding:20}}>
                 {`Subtotal(${cart.numberOfItems} items): GHS ${cart.discountedTotal?cart.discountedTotal:cart.totalAmount}`}
             </div>
-            <Button primary type='submit' onClick={()=>{}} form ='checkout' style={{minWidth:"fit-content",width:300}}>Place Order</Button>
+            <Button primary type='submit' onClick={()=>{return false}} form ='checkout' style={{minWidth:"fit-content",width:300}}>Place Order</Button>
         </Card>
     )
 }
