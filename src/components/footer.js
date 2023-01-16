@@ -98,15 +98,15 @@ export default function Footer() {
             </section>
             <section>
             <div id="mc_embed_signup">
-              <form action="https://gmail.us5.list-manage.com/subscribe/post?u=cf498c936bf992a19fdbe5f5a&amp;id=62defa14cc" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+              <form action="https://gmail.us5.list-manage.com/subscribe/post?u=cf498c936bf992a19fdbe5f5a&amp;id=62defa14cc" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" className="validate" target="_blank" noValidate>
                   <div id="mc_embed_signup_scroll">
-                <label for="mce-EMAIL">Subscribe to our newsletter</label>
-                <input type="email" onChange={handleChange} value={subscriberEmail} name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required/>
+                <label htmlFor="mce-EMAIL">Subscribe to our newsletter</label>
+                <input type="email" onChange={handleChange} value={subscriberEmail}  name="EMAIL" className="email" id="mce-EMAIL" placeholder="email address" required/>
 
-                  <div style={{position: 'absolute', left: -5000}} aria-hidden="true"><input type="text" name="b_cf498c936bf992a19fdbe5f5a_62defa14cc" tabindex="-1" value=""/></div>
-                      <div class="optionalParent">
-                          <div class="clear foot">
-                              <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button"/>
+                  <div style={{position: 'absolute', left: -5000}} aria-hidden="true"><input type="text" name="b_cf498c936bf992a19fdbe5f5a_62defa14cc" tabIndex="-1" value=""/></div>
+                      <div className="optionalParent">
+                          <div className="clear foot">
+                              <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" className="button"/>
                               
                           </div>
                       </div>

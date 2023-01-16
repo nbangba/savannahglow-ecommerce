@@ -292,16 +292,17 @@ export interface CartProps{
     user:string,
     dateCreated:FieldValue
 }
+
 export interface SubTotalProps{
     cart:CartProps
 }
 
 function Subtotal({cart}:SubTotalProps){
     return( 
-        <Card style={{position:'sticky',top:20,alignContent:'flex-start',maxHeight:200,fontFamily:`'Montserrat', sans-serif`}}>
+        <Card style={{position:'sticky',top:20,alignContent:'flex-start',justifyContent:'center',textAlign:'center',maxHeight:150,fontFamily:`'Montserrat', sans-serif`}}>
             <div style={{width:"100%",padding:20}}>{`Subtotal(${cart.numberOfItems} items): GHS ${cart.discountedTotal}`}</div>
             <Link style={{textDecoration:'none',color:'white'}} to='/checkout' state={{fromFeed:false}}>
-                <Button primary style={{minWidth:"fit-content",width:300}} onClick={()=>{}}>
+                <Button primary style={{minWidth:"fit-content",width:250}} onClick={()=>{}}>
                     Check Out
                 </Button>
             </Link>

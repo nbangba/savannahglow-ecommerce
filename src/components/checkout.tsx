@@ -24,6 +24,7 @@ import { AddressInfoProps } from './addressform'
 import { VarietyProps } from './product'
 import 'react-credit-cards/es/styles-compiled.css';
 import {SubTotalProps,CartProps } from './cart'
+
 const RadioButtonsContainer = styled.label`
     display: block;
     position: relative;
@@ -105,7 +106,6 @@ const CheckoutWrapper = styled.div`
 
 export default function Checkout({location}:any) {
     
-    const { status, data: signInCheckResult } = useSigninCheck();
     const { data: user } = useUser()
     const db = useFirestore();
     const cartRef =  doc(db, location && location.state&&location.state.fromFeed?'buyNow':'carts', user?user.uid:'');
@@ -175,7 +175,7 @@ export default function Checkout({location}:any) {
                   }, 400);
                   
                 }}>
-                {({ isSubmitting,setFieldValue,set ,handleChange,handleSubmit,values,errors }:any) => (
+                {({setFieldValue,values}:any) => (
                 <Form id='checkout'> 
                     <UserAddress selected={selected} setSelected={setSelected} addresses={addresses} setFieldValue={setFieldValue} />
                     <ErrorMessage  name="orderAddress" component="div"/>
@@ -298,11 +298,11 @@ function PaymentSegment({card,values,db,user}:PaymentSegmentProps){
 function Subtotal({cart}:SubTotalProps){
     
     return(
-        <Card style={{alignContent:'flex-start',maxHeight:200,fontFamily:`'Montserrat',sans-serif`}}>
+        <Card style={{alignContent:'flex-start',justifyContent:'center',textAlign:'center',maxHeight:150,fontFamily:`'Montserrat',sans-serif`}}>
             <div style={{width:"100%",padding:20}}>
                 {`Subtotal(${cart.numberOfItems} items): GHS ${cart.discountedTotal?cart.discountedTotal:cart.totalAmount}`}
             </div>
-            <Button primary type='submit' onClick={()=>{return false}} form ='checkout' style={{minWidth:"fit-content",width:300}}>Place Order</Button>
+            <Button primary type='submit' onClick={()=>{return false}} form ='checkout' style={{minWidth:"fit-content",width:250}}>Place Order</Button>
         </Card>
     )
 }

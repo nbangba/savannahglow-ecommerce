@@ -200,13 +200,14 @@ const Testimonial= styled.div`
    justify-content:center;
    background: linear-gradient(rgba(224,193,175,1) ,rgba(224,193,175,0.2));
    padding:1vw;
+
    h2{
     font-family: 'Montserrat', sans-serif;
     font-size:2rem;
     font-weight:400;
     color:#35486F;
-     width:100%;
-     text-align:center;
+    width:100%;
+    text-align:center;
    }
 
    h3{
@@ -277,12 +278,12 @@ export default function Home() {
                   <Link style={{textDecoration:'none'}} to="/products/savannah-glow-shea-butter"><Button primary style={{width:280,display:'flex',marginBottom:'5vw',  fontSize:24,alignItems:'center',justifyContent:'center'}} >BUY NOW </Button></Link>
                 </section>
                 <section className='second'>
-                  <StaticImage   src='../images/non-svg/pomade.png' placeholder="blurred"/>
+                  <StaticImage   src='../images/non-svg/pomade.png' placeholder="blurred" alt=""/>
                 </section>
             </Top>
             <Top className='gradient' style={{borderRadius:50}}>
               <section className='second' >
-              <StaticImage   src='../images/non-svg/woman.png' style={{objectFit:'cover',objectPosition:'right top'}}/>
+              <StaticImage   src='../images/non-svg/woman.png' style={{objectFit:'cover',objectPosition:'right top'}} alt=""/>
                 </section>
                 <section  className='first' >
                   <h1>
@@ -338,7 +339,7 @@ export default function Home() {
                 You're in good company
               </h2>
               <h3>Listen to what some of our customers have to say</h3>
-              <Carousel>
+              <Carousel showThumbs={false}>
               <div>
                 
                 <blockquote>

@@ -230,8 +230,8 @@ export default function Nav() {
             <MenuIcon onClick={()=>setOpenDrawer(true)}><HamburgerIcon style={{width:40,height:40,zIndex:100}}/></MenuIcon>
             <Drawer openDrawer={openDrawer} setOpenDrawer={setOpenDrawer}>
             <MenuContent >
-                {menuItems.map(item=> 
-                <MenuContentList><Link to={item==='Home'?'/':`/${item.toLowerCase()}`} >{item}</Link> </MenuContentList>
+                {menuItems.map((item:string,index:number)=> 
+                <MenuContentList key={index}><Link to={item==='Home'?'/':`/${item.toLowerCase()}`} >{item}</Link> </MenuContentList>
                 )}
             </MenuContent>
             </Drawer>
@@ -239,7 +239,7 @@ export default function Nav() {
             <Logo  style={{width:80,height:80}}/>
             </div>
             <Menu className='desktop-menu' style={{flexGrow:10}}>
-                {menuItems.map(item=> <MenuItem><Link to={item==='Home'?'/':`/${item.toLowerCase()}`} >{item}</Link> </MenuItem>)}
+                {menuItems.map((item:string,index:number)=> <MenuItem key={index}><Link to={item==='Home'?'/':`/${item.toLowerCase()}`} >{item}</Link> </MenuItem>)}
             </Menu>
             <Errorwrapper>
                 <LoginStatus/>
@@ -255,17 +255,17 @@ function LoginStatus(){
     const [showPopper, setshowPopper] = useState(false)
     const subMenuItems =['Profile','Orders','Settings']
 
-    const { data: user } = useUser()
-    const { status, data: signInCheckResult } = useSigninCheck();
+    const {status:userStatus, data: user } = useUser()
+    const { status:signInstatus, data: signInCheckResult } = useSigninCheck();
     console.log(user)
-    console.log(status,signInCheckResult)
+    console.log(signInstatus,signInCheckResult)
     const firestore = useFirestore()
     
     
 
     const CartComponent = ()=>{
         const cartRef = doc(firestore, 'carts', user?user.uid:"nocart");
-        const { data:cart } = useFirestoreDocData(cartRef);
+        const {status:cartStatus, data:cart } = useFirestoreDocData(cartRef);
         console.log('cart',cart)
         return(
             <CartNumber>
@@ -283,7 +283,7 @@ function LoginStatus(){
             }
             <ShoppingBag fill='#474E52' style={{width:30,height:30}}/>
             </MenuItem>
-                { status === 'success' && 
+                { signInstatus === 'success' && 
                 <>
                 {
                    (signInCheckResult && signInCheckResult.signedIn === true)&&(user&&!user.isAnonymous)?
@@ -293,8 +293,7 @@ function LoginStatus(){
                             <MenuItem  ref={setReferenceElement} tabIndex={-1} onClick={()=>setOpen(!open)}>
                             <UserWrapper><User fill='#474E52' style={{width:30,height:30}}/></UserWrapper>
                             </MenuItem>
-                        }
-                        
+                        }    
                     </Popper> 
                     :
                     <MenuItem><Button primary onClick={()=>navigate('/signin')}>Sign In</Button></MenuItem>
@@ -308,8 +307,4 @@ function LoginStatus(){
                 </ModalComponent>
             </Menu>
     )
-}
-
-function DocumentReference<T>(): import("reactfire").ReactFireOptions<import("@firebase/firestore").DocumentData> | undefined {
-    throw new Error('Function not implemented.')
 }
