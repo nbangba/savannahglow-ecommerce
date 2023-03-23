@@ -156,6 +156,7 @@ interface AdrressInfoFSProps extends AddressInfoProps{
   user:string|null
 
 }
+
  export default function AddressForm({setShowModal,
                                       addressInfo={firstname:'',
                                       lastname:'',
@@ -348,6 +349,7 @@ interface AdrressInfoFSProps extends AddressInfoProps{
       </Formik>
     </>
   )}
+  
   
 
   

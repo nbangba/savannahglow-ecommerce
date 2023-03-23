@@ -108,6 +108,7 @@ export function CartItems({children,location}:CartItemsProps) {
     const auth = useAuth();
     console.log(location)
     
+    // To be refactored
     const LoggedInCart = ({collection}:LoggedInCartProp)=> {
         const cartRef = doc(db, collection,user? user.uid:'');
         const { data:cart } = useFirestoreDocData(cartRef);
@@ -199,7 +200,7 @@ export function CartItems({children,location}:CartItemsProps) {
                 No items in your Cart
             </div>
         )
-}
+    }
     if(!user){
         return(
             <div>
@@ -294,7 +295,8 @@ export interface CartProps{
 }
 
 export interface SubTotalProps{
-    cart:CartProps
+    cart:CartProps,
+    isSubmitting?: boolean,
 }
 
 function Subtotal({cart}:SubTotalProps){

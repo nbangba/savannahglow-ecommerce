@@ -1,13 +1,17 @@
-import React,{useState} from 'react'
+import React, { useState } from 'react'
 import { AccordionButton } from './settings'
-export default function FAQ({data}) {
-    const [active,setActive] = useState(null)
-  return (
-    data.allContentfulSgFaq.nodes.map((faq,index)=>
-      <AccordionButton name={index} title={faq.question} active={active} setActive={setActive}>
-          <p>{faq.answer.answer}</p>
-      </AccordionButton>
-    
-    )
-  )
+export default function FAQ({ data }) {
+    const [activeTab, setActiveTab] = useState('')
+
+    return data.allContentfulSgFaq.nodes.map((faq, index) => (
+        <AccordionButton
+            name={faq.question}
+            title={faq.question}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            key={index}
+        >
+            <p>{faq.answer.answer}</p>
+        </AccordionButton>
+    ))
 }

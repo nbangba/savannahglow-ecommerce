@@ -25,7 +25,7 @@ background: white;
   console.log(blog)
   const bodyRichText = blog.body.childMarkdownRemark.html
   return (
-    <Layout >
+    < >
       <BlogWrapper>
      <div style={{width:'100%',fontFamily:`'Montserrat', sans-serif`}}>
        <GatsbyImage style={{width:'100%',height:300 ,objectFit:'cover'}}image={blog.heroImage.gatsbyImageData}/>
@@ -49,7 +49,7 @@ background: white;
      <div className="body" dangerouslySetInnerHTML={{__html: bodyRichText,}}/>
      </Blog>
      </BlogWrapper> 
-    </Layout>
+    </>
   )
 }
 

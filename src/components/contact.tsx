@@ -49,7 +49,7 @@ export const ContactItem = styled.div`
   display:flex;
   height:50px;
   max-width:500px;
-  padding:${props => props.padding || "0px"};
+  padding:${(props:{padding?:string}) => props.padding || "0px"};
   justify-content:flex-start;
   align-items:center;
   font-family: 'Montserrat', sans-serif;
@@ -63,7 +63,7 @@ export const ContactLink = styled.a`
   height:50px;
   width:fit-content;
   max-width:100%;
-  padding:${props => props.padding || "0px"};
+  padding:${(props:{padding?:string}) => props.padding || "0px"};
   justify-content:flex-start;
   align-items:center;
   font-family: 'Montserrat', sans-serif;
@@ -99,9 +99,9 @@ export function ContactUs(){
         <ContactLink href='mailto:customerservice@savannahglow.com'><Mail fill='#474E52' className='icon' style={{minWidth:30}}/>
         <span lang='en' style={{hyphens:'auto',overflowWrap:'break-word',maxWidth: 'calc(100% - 50px)',}}>customerservice@savannahglow.com</span>
         </ContactLink>
-        <ContactLink href='tel:00233242372715'><Phone fill='#474E52' className='icon'/> (+233) 0244569221</ContactLink>
-        <ContactLink href='https://wa.me/233242372715'><Whatsapp fill='#474E52' className='icon'/> (+233) 0244569221</ContactLink>
-        <ContactItem><Location fill='#474E52' className='icon'/> sp4, Nkrumah Flats</ContactItem>
+        <ContactLink href='tel:00233267720270'><Phone fill='#474E52' className='icon'/> (+233) 02677202701</ContactLink>
+        <ContactLink href='https://wa.me/233267720270'><Whatsapp fill='#474E52' className='icon'/> (+233) 0267720270</ContactLink>
+        <ContactItem><Location fill='#474E52' className='icon'/> 22 Onyasia Street, Westlegon,Accra</ContactItem>
         <ContactItem><Time fill='#474E52' className='icon'/> 9:00am - 5:00pm</ContactItem>
       </>
     )

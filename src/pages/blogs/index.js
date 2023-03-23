@@ -20,13 +20,15 @@ export default function BlogPost({data}) {
     console.log(data)
     const blogs = data.allContentfulBlogPost.nodes
   return (
-    <Layout>
+    <>
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',alignItems:'top'}}>
       {
       blogs.map((blog)=>
                         <Card > 
                           <StyledLink to={`${slugify(blog.title)}`}>
-                         <CardItem><GatsbyImage style={{width:'100%', objectFit:'contain'}}image={blog.heroImage.gatsbyImageData}  /></CardItem>
+                         <CardItem>
+                          <GatsbyImage style={{width:'100%', objectFit:'contain'}}image={blog.heroImage.gatsbyImageData}  />
+                         </CardItem>
                          <CardItem><h3>{blog.title}</h3></CardItem>
                          <CardItem><p>{blog.description.description}</p></CardItem>
                          </StyledLink>
@@ -48,7 +50,7 @@ export default function BlogPost({data}) {
         )
       }
     </div>
-    </Layout>
+    </>
   )
   
 }

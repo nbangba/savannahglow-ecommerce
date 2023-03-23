@@ -24,6 +24,7 @@ import { AddressInfoProps } from './addressform'
 import { VarietyProps } from './product'
 import 'react-credit-cards/es/styles-compiled.css';
 import {SubTotalProps,CartProps } from './cart'
+import Errorwrapper from './errorwrapper'
 
 const RadioButtonsContainer = styled.label`
     display: block;
@@ -92,6 +93,7 @@ const CheckoutWrapper = styled.div`
    }
    .checkout-form{
        width:100%;
+       max-width:fit-content;
        display:flex;
        flex-wrap:wrap;
        flex:1 0 300px;
@@ -106,21 +108,23 @@ const CheckoutWrapper = styled.div`
 
 export default function Checkout({location}:any) {
     
-    const { data: user } = useUser()
+    const {status, data: user } = useUser()
     const db = useFirestore();
-    const cartRef =  doc(db, location && location.state&&location.state.fromFeed?'buyNow':'carts', user?user.uid:'');
+    const cartRef =  doc(db, location && location.state&&location.state.fromFeed?'buyNow':'carts', user?user.uid:'null');
     const { data:cart } = useFirestoreDocData(cartRef) as ObservableStatus<CartProps>;
-
     const items:VarietyProps[] =cart && cart.items
+   
+
+    
     
     const cardsCollection = collection(db, 'cards');
-    const cardsQuery = query(cardsCollection,where('owner','==',user?user.uid:''))
+    const cardsQuery = query(cardsCollection,where('owner','==',user?user.uid:'null'))
     const { data:cards } = useFirestoreCollectionData(cardsQuery);
     const card = (cards && cards[0]) && cards[0].authorization
     console.log(card)
     
     const addressesCollection = collection(db, 'addresses');
-    const addressesQuery = query(addressesCollection,where('isDefault','==',true),where('user','==',user?user.uid:''))
+    const addressesQuery = query(addressesCollection,where('isDefault','==',true),where('user','==',user?user.uid:'null'))
     const { status:info, data:addresses } = useFirestoreCollectionData(addressesQuery)as ObservableStatus<AddressInfoProps[]>;;    
     const [selected, setSelected] = useState(addresses[0])
     const orderSchema = Yup.object().shape({
@@ -128,18 +132,7 @@ export default function Checkout({location}:any) {
         payment:Yup.string().required('Select a payment option')
     });
     
-    useCallback(
-      () => {
-        if(addresses.length <= 0)
-        setSelected(addresses[0])
-      },
-      [addresses],
-    )
-    
-    const getSeleted = ()=>{
-        return selected
-    } 
-       
+   
     if(items&&items.length > 0)
     return (
         <CheckoutWrapper >
@@ -162,7 +155,7 @@ export default function Checkout({location}:any) {
                       values.amount = cart.discountedTotal?cart.discountedTotal:cart.totalAmount
                       values.items = [...items]
                       values.collection =location && location.state&&location.state.fromFeed?'buyNow':'carts'
-                      values.orderAddress = getSeleted()
+                      values.orderAddress = selected
                       values.isAnonymous = user?user.isAnonymous:true
                     console.log(JSON.stringify(values, null, 2));
                     if(values.paystackOptions=='defaultCard')
@@ -171,22 +164,29 @@ export default function Checkout({location}:any) {
                     payWithPaystack({...values});
                     else
                     payOnDelivery({...values})
-                    setSubmitting(false);
+                    //setSubmitting(false);
                   }, 400);
                   
                 }}>
-                {({setFieldValue,values}:any) => (
-                <Form id='checkout'> 
-                    <UserAddress selected={selected} setSelected={setSelected} addresses={addresses} setFieldValue={setFieldValue} />
-                    <ErrorMessage  name="orderAddress" component="div"/>
-                    <PaymentSegment card={card} values={values} db={db} user={user}/>
-                    <ErrorMessage  name="payment" component="div"/>
-                    <CartItems location={location} /> 
+                {({setFieldValue,values,isSubmitting}:any) => (
+                <Form id='checkout' > 
+                    <Errorwrapper>
+                        <UserAddress selected={selected} setSelected={setSelected} addresses={addresses} setFieldValue={setFieldValue} />
+                        <ErrorMessage  name="orderAddress" component="div"/>
+                    </Errorwrapper>
+                    <Errorwrapper>
+                        <PaymentSegment card={card} values={values} db={db} user={user}/>
+                        <ErrorMessage  name="payment" component="div"/>
+                    </Errorwrapper>
+                    <Errorwrapper>
+                        <CartItems location={location} />
+                    </Errorwrapper> 
+                    <Subtotal cart={cart} isSubmitting={isSubmitting}/>  
                 </Form>
                 )}
             </Formik>
             </div>
-            <Subtotal cart={cart}/>
+            
         </CheckoutWrapper>
     )
 
@@ -295,14 +295,17 @@ function PaymentSegment({card,values,db,user}:PaymentSegmentProps){
     )
 }
 
-function Subtotal({cart}:SubTotalProps){
+function Subtotal({cart, isSubmitting}:SubTotalProps){
     
     return(
-        <Card style={{alignContent:'flex-start',justifyContent:'center',textAlign:'center',maxHeight:150,fontFamily:`'Montserrat',sans-serif`}}>
+        
+        <Card style={{alignContent:'flex-start',justifyContent:'center',textAlign:'center',maxHeight:150,fontFamily:`'Montserrat',sans-serif`,margin:'auto'}}>
             <div style={{width:"100%",padding:20}}>
                 {`Subtotal(${cart.numberOfItems} items): GHS ${cart.discountedTotal?cart.discountedTotal:cart.totalAmount}`}
             </div>
-            <Button primary type='submit' onClick={()=>{return false}} form ='checkout' style={{minWidth:"fit-content",width:250}}>Place Order</Button>
+            <Button primary type='submit' disabled={isSubmitting} onClick={()=>{return false}} form ='checkout' style={{minWidth:"fit-content",width:250}}>
+                {isSubmitting?"Please Wait...":"Place Order"}
+            </Button>
         </Card>
     )
 }

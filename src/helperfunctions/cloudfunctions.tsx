@@ -5,6 +5,7 @@ import { VarietyProps } from '../components/product';
 import {InfoProps} from '../components/checkout'
 import { OrderInfoProps } from '../components/adminCustomerOrders';
 import { ReviewProps } from '../components/review';
+
 export function verifyPaystack(info:InfoProps,response:any){
     const functions =  getFunctions();
     const verify = httpsCallable(functions, 'payStackTransctionVerification');

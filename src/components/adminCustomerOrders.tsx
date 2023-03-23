@@ -7,7 +7,7 @@ import ModalComponent from './modal';
 import Select from 'react-select';
 import styled from 'styled-components';
 import CreatableSelect from 'react-select/creatable';
-import useRole from './useRole';
+import useRole from '../hooks/useRole';
 import QueryOptions from './queryOptions';
 import { VarietyProps } from './product';
 import { AddressInfoProps } from './addressform';

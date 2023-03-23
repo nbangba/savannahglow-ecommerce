@@ -59,7 +59,6 @@ exports.payStackTransctionVerification = functions
       data, 
     );
    
-   
     
     if(info && response){
       

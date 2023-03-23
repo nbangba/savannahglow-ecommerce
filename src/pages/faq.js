@@ -4,10 +4,11 @@ import FAQComponent from '../components/faq'
 import { graphql } from 'gatsby'
 
 export default function faq({data}) {
+ 
   return (
-    <Layout>
+    <>
     <FAQComponent data={data}/>
-    </Layout>
+    </>
   )
 }
 

@@ -1,14 +1,14 @@
 import React from 'react'
 import styled from 'styled-components'
 import {Button} from './navbar'
-import Vitamins from  '../images/svgs/vitamins.svg'
-import Sun from  '../images/svgs/sun.svg'
-import EcoFriendly from  '../images/svgs/eco-friendly.svg'
-import HealthyLifestyle from  '../images/svgs/healthy-lifestyle.svg'
-import { StaticImage } from "gatsby-plugin-image"
+import {GatsbyImage } from "gatsby-plugin-image"
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel';
 import { Link } from 'gatsby'
+import HappyDelivery from "./lottieanimations"
+import SEO from './seo'
+
+
 const HomeWrapper = styled.div`
 .gradient{
   background:linear-gradient(250deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%);
@@ -28,13 +28,14 @@ const Top= styled.div`
   flex:1 0 420px;
   font-family: 'Montserrat', sans-serif;
   flex-wrap: wrap;
-  
+  margin-bottom:100px;
 
   section{
     width:50%;
     min-width:400px;
     position:relative;
     box-sizing:border-box;
+    
     h1{
       font-size:3.75rem;
     }
@@ -93,6 +94,37 @@ const Top= styled.div`
     }
   }
 
+  .imgGlow
+  {
+     
+      &:after {
+        position: absolute;
+        content: "";
+        top: 0;
+        left: 4vw;
+        right: 0;
+        z-index: -1;
+        height: 100%;
+        width: 100%;
+        margin: 0 auto;
+        transform: scale(0.75);
+        -webkit-filter: blur(5vw);
+        -moz-filter: blur(5vw);
+        -ms-filter: blur(5vw);
+        filter: blur(5vw);
+        background: linear-gradient(270deg, #0fffc1, #7e0fff);
+        background-size: 200% 200%;
+        animation: animateGlow 10s ease infinite;
+        
+        @keyframes animateGlow {
+          0%{background-position:0% 50%}
+          50%{background-position:100% 50%}
+          100%{background-position:0% 50%}
+        }
+      }
+    }
+  }
+
   .sub{
     font-size:36px;
     font-weight:400;
@@ -108,8 +140,6 @@ const Top= styled.div`
     }
 
   @media only screen and (max-width: 833px) {
-    
-
    
     .gradient{
     background:linear-gradient(180deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%);
@@ -118,6 +148,7 @@ const Top= styled.div`
     .first{
       order:1;
       min-width: 100%;
+      margin-bottom:80px;
     }
     .second{
       order:2;
@@ -188,6 +219,14 @@ const Benefits = styled.div`
 
     .benefits{
       fill: #94d31b; 
+    }
+
+    .myFill{
+      width:60px;
+      path { 
+      fill: #474E52;
+      }
+      
     }
 `
 
@@ -261,85 +300,82 @@ const Testimonial= styled.div`
    }
 `
 
-export default function Home() {
+export default function Home({data}) {
+  console.log('homedata',data)
+  const homePageData = data.strapiHomePage
+  const mainProductImage = homePageData.productimage.localFile.childImageSharp.gatsbyImageData
+  const midSectionBannerImage = homePageData.midsectionbanner.image[0].localFile.childImageSharp.gatsbyImageData
     return (
         <HomeWrapper>
             <Top>
                 <section className='first' style={{display:'flex',flexWrap:'wrap',justifyContent:'center', alignItems:'center'}}>
                   <h1 className='glow'>
-                      SAVANNAH GLOW
+                      {homePageData.brandname}
                   </h1>
                   
                   <ul style={{width:'100%',listStyleType:'none'}}>
-                    <li><h3>Moisturizes and protects skin</h3></li>
-                    <li><h3>Enriches your skin</h3></li>
-                    <li><h3>Perfect for your hair</h3></li>
+                    {
+                      homePageData.benefit.map(benefit=> <li><h3>{benefit.benefit}</h3></li>)
+                    }
                   </ul>
                   <Link style={{textDecoration:'none'}} to="/products/savannah-glow-shea-butter"><Button primary style={{width:280,display:'flex',marginBottom:'5vw',  fontSize:24,alignItems:'center',justifyContent:'center'}} >BUY NOW </Button></Link>
                 </section>
-                <section className='second'>
-                  <StaticImage   src='../images/non-svg/pomade.png' placeholder="blurred" alt=""/>
+                <section className='second' style={{margin:'auto'}}>
+                  <GatsbyImage image={mainProductImage} imgStyle={{transform:"scale(1.4)"}}  placeholder="blurred" alt={homePageData.productimage.alternativeText}/>
                 </section>
             </Top>
             <Top className='gradient' style={{borderRadius:50}}>
               <section className='second' >
-              <StaticImage   src='../images/non-svg/woman.png' style={{objectFit:'cover',objectPosition:'right top'}} alt=""/>
+              <GatsbyImage   image={midSectionBannerImage} style={{objectFit:'cover',objectPosition:'right top'}} alt={homePageData.midsectionbanner.image[0].alternativeText}/>
                 </section>
                 <section  className='first' >
                   <h1>
-                      Be confident in your skin
+                      {homePageData.midsectionbanner.maintext}
                   </h1>
                   <h3 className='sub'>
-                      Savannah Glow is enriched in vitamin A & E
+                     {homePageData.midsectionbanner.subtext}
                   </h3>
                 </section>
                 
             </Top>
+            <div>
+              <h2>
+                We Deliver to your location
+              </h2>
+              <HappyDelivery></HappyDelivery>
+            </div>
             <Benefits>
               <h2>
-                Why use savannah glow shea butter?
+                {homePageData.headerforwhyuse.header2}
               </h2>
-              
-              <section>
-                <h3>Rich in vitamins A & E <Vitamins fill='#474E52' style={{width:60}}/></h3>
-                
-                <p>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, 
-                totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae 
-                dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, 
-                sed 
-                </p>
-              </section>
-              <section>
-                <h3>Rich in Antioxidants <HealthyLifestyle fill='#474E52' style={{width:80,height:60}}/></h3>
-                <p>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, 
-                totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae 
-                </p>
-              </section>
-              <section>
-                <h3>Eco-friendly <EcoFriendly fill='#474E52' style={{width:60,}}/></h3>
-                <p>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, 
-                totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae 
-                
-                </p>
-              </section>
-              <section>
-                <h3>UV protection <Sun fill='#474E52' style={{width:60}}/></h3>
-                <p>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, 
-                totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae 
-                dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, 
-                </p>
-              </section>
+              {
+                homePageData.whyuse.map(why=>
+                <section>
+                  <h3>{why.maintext}<img className='myFill' src={why.image.localFile.url} /></h3>
+                  <p>
+                    {why.description}
+                  </p>
+                </section>)
+              }
             </Benefits>
+            
             <Testimonial>
               <h2>
-                You're in good company
+                {homePageData.heading.header2}
               </h2>
-              <h3>Listen to what some of our customers have to say</h3>
+              <h3>{homePageData.subheading.header2}</h3>
               <Carousel showThumbs={false}>
+                {homePageData.testimonies.map(testimony=>
+                  <div>
+                
+                  <blockquote>
+                    {testimony.testimony}
+                    <span className='customer-profile'>
+                    {testimony.nameofperson}
+                    </span>
+                  </blockquote>
+                </div>
+                )}
               <div>
                 
                 <blockquote>
@@ -381,3 +417,6 @@ export default function Home() {
     )
 }
 
+export function Head(){
+  return <SEO/>
+}

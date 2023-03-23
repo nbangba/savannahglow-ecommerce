@@ -16,7 +16,6 @@ import * as Yup from 'yup'
 interface ReviewComponentProps{
   productName:string,
   productId:string,
-  user:any,
 } 
 
 export interface ReviewProps{
@@ -35,7 +34,8 @@ export interface ReviewProps{
 
 /* create user reviews and ratings
 */
-export default function Review({productName,productId,user}:ReviewComponentProps) {
+export default function Review({productName,productId}:ReviewComponentProps) {
+    const { data: user } = useUser()
     const fs = useFirestore()
     const auth = useAuth();
     const ref = collection(fs,'reviews')
@@ -85,7 +85,7 @@ export default function Review({productName,productId,user}:ReviewComponentProps
             {allOtherReviews && allOtherReviews.map((review)=> <UserReview review={review} key={review.NO_ID_FIELD}/>)}
         </section>
         <section style={{width:'100%'}} className='top'>
-          <div className='description' style={{paddingInlineStart:10}}>{editReview?"Your Rating":"Your review"}</div>
+          <div className='description' style={{paddingInlineStart:10}}>{editReview?"Your Rating":"Your Rating"}</div>
           {
           yourReviewArray.length>0 && !editReview?
           <UserReview review={yourReviewArray[0]} user={user} setEditReview={setEditReview}/>:
@@ -115,7 +115,7 @@ export default function Review({productName,productId,user}:ReviewComponentProps
             }
           }
           else{
-            values.userId= user.uid;
+            values.userId= user?user.uid:"NO_USER";
             values.reviewId = yourReview.reviewId;
             values.previousRating = yourReview.rating;
             rateProduct(values)

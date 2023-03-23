@@ -1,8 +1,7 @@
-import React,{useState} from "react"
+import React from "react"
 import { navigate } from "gatsby"
-import { useSigninCheck,useAuth } from 'reactfire'
-import Errorwrapper from "./errorwrapper"
-import useRole from "./useRole"
+import { useSigninCheck} from 'reactfire'
+import useRole from "../hooks/useRole"
 
 const PrivateRoute = ({ component: Component, location, ...rest }) => {
     const { status, data: signInCheckResult } = useSigninCheck();

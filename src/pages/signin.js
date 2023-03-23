@@ -1,9 +1,12 @@
 import React from 'react'
-import Layout from '../components/layout'
 import SignIn from '../components/signin'
-import { getAnalytics, logEvent } from "firebase/analytics";
+import { useAnalytics } from 'reactfire';
+
 export default function Sign() {
-    const analytics = getAnalytics();
+    
+      useAnalytics()  
+    
+    
     return ( 
            <SignIn/>  
     )

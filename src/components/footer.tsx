@@ -77,7 +77,7 @@ const Foot = styled.footer`
 `
 export default function Footer() {
   const [subscriberEmail, setSubscriberEmail] = useState('')
-  const handleChange =(e)=>{
+  const handleChange =(e:any)=>{
     setSubscriberEmail(e.target.value)
   }
     return (
@@ -103,7 +103,7 @@ export default function Footer() {
                 <label htmlFor="mce-EMAIL">Subscribe to our newsletter</label>
                 <input type="email" onChange={handleChange} value={subscriberEmail}  name="EMAIL" className="email" id="mce-EMAIL" placeholder="email address" required/>
 
-                  <div style={{position: 'absolute', left: -5000}} aria-hidden="true"><input type="text" name="b_cf498c936bf992a19fdbe5f5a_62defa14cc" tabIndex="-1" value=""/></div>
+                  <div style={{position: 'absolute', left: -5000}} aria-hidden="true"><input type="text" name="b_cf498c936bf992a19fdbe5f5a_62defa14cc" tabIndex={-1} value=""/></div>
                       <div className="optionalParent">
                           <div className="clear foot">
                               <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" className="button"/>

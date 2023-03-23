@@ -14,7 +14,7 @@ import { Formik,Form } from 'formik'
 import { InputWrapper } from './addressform'
 import { assignRole } from '../helperfunctions/cloudfunctions'
 import Select from 'react-select';
-import useRole from './useRole'
+import useRole from '../hooks/useRole'
 
 const Table = styled.table`
     tr:nth-child(even) {background: #fbf2ed}

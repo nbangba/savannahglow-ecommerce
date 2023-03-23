@@ -24,4 +24,5 @@ import "firebase/compat/performance"
     firebase.initializeApp(firebaseConfig);
  }
 
+ const analytics = firebase.analytics();
   export default firebase
