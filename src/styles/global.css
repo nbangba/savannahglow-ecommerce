@@ -1,54 +1,67 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,700;1,300&family=Niconne&display=swap');
 
-body{
-    display:flex;
+body {
+    display: flex;
     flex-direction: column;
 
-    background:#EBDDD2 url(../images/non-svg/sg-bg2.png);
-
-    
-    
-  }
-#gatsby-focus-wrapper{
-  display:flex;
-    flex-direction: column;
-  
+    background: #ebddd2 url(../images/non-svg/sg-bg-small.png);
 }
-  html{
-    font-size:16px;
-  }
+#gatsby-focus-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+html {
+    font-size: 16px;
+}
 
-  .react-tel-input .form-control:focus{
-    outline:none;
-    border:2px solid #35486F !important; 
-    box-shadow:0 0 10px #9bb2e1;
-  }
+.react-tel-input .form-control:focus {
+    outline: none;
+    border: 2px solid #35486f !important;
+    box-shadow: 0 0 10px #9bb2e1;
+}
 
-  main{
-    padding:0;
-    color:none;
-  }
-  .carousel-root{
-    width:100%;
-  }
-  
-  #gatsby-focus-wrapper > main > div > div.home__Testimonial-isyhln.hGwRJj > div > div.carousel.carousel-slider > ul{
-    margin:0px;
-  }
-
-  #checkout > div.card__Card-fNtOyb.bWCpsx > div > label:nth-child(1) > label:nth-child(6) > div{
+main {
+    padding: 0;
+    color: none;
+}
+.carousel-root {
     width: 100%;
-  }
+}
 
-  #checkout > div.card__Card-fNtOyb.bWCpsx > div > label:nth-child(1) > label:nth-child(6) > div > div{
+#gatsby-focus-wrapper
+    > main
+    > div
+    > div.home__Testimonial-isyhln.hGwRJj
+    > div
+    > div.carousel.carousel-slider
+    > ul {
+    margin: 0px;
+}
+
+#checkout
+    > div.card__Card-fNtOyb.bWCpsx
+    > div
+    > label:nth-child(1)
+    > label:nth-child(6)
+    > div {
     width: 100%;
-  }
+}
 
-  .rccs__card{
-    width:unset;
-  }
+#checkout
+    > div.card__Card-fNtOyb.bWCpsx
+    > div
+    > label:nth-child(1)
+    > label:nth-child(6)
+    > div
+    > div {
+    width: 100%;
+}
 
-  .container {
+.rccs__card {
+    width: unset;
+}
+
+.container {
     position: relative;
     padding-left: 35px;
     margin-bottom: 12px;
@@ -58,51 +71,51 @@ body{
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-  }
-  
-  /* Hide the browser's default checkbox */
-  .container input {
+}
+
+/* Hide the browser's default checkbox */
+.container input {
     position: absolute;
     opacity: 0;
     cursor: pointer;
     height: 0;
     width: 0;
-  }
-  
-  /* Create a custom checkbox */
-  .checkmark {
+}
+
+/* Create a custom checkbox */
+.checkmark {
     position: absolute;
     top: 0;
     left: 0;
     height: 25px;
     width: 25px;
     background-color: #eee;
-  }
-  
-  /* On mouse-over, add a grey background color */
-  .container:hover input ~ .checkmark {
+}
+
+/* On mouse-over, add a grey background color */
+.container:hover input ~ .checkmark {
     background-color: #ccc;
-  }
-  
-  /* When the checkbox is checked, add a blue background */
-  .container input:checked ~ .checkmark {
-    background-color: #2196F3;
-  }
-  
-  /* Create the checkmark/indicator (hidden when not checked) */
-  .checkmark:after {
-    content: "";
+}
+
+/* When the checkbox is checked, add a blue background */
+.container input:checked ~ .checkmark {
+    background-color: #2196f3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+    content: '';
     position: absolute;
     display: none;
-  }
-  
-  /* Show the checkmark when checked */
-  .container input:checked ~ .checkmark:after {
+}
+
+/* Show the checkmark when checked */
+.container input:checked ~ .checkmark:after {
     display: block;
-  }
-  
-  /* Style the checkmark/indicator */
-  .container .checkmark:after {
+}
+
+/* Style the checkmark/indicator */
+.container .checkmark:after {
     left: 9px;
     top: 5px;
     width: 5px;
@@ -112,4 +125,8 @@ body{
     -webkit-transform: rotate(45deg);
     -ms-transform: rotate(45deg);
     transform: rotate(45deg);
-  }
+}
+div.ais-PoweredBy.ais-PoweredBy--light {
+    width: 50px;
+    text-align: right;
+}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { AccordionButton } from './settings'
+import { AccordionButton } from './settings/settings'
+
 export default function FAQ({ data }) {
     const [activeTab, setActiveTab] = useState('')
 

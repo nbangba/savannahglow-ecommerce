@@ -1,28 +1,37 @@
 import React from 'react'
 import styled from 'styled-components'
-import {Button} from './navbar'
-import {GatsbyImage } from "gatsby-plugin-image"
-import "react-responsive-carousel/lib/styles/carousel.min.css";
-import { Carousel } from 'react-responsive-carousel';
+import { Button } from './layout/navbar'
+import { GatsbyImage } from 'gatsby-plugin-image'
+import 'react-responsive-carousel/lib/styles/carousel.min.css'
+import { Carousel } from 'react-responsive-carousel'
 import { Link } from 'gatsby'
-import HappyDelivery from "./lottieanimations"
 import SEO from './seo'
-
+import loadable from '@loadable/component'
+const HappyDelivery = loadable(() => import('./supportingui/lottieanimations'))
 
 const HomeWrapper = styled.div`
-.gradient{
-  background:linear-gradient(250deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%);
-  transform:translate(-50px,0px)
-  }
-    
-@media only screen and (max-width: 833px) {
-  .gradient{
-  background:linear-gradient(180deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) 50%);
-  transform:translate(0px,0px)
-  }
-}
+    font-family: 'Montserrat', sans-serif;
+    .gradient {
+        background: linear-gradient(
+            250deg,
+            rgba(252, 201, 132, 0.64),
+            rgba(235, 221, 210, 0) 50%
+        );
+        transform: translate(-50px, 0px);
+    }
+
+    @media only screen and (max-width: 833px) {
+        .gradient {
+            background: linear-gradient(
+                180deg,
+                rgba(252, 201, 132, 0.64),
+                rgba(235, 221, 210, 0) 50%
+            );
+            transform: translate(0px, 0px);
+        }
+    }
 `
-const Top= styled.div`
+const Top = styled.div`
   display:flex;
   width:100%;
   flex:1 0 420px;
@@ -159,264 +168,320 @@ const Top= styled.div`
 `
 
 const Benefits = styled.div`
-    display:flex;
-    width:100%;
-    flex:1 0 400px;
-    flex-wrap:wrap;
-    padding:3vw;
-    justify-content:space-around;
-    box-sizing:border-box;
+    display: flex;
+    width: 100%;
+    flex: 1 0 400px;
+    flex-wrap: wrap;
+    padding: 3vw;
+    justify-content: space-around;
+    box-sizing: border-box;
+    overflow-x: clip;
+    @media only screen and (max-width: 700px) {
+        padding: 4rem;
+    }
 
     @media only screen and (max-width: 700px) {
-      padding: 4rem;
+        padding: 2rem;
     }
 
-    @media only screen and (max-width: 700px) {
-      padding: 2rem;
+    h2 {
+        min-width: 100%;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 36px;
+        font-weight: 400;
+        color: #35486f;
     }
 
-    h2{
-      min-width:100%;
-      font-family: 'Montserrat', sans-serif;
-      font-size:36px;
-      font-weight:400;
-      color:#35486F;
+    h3 {
+        min-width: 100%;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 24px;
+        font-weight: 500;
+
+        color: #474e52;
+    }
+    section {
+        width: 400px;
+        border: 15px solid;
+        border-image-slice: 1;
+        border-width: 5px;
+        border-image-source: linear-gradient(
+            250deg,
+            rgba(252, 201, 132, 0.64),
+            rgba(235, 221, 210, 0)
+        );
+        padding: 1.25rem;
+        margin: 1.25rem 0px;
+        box-sizing: border-box;
     }
 
-    h3{
-      min-width:100%;
-      font-family: 'Montserrat', sans-serif;
-      font-size:24px;
-      font-weight:500;
-      
-      color:#474E52;
-    }
-    section{
-      width:400px;
-      border:15px solid ;
-      border-image-slice: 1;
-      border-width: 5px;
-      border-image-source: linear-gradient(250deg,rgba(252,201,132,0.64) ,rgba(235,221,210,0) );
-      padding: 1.25rem;
-      margin: 1.25rem 0px;
-      box-sizing:border-box;
+    p {
+        min-width: 100%;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1.125rem;
+        color: #00000;
     }
 
-    p{
-      min-width:100%;
-      font-family: 'Montserrat', sans-serif;
-      font-size:1.125rem;
-      color:#00000;
+    img {
+        height: 60px;
+        width: 60px;
+        object-fit: cover;
+        box-sizing: border-box;
     }
 
-    img{
-      height:60px;
-      width:60px;
-      object-fit:cover;
-      box-sizing:border-box;
-     
+    .benefits {
+        fill: #94d31b;
     }
 
-    .benefits{
-      fill: #94d31b; 
-    }
-
-    .myFill{
-      width:60px;
-      path { 
-      fill: #474E52;
-      }
-      
+    .myFill {
+        width: 60px;
+        path {
+            fill: #474e52;
+        }
     }
 `
 
-const Testimonial= styled.div`
-   display:flex;
-   width:100%;
-   box-sizing:border-box;
-   flex:1 0;
-   flex-wrap:wrap;
-   justify-content:center;
-   background: linear-gradient(rgba(224,193,175,1) ,rgba(224,193,175,0.2));
-   padding:1vw;
+const Testimonial = styled.div`
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: linear-gradient(
+        rgba(224, 193, 175, 1),
+        rgba(224, 193, 175, 0.2)
+    );
+    padding: 1vw;
 
-   h2{
-    font-family: 'Montserrat', sans-serif;
-    font-size:2rem;
-    font-weight:400;
-    color:#35486F;
-    width:100%;
-    text-align:center;
-   }
-
-   h3{
-    font-family: 'Montserrat', sans-serif;
-    font-size:1.5rem;
-    font-weight:400;
-    color:#35486F;
-     width:100%;
-     text-align:center;
-
-   }
-
-   section{
-     display:flex;
-     width:50%;
-     padding:1.25rem;
-     box-sizing:border-box;
-     justify-content:center;
-     align-items:center;
-     flex: 1 0 350px;
-     
-     @media only screen and (max-width: 833px) {
-     font-size:
+    h2 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 2rem;
+        font-weight: 400;
+        color: #35486f;
+        width: 100%;
+        text-align: center;
     }
-   }
 
-   img{
-     height:60px;
-     width:60px;
-     object-fit:cover;
-     border:5px solid  rgba(252,201,132,0.64);
-     box-sizing:border-box;
-     border-radius:30px;
-   }
+    h3 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 400;
+        color: #35486f;
+        width: 100%;
+        text-align: center;
+    }
 
-   blockquote{
-    font-family: 'Montserrat', sans-serif;
-    font-style: italic;
-    color:#474E52;
-   }
+    section {
+        display: flex;
+        width: 50%;
+        padding: 1.25rem;
+        box-sizing: border-box;
+        justify-content: center;
+        align-items: center;
+        flex: 1 0 350px;
 
-   .customer-profile{
-     position: relative;
-     display:inline-block;
-     font-style:normal;
-     width:100%;
-     text-align:right;
-   }
-   .quote{
+        @media only screen and (max-width: 833px) {
+            font-size: ;
+        }
+    }
 
-   }
+    img {
+        height: 60px;
+        width: 60px;
+        object-fit: cover;
+        border: 5px solid rgba(252, 201, 132, 0.64);
+        box-sizing: border-box;
+        border-radius: 30px;
+    }
+
+    blockquote {
+        font-family: 'Montserrat', sans-serif;
+        font-style: italic;
+        color: #474e52;
+    }
+
+    .customer-profile {
+        position: relative;
+        display: inline-block;
+        font-style: normal;
+        width: 100%;
+        text-align: right;
+    }
+    .quote {
+    }
 `
+const MoveDeliveryMan = styled.div`
+    position: relative;
+    animation: 8s linear infinite move;
+    right: 60vw;
+    @keyframes move {
+        from {
+            right: 60vw;
+        }
 
-export default function Home({data}) {
-  console.log('homedata',data)
-  const homePageData = data.strapiHomePage
-  const mainProductImage = homePageData.productimage.localFile.childImageSharp.gatsbyImageData
-  const midSectionBannerImage = homePageData.midsectionbanner.image[0].localFile.childImageSharp.gatsbyImageData
+        to {
+            right: -50vw;
+        }
+    }
+`
+export default function Home({ data }) {
+    console.log('homedata', data)
+    const homePageData = data.strapiHomePage
+    const mainProductImage =
+        homePageData.productimage.localFile.childImageSharp.gatsbyImageData
+    const midSectionBannerImage =
+        homePageData.midsectionbanner.image[0].localFile.childImageSharp
+            .gatsbyImageData
+
     return (
         <HomeWrapper>
             <Top>
-                <section className='first' style={{display:'flex',flexWrap:'wrap',justifyContent:'center', alignItems:'center'}}>
-                  <h1 className='glow'>
-                      {homePageData.brandname}
-                  </h1>
-                  
-                  <ul style={{width:'100%',listStyleType:'none'}}>
-                    {
-                      homePageData.benefit.map(benefit=> <li><h3>{benefit.benefit}</h3></li>)
-                    }
-                  </ul>
-                  <Link style={{textDecoration:'none'}} to="/products/savannah-glow-shea-butter"><Button primary style={{width:280,display:'flex',marginBottom:'5vw',  fontSize:24,alignItems:'center',justifyContent:'center'}} >BUY NOW </Button></Link>
+                <section
+                    className="first"
+                    style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <h1 className="glow">{homePageData.brandname}</h1>
+
+                    <ul style={{ width: '100%', listStyleType: 'none' }}>
+                        {homePageData.benefit.map((benefit) => (
+                            <li>
+                                <h3>{benefit.benefit}</h3>
+                            </li>
+                        ))}
+                    </ul>
+                    <Link
+                        style={{ textDecoration: 'none' }}
+                        to="/products/savannah-glow-shea-butter"
+                    >
+                        <Button
+                            primary
+                            style={{
+                                width: 280,
+                                display: 'flex',
+                                marginBottom: '5vw',
+                                fontSize: 24,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            BUY NOW{' '}
+                        </Button>
+                    </Link>
                 </section>
-                <section className='second' style={{margin:'auto'}}>
-                  <GatsbyImage image={mainProductImage} imgStyle={{transform:"scale(1.4)"}}  placeholder="blurred" alt={homePageData.productimage.alternativeText}/>
+                <section className="second" style={{ margin: 'auto' }}>
+                    <GatsbyImage
+                        image={mainProductImage}
+                        imgStyle={{ transform: 'scale(1.4)' }}
+                        placeholder="blurred"
+                        alt={homePageData.productimage.alternativeText}
+                    />
                 </section>
             </Top>
-            <Top className='gradient' style={{borderRadius:50}}>
-              <section className='second' >
-              <GatsbyImage   image={midSectionBannerImage} style={{objectFit:'cover',objectPosition:'right top'}} alt={homePageData.midsectionbanner.image[0].alternativeText}/>
+            <Top className="gradient" style={{ borderRadius: 50 }}>
+                <section className="second">
+                    <GatsbyImage
+                        image={midSectionBannerImage}
+                        style={{
+                            objectFit: 'cover',
+                            objectPosition: 'right top',
+                        }}
+                        alt={
+                            homePageData.midsectionbanner.image[0]
+                                .alternativeText
+                        }
+                    />
                 </section>
-                <section  className='first' >
-                  <h1>
-                      {homePageData.midsectionbanner.maintext}
-                  </h1>
-                  <h3 className='sub'>
-                     {homePageData.midsectionbanner.subtext}
-                  </h3>
+                <section className="first">
+                    <h1>{homePageData.midsectionbanner.maintext}</h1>
+                    <h3 className="sub">
+                        {homePageData.midsectionbanner.subtext}
+                    </h3>
                 </section>
-                
             </Top>
-            <div>
-              <h2>
-                We Deliver to your location
-              </h2>
-              <HappyDelivery></HappyDelivery>
-            </div>
             <Benefits>
-              <h2>
-                {homePageData.headerforwhyuse.header2}
-              </h2>
-              {
-                homePageData.whyuse.map(why=>
-                <section>
-                  <h3>{why.maintext}<img className='myFill' src={why.image.localFile.url} /></h3>
-                  <p>
-                    {why.description}
-                  </p>
-                </section>)
-              }
+                <h2>We Deliver to your location</h2>
+                <MoveDeliveryMan>
+                    <HappyDelivery />
+                </MoveDeliveryMan>
             </Benefits>
-            
+            <Benefits>
+                <h2>{homePageData.headerforwhyuse.header2}</h2>
+                {homePageData.whyuse.map((why) => (
+                    <section>
+                        <h3>
+                            {why.maintext}
+                            <img
+                                className="myFill"
+                                src={why.image.localFile.url}
+                            />
+                        </h3>
+                        <p>{why.description}</p>
+                    </section>
+                ))}
+            </Benefits>
+
             <Testimonial>
-              <h2>
-                {homePageData.heading.header2}
-              </h2>
-              <h3>{homePageData.subheading.header2}</h3>
-              <Carousel showThumbs={false}>
-                {homePageData.testimonies.map(testimony=>
-                  <div>
-                
-                  <blockquote>
-                    {testimony.testimony}
-                    <span className='customer-profile'>
-                    {testimony.nameofperson}
-                    </span>
-                  </blockquote>
-                </div>
-                )}
-              <div>
-                
-                <blockquote>
-                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
-                  <span className='customer-profile'>
-                  ~Lukman Ahmed
-                  </span>
-                </blockquote>
-              </div>
-              <div>
-                
-                <blockquote>
-                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
-                  <span className='customer-profile'>
-                  ~Lukman Ahmed
-                  </span>
-                </blockquote>
-              </div>
-              <div>
-                
-                <blockquote>
-                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
-                  <span className='customer-profile'>
-                  ~Lukman Ahmed
-                  </span>
-                </blockquote>
-              </div>
-              <div>
-                <blockquote>
-                  " Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque "
-                  <span className='customer-profile'>
-                  ~Lukman Ahmed
-                  </span>
-                </blockquote>
-              </div>
-              </Carousel>
+                <h2>{homePageData.heading.header2}</h2>
+                <h3>{homePageData.subheading.header2}</h3>
+                <Carousel showThumbs={false}>
+                    {homePageData.testimonies.map((testimony) => (
+                        <div>
+                            <blockquote>
+                                {testimony.testimony}
+                                <span className="customer-profile">
+                                    {testimony.nameofperson}
+                                </span>
+                            </blockquote>
+                        </div>
+                    ))}
+                    <div>
+                        <blockquote>
+                            " Sed ut perspiciatis unde omnis iste natus error
+                            sit voluptatem accusantium doloremque "
+                            <span className="customer-profile">
+                                ~Lukman Ahmed
+                            </span>
+                        </blockquote>
+                    </div>
+                    <div>
+                        <blockquote>
+                            " Sed ut perspiciatis unde omnis iste natus error
+                            sit voluptatem accusantium doloremque "
+                            <span className="customer-profile">
+                                ~Lukman Ahmed
+                            </span>
+                        </blockquote>
+                    </div>
+                    <div>
+                        <blockquote>
+                            " Sed ut perspiciatis unde omnis iste natus error
+                            sit voluptatem accusantium doloremque "
+                            <span className="customer-profile">
+                                ~Lukman Ahmed
+                            </span>
+                        </blockquote>
+                    </div>
+                    <div>
+                        <blockquote>
+                            " Sed ut perspiciatis unde omnis iste natus error
+                            sit voluptatem accusantium doloremque "
+                            <span className="customer-profile">
+                                ~Lukman Ahmed
+                            </span>
+                        </blockquote>
+                    </div>
+                </Carousel>
             </Testimonial>
         </HomeWrapper>
     )
 }
 
-export function Head(){
-  return <SEO/>
+export function Head() {
+    return <SEO />
 }
