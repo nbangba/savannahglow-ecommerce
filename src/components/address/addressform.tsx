@@ -388,7 +388,7 @@ export default function AddressForm({
                             <GSelect
                                 id="location"
                                 placeholder="Search Location"
-                                apiKey={`${process.env.FIREBASE_API_KEY}`}
+                                apiKey={`AIzaSyDGHTzlA-Iq457SzfvDmbvb2QBTT79poc8`}
                                 options={{
                                     types: [],
                                     fields: [
