@@ -235,9 +235,7 @@ const Benefits = styled.div`
 
     .myFill {
         width: 60px;
-        path {
-            fill: #474e52;
-        }
+        margin: 0px 10px;
     }
 `
 
@@ -414,11 +412,15 @@ export default function Home({ data }) {
                 <h2>{homePageData.headerforwhyuse.header2}</h2>
                 {homePageData.whyuse.map((why) => (
                     <section>
-                        <h3>
+                        <h3 style={{ display: 'flex', alignItems: 'center' }}>
                             {why.maintext}
-                            <img
+                            <GatsbyImage
                                 className="myFill"
-                                src={why.image.localFile.url}
+                                image={
+                                    why.image.localFile.childImageSharp
+                                        .gatsbyImageData
+                                }
+                                alt=""
                             />
                         </h3>
                         <p>{why.description}</p>

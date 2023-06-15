@@ -3,7 +3,7 @@ import { FirebaseAppProvider } from 'reactfire'
 // eslint-disable-next-line react/display-name,react/prop-types
 export default ({ element }) => {
     const firebaseConfig = {
-        apiKey: `${process.env.FIREBASE_API_KEY}`,
+        apiKey: `AIzaSyDGHTzlA-Iq457SzfvDmbvb2QBTT79poc8`,
 
         authDomain: 'savannahglow-65324.firebaseapp.com',
 

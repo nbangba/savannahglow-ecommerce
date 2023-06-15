@@ -11,7 +11,7 @@ import 'firebase/compat/performance'
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 //I am still keeping thisfor firebase ui in signin.js
 const firebaseConfig = {
-    apiKey: `${process.env.FIREBASE_API_KEY}`,
+    apiKey: `AIzaSyDGHTzlA-Iq457SzfvDmbvb2QBTT79poc8`,
 
     authDomain: 'savannahglow-65324.firebaseapp.com',
 

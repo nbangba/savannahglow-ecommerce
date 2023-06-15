@@ -372,6 +372,8 @@ export default function Nav() {
                     <Link
                         to="/"
                         style={{
+                            position: 'absolute',
+                            zIndex: 3,
                             display: 'inline-block',
                             width: 'fit-content',
                         }}

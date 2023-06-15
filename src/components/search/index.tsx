@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import algoliasearch from 'algoliasearch/lite'
 import { InstantSearch, SearchBox } from 'react-instantsearch-hooks-web'
 import SearchResult from './searchresults'
-import Popper from '../supportingui/popper'
 import styled from 'styled-components'
 import SearchIcon from '../../images/svgs/search-icon.svg'
 import ModalComponent from '../supportingui/modal'
@@ -56,14 +55,15 @@ const SearchBoxWrapper = styled.div`
     align-items: center;
     justify-content: center;
 `
-export const searchClient = algoliasearch(
-    `${process.env.GATSBY_ALGOLIA_APP_ID}`,
-    `${process.env.ALGOLIA_ADMIN_KEY}`
+const searchClient = algoliasearch(
+    `JPZOCGGNC8`,
+    `5a6b3424004019736f1399bd006c65a5`
 )
 
 export default function Search() {
     const [open, setOpen] = useState(false)
     const [showModal, setShowModal] = useState(false)
+
     const queryHook = (query: string, search: any) => {
         console.log('query', query)
 
