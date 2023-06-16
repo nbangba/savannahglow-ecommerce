@@ -26,7 +26,7 @@ const CartWrapper = styled.div`
     display: flex;
     flex-wrap: wrap;
     position: relative;
-    justify-content: flex-start;
+    justify-content: center;
     max-width: 1200px;
     margin: 0px auto;
     .mobileV {

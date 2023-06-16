@@ -28,7 +28,7 @@ import QueryOptions from './queryOptions'
 import { VarietyProps } from '../product/product'
 import { AddressInfoProps } from '../address/addressform'
 import { User } from 'firebase/auth'
-
+import { TextInfo } from '../order/orders'
 const moment = require('moment')
 
 const TA = styled.div`
@@ -230,7 +230,7 @@ export default function AdminCustomers() {
                 />
             </div>
         )
-    else return <div>You are not authorized to view this page</div>
+    else return <TextInfo>You are not authorized to view this page</TextInfo>
 }
 
 interface DeliveryProps {
@@ -414,14 +414,15 @@ function Dispatch({ order }: DispatchProps) {
                     onChange={handleChange}
                 />
                 <div style={{ width: '100%', textAlign: 'center' }}>
-                    <button
+                    <Button
+                        primary
                         onClick={() => {
                             onDispatch(order, selected)
                         }}
                     >
                         Submit
-                    </button>
-                    <button onClick={() => setshowModal(false)}>Cancel</button>
+                    </Button>
+                    <Button onClick={() => setshowModal(false)}>Cancel</Button>
                 </div>
             </ModalComponent>
         </>

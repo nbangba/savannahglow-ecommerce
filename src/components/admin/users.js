@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react'
-import { getAuth } from '@firebase/auth'
-import { useAuth, useFirestore, useFirestoreCollectionData } from 'reactfire'
+import { useFirestore, useFirestoreCollectionData } from 'reactfire'
 import { query, collection, writeBatch, doc, where } from '@firebase/firestore'
 import { useTable, useRowSelect } from 'react-table'
 import styled from 'styled-components'
 import ModalComponent from '../supportingui/modal'
 import { Loading } from '../verification/[reference]'
 import { deleteUsers } from '../../helperfunctions/cloudfunctions'
-import { Menu, MenuItem } from '../layout/navbar'
-import { Button } from '../address/addressform'
+import { Menu, MenuItem, Button } from '../layout/navbar'
 import { Formik, Form } from 'formik'
 import { InputWrapper } from '../address/addressform'
 import { assignRole } from '../../helperfunctions/cloudfunctions'
 import Select from 'react-select'
 import useRole from '../../hooks/useRole'
+import { TextInfo } from '../order/orders'
 
 const Table = styled.table`
     tr:nth-child(even) {
@@ -221,42 +220,42 @@ function AdminOptions({ selectedRows }) {
                 {deleteState === '' ? (
                     <div>
                         <div>Are you sure you want to delete user(s)</div>
-                        <button onClick={initiateDelete}>YES</button>
-                        <button
+                        <Button onClick={initiateDelete}>YES</Button>
+                        <Button
                             onClick={() => {
                                 setShowDeleteDialog(false)
                                 setDeleteState('')
                             }}
                         >
                             NO
-                        </button>
+                        </Button>
                     </div>
                 ) : deleteState === 'deleting' ? (
                     <>
                         <Loading />
-                        <div>Deleting user(s)</div>
+                        <TextInfo>Deleting user(s)</TextInfo>
                     </>
                 ) : deleteState === 'error' ? (
                     <>
-                        <div>something went wrong </div>
-                        <button
+                        <TextInfo>something went wrong </TextInfo>
+                        <Button
                             onClick={() => {
                                 setShowDeleteDialog(false)
                                 setDeleteState('')
                             }}
                         >
                             close
-                        </button>
+                        </Button>
                     </>
                 ) : (
-                    <button
+                    <Button
                         onClick={() => {
                             setShowDeleteDialog(false)
                             setDeleteState('')
                         }}
                     >
                         close
-                    </button>
+                    </Button>
                 )}
             </ModalComponent>
         )
@@ -375,18 +374,19 @@ function AssignRole({
                             />
                         </InputWrapper>
                         <div style={{ textAlign: 'center', width: '100%' }}>
-                            <button
+                            <Button
                                 style={{ height: 'fit-content' }}
                                 onClick={() => setShowAssignRoleDialog(false)}
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                primary
                                 style={{ height: 'fit-content' }}
                                 type="submit"
                             >
                                 Submit
-                            </button>
+                            </Button>
                         </div>
                     </Form>
                 )}

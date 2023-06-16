@@ -24,12 +24,21 @@ import {
 } from '../admin/adminCustomerOrders'
 import { Link } from 'gatsby'
 import { User } from 'firebase/auth'
+import { GatsbyImage } from 'gatsby-plugin-image'
 
 const moment = require('moment')
 
 const OrderWrapper = styled.div`
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
+`
+
+export const TextInfo = styled.div`
+    font-family: 'Montserrat', sans-serif;
+    font: 16px bold;
+    display: flex;
+    align-content: center;
     justify-content: center;
 `
 
@@ -42,7 +51,7 @@ export default function Orders() {
             </Errorwrapper>
         )
 
-    return <div>No user</div>
+    return <TextInfo>No user</TextInfo>
 }
 
 interface OrdersComponentProps {
@@ -80,7 +89,7 @@ function OrdersComponent({ user }: OrdersComponentProps) {
                 />
             </OrderWrapper>
         )
-    else return <div> nothing found </div>
+    else return <TextInfo> nothing found </TextInfo>
 }
 
 interface OrderCardProps {
@@ -133,9 +142,13 @@ export function OrderCard({ order, role = null, children }: OrderCardProps) {
                             Savannah Glow
                         </CardItem>
                         <div style={{ display: 'flex' }}>
-                            <img
+                            <GatsbyImage
                                 style={{ width: 100, objectFit: 'contain' }}
-                                src={item.images[0].fluid.src}
+                                image={
+                                    item.images[0].localFile.childImageSharp
+                                        .gatsbyImageData
+                                }
+                                alt=""
                             />
                             <CardItem>
                                 <CardItem>{item.name} </CardItem>

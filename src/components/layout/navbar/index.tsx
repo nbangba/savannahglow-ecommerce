@@ -26,6 +26,7 @@ const Navbar = styled.div`
             display: flex;
         }
         .logoMobile {
+            position: relative;
             object-fit: cover;
         }
     }
@@ -100,7 +101,6 @@ export const MenuItem = styled.li`
 export const Button = styled.button`
     --gradientPrimary: to bottom, #1e7ae9, #194fb9, hsl(221.54deg 79.57% 27.71%);
 
-    margin: 10px;
     background-image: linear-gradient(
         to bottom,
         #fff,
@@ -118,7 +118,7 @@ export const Button = styled.button`
     margin: 5px;
     box-sizing: border-box;
     border-radius: 0.5rem;
-    margin: 0 10px;
+    //margin: 0 10px;
     font-family: 'Montserrat', sans-serif;
     text-align: center;
     &:hover {
@@ -372,7 +372,7 @@ export default function Nav() {
                     <Link
                         to="/"
                         style={{
-                            position: 'absolute',
+                            position: 'relative',
                             zIndex: 3,
                             display: 'inline-block',
                             width: 'fit-content',

@@ -5,6 +5,7 @@ import { useFirestore, useFirestoreDocData } from 'reactfire'
 import { CardItem } from '../address/addresscard'
 import Errorwrapper from '../errorwrapper'
 import { leadingZeros } from '../../helperfunctions'
+import { GatsbyImage } from 'gatsby-plugin-image'
 
 const moment = require('moment')
 
@@ -106,9 +107,10 @@ export default function OrderComponent({ id }) {
                             Savannah Glow
                         </CardItem>
                         <div style={{ display: 'flex' }}>
-                            <img
+                            <GatsbyImage
                                 style={{ width: 100, objectFit: 'contain' }}
-                                src={item.images[0].fluid.src}
+                                image={item.images[0].fluid.src}
+                                alt=""
                             />
                             <CardItem>
                                 <CardItem>{item.name} </CardItem>

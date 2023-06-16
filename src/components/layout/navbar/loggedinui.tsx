@@ -135,7 +135,7 @@ export default function LoginStatus() {
 
                 <ModalComponent showModal={showModal}>
                     <SignIn />
-                    <button onClick={() => setshowModal(false)}>close</button>
+                    <Button onClick={() => setshowModal(false)}>close</Button>
                 </ModalComponent>
             </Menu>
         </Errorwrapper>
