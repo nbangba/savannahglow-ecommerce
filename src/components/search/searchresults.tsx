@@ -11,7 +11,7 @@ import {
 import slugify from '@sindresorhus/slugify'
 import styled from 'styled-components'
 import ProductItem from '../product/productitem'
-
+import Errorwrapper from '../errorwrapper'
 const SearchResultsWrapper = styled.div`
     max-width: 800px;
     min-width: fit-content;
@@ -46,23 +46,26 @@ const HitCount = () => {
 
 const PageHit = ({ hit, setShowModal }: any) => (
     <div onClick={() => setShowModal(false)}>
-        <Link
-            to={`/products/${slugify(hit.name)}`}
-            style={{ textDecoration: 'none' }}
-        >
-            <ProductItem
-                name={hit.name}
-                subName={hit.varieties[0].name}
-                price={`GHS ${hit.varieties[0].price}.00`}
-                imgSrc={
-                    hit.varieties[0].images[0].localFile.childImageSharp
-                        .gatsbyImageData
-                }
-                id={hit.id}
-                className="search-results"
-                ratingSize={15}
-            />
-        </Link>
+        <Errorwrapper>
+            <Link
+                to={`/products/${slugify(hit.name)}`}
+                style={{ textDecoration: 'none' }}
+            >
+                <ProductItem
+                    name={hit.name}
+                    subName={hit.varieties.name}
+                    price={`GHS ${hit.varieties.price}.00`}
+                    imgSrc={
+                        hit.varieties.images[0].localFile.childImageSharp
+                            .gatsbyImageData
+                    }
+                    id={hit.id}
+                    className="search-results"
+                    ratingSize={15}
+                    ratingInfo={[hit.productRating]}
+                />
+            </Link>
+        </Errorwrapper>
         {/*<Snippet attribute="description" hit={hit} />*/}
     </div>
 )

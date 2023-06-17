@@ -6,6 +6,8 @@ import styled from 'styled-components'
 import SearchIcon from '../../images/svgs/search-icon.svg'
 import ModalComponent from '../supportingui/modal'
 import { Button } from '../layout/navbar'
+import { Loading } from '../errorwrapper'
+
 export const SearchWrapper = styled.div`
     width: 90%;
     .ais-SearchBox-reset {
@@ -61,18 +63,12 @@ const searchClient = algoliasearch(
 )
 
 export default function Search() {
-    const [open, setOpen] = useState(false)
     const [showModal, setShowModal] = useState(false)
 
-    const queryHook = (query: string, search: any) => {
+    const queryHook = (query: string, search: (value: string) => void) => {
         console.log('query', query)
 
-        if (query.length > 2) {
-            setOpen(true)
-            search(query)
-        } else {
-            setOpen(false)
-        }
+        if (query.length > 2) search(query)
     }
     return (
         <>
@@ -100,6 +96,15 @@ export default function Search() {
                             <SearchBox
                                 style={{ flexGrow: 1 }}
                                 placeholder="Search"
+                                loadingIconComponent={() => (
+                                    <Loading>
+                                        <div className="lds-facebook">
+                                            <div></div>
+                                            <div></div>
+                                            <div></div>
+                                        </div>
+                                    </Loading>
+                                )}
                                 classNames={{
                                     form: 'form',
                                     resetIcon: 'reset',

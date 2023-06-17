@@ -4,6 +4,7 @@ import ProductItem from '../product/productitem'
 import styled from 'styled-components'
 import slugify from '@sindresorhus/slugify'
 import { Link } from 'gatsby'
+import { TextInfo } from '../order/orders'
 
 const ProductsWrapper = styled.div`
     margin: 20px;
@@ -24,33 +25,40 @@ const ProductsWrapper = styled.div`
 `
 export default function Products({ data, location }: any) {
     const sgproducts = data.allStrapiProduct.nodes
+    const sgRatings = data.productsRatings.nodes[0].documents
     console.log(sgproducts)
-
-    return (
-        <ProductsWrapper>
-            <ul>
-                {sgproducts.map((node: any) => (
-                    <li>
-                        <Link
-                            to={`${location.pathname}${slugify(node.name)}`}
-                            style={{ textDecoration: 'none' }}
-                        >
-                            <ProductItem
-                                name={node.name}
-                                subName={node.varieties[0].name}
-                                price={`GHS ${node.varieties[0].price}.00`}
-                                imgSrc={
-                                    node.varieties[0].images[0].localFile
-                                        .childImageSharp.gatsbyImageData
-                                }
-                                id={node.id}
-                            />
-                        </Link>
-                    </li>
-                ))}
-            </ul>
-        </ProductsWrapper>
-    )
+    if (sgproducts.length > 0)
+        return (
+            <ProductsWrapper>
+                <ul>
+                    {sgproducts.map((node: any) => (
+                        <li>
+                            <Link
+                                to={`${location.pathname}${slugify(node.name)}`}
+                                style={{ textDecoration: 'none' }}
+                            >
+                                <ProductItem
+                                    name={node.name}
+                                    subName={node.varieties[0].name}
+                                    price={`GHS ${node.varieties[0].price}.00`}
+                                    imgSrc={
+                                        node.varieties[0].images[0].localFile
+                                            .childImageSharp.gatsbyImageData
+                                    }
+                                    id={node.id}
+                                    ratingInfo={sgRatings.filter(
+                                        (sgRating: any) =>
+                                            sgRating.fields.productName
+                                                .stringValue === node.name
+                                    )}
+                                />
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            </ProductsWrapper>
+        )
+    else return <TextInfo>No items in this category yet.</TextInfo>
 }
 
 export const query = graphql`
@@ -80,6 +88,24 @@ export const query = graphql`
                                     placeholder: BLURRED
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+        productsRatings: allProductRating {
+            nodes {
+                documents {
+                    fields {
+                        productName {
+                            stringValue
+                        }
+                        numberOfRating {
+                            integerValue
+                        }
+                        rating {
+                            integerValue
+                            doubleValue
                         }
                     }
                 }

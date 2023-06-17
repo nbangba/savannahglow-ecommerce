@@ -36,7 +36,6 @@ const OrderWrapper = styled.div`
 
 export const TextInfo = styled.div`
     font-family: 'Montserrat', sans-serif;
-    font: 16px bold;
     display: flex;
     align-content: center;
     justify-content: center;
