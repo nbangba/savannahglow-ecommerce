@@ -159,7 +159,7 @@ export default function AdminCustomers() {
         )
             .then(() => {
                 addDoc(collection(firestore, 'mail'), {
-                    to: ['nbangba.la@gmail.com'],
+                    to: [`${order.orderAddress.email}`],
                     template: {
                         name: 'orderStatus',
                         data: {
@@ -371,7 +371,7 @@ function Dispatch({ order }: DispatchProps) {
             .then((r) => {
                 console.log('result', r)
                 addDoc(collection(firestore, 'mail'), {
-                    to: ['nbangba.la@gmail.com'],
+                    to: [`${order.order.orderAddress.email}`],
                     template: {
                         name: 'orderStatus',
                         data: {

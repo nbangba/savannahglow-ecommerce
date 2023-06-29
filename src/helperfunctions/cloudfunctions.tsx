@@ -33,7 +33,7 @@ export async function verifyPaystack(info: InfoProps, response: any) {
                 })
 
                 addDoc(collection(firestore, 'mail'), {
-                    to: ['nbangba.la@gmail.com'],
+                    to: [`${info.orderAddress.email}`],
                     template: {
                         name: 'orderStatus',
                         data: {
@@ -88,7 +88,7 @@ export async function refund(order: OrderInfoProps) {
     })
         .then((result) => {
             addDoc(collection(firestore, 'mail'), {
-                to: ['nbangba.la@gmail.com'],
+                to: [`${order.order.orderAddress.email}`],
                 template: {
                     name: 'orderStatus',
                     data: {
