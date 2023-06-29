@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Formik, Form } from 'formik'
-import { Input } from '../address/addressform'
+import { Input, dropDownStyle, reactTextInput } from '../address/addressform'
 import { InputWrapper } from '../address/addressform'
 import { Label } from '../address/addressform'
 import { Button } from '../layout/navbar'
@@ -13,8 +13,19 @@ import HidePassword from '../../images/svgs/hide-password.svg'
 import * as Yup from 'yup'
 //import { useFirestoreConnect } from 'react-redux-firebase';
 //import { useSelector } from 'react-redux';
-import { useUser } from 'reactfire'
-import { updateEmail, updatePassword, deleteUser } from 'firebase/auth' // Firebase v9+
+import { useUser, useAuth } from 'reactfire'
+import {
+    updateEmail,
+    updatePassword,
+    deleteUser,
+    updatePhoneNumber,
+    updateCurrentUser,
+    updateProfile,
+    RecaptchaVerifier,
+    PhoneAuthProvider,
+} from 'firebase/auth' // Firebase v9+
+import { ErrorMessage } from 'formik'
+import PhoneInput from 'react-phone-input-2'
 
 const LinkButton = styled.div`
     width: 100%;
@@ -29,11 +40,19 @@ const LinkButton = styled.div`
     }
 `
 export default function Account() {
+    const [updateProfile, setUpdateProfile] = useState(false)
+    const [updatePhoneNumber, setUpdatePhoneNumber] = useState(false)
     const [changeEmail, setChangeEmail] = useState(false)
     const [changePassword, setChangePassword] = useState(false)
     const [deleteAccount, setDeleteAccount] = useState(false)
     return (
         <div>
+            <LinkButton onClick={() => setUpdateProfile(true)}>
+                Change Display Name
+            </LinkButton>
+            <LinkButton onClick={() => setUpdatePhoneNumber(true)}>
+                Update Phone Number
+            </LinkButton>
             <LinkButton onClick={() => setChangeEmail(true)}>
                 Change Email
             </LinkButton>
@@ -43,6 +62,20 @@ export default function Account() {
             <LinkButton onClick={() => setDeleteAccount(true)}>
                 Delete Account
             </LinkButton>
+            <ModalComponent
+                width="600px"
+                showModal={updateProfile}
+                title="Update Profile"
+            >
+                <UpdateProfile setShowModal={setUpdateProfile} />
+            </ModalComponent>
+            <ModalComponent
+                width="600px"
+                showModal={updatePhoneNumber}
+                title="Update Profile"
+            >
+                <UpdatePhoneNumber setShowModal={setUpdatePhoneNumber} />
+            </ModalComponent>
             <ModalComponent
                 width="600px"
                 showModal={changeEmail}
@@ -64,6 +97,396 @@ export default function Account() {
     )
 }
 
+function UpdateProfile({ setShowModal }: ChangeMailProps) {
+    const { data: user } = useUser()
+
+    const personalInfoSchema = Yup.object().shape({
+        displayName: Yup.string().required('Display name is required'),
+    })
+    return (
+        <Formik
+            initialValues={{
+                displayName: (user && user.displayName) || '',
+            }}
+            validationSchema={personalInfoSchema}
+            //Remember to add yup for  validation check.
+            onSubmit={(values: any, { setSubmitting }: any) => {
+                setTimeout(() => {
+                    console.log(JSON.stringify(values, null, 2))
+                    if (user)
+                        updateProfile(user, values)
+                            .then(() => {
+                                console.log(
+                                    `Display name updated to ${values.displayName} successfully`
+                                )
+                                setShowModal(false)
+                            })
+                            .catch((error) => {
+                                // An error occurred
+                                // ...
+                                console.log(error)
+                            })
+                    setSubmitting(false)
+                }, 400)
+            }}
+        >
+            {({ isSubmitting, setFieldValue, handleChange, values }: any) => (
+                <Form
+                    style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        width: '100%',
+                        overflow: 'hidden',
+                    }}
+                >
+                    <InputWrapper>
+                        <Label>Display Name</Label>
+                        <Input
+                            onChange={handleChange}
+                            value={values.displayName}
+                            type="text"
+                            name="displayName"
+                            id="displayName"
+                        />
+                        <ErrorMessage name="displayName" component="div" />
+                    </InputWrapper>
+
+                    <InputWrapper
+                        style={{ display: 'flex', justifyContent: 'flex-end' }}
+                    >
+                        <Button
+                            secondary
+                            type="button"
+                            onClick={() => {
+                                setShowModal(false)
+                            }}
+                            style={{
+                                width: 100,
+                                display: 'flex',
+                                margin: '10px',
+                                height: 40,
+                                fontSize: 16,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            CANCEL
+                        </Button>
+                        <Button
+                            primary
+                            type="submit"
+                            disabled={isSubmitting}
+                            onClick={() => {}}
+                            style={{
+                                width: 100,
+                                display: 'flex',
+                                margin: '10px',
+                                height: 40,
+                                fontSize: 16,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            SEND
+                        </Button>
+                    </InputWrapper>
+                </Form>
+            )}
+        </Formik>
+    )
+}
+function UpdatePhoneNumber({ setShowModal }: ChangeMailProps) {
+    const auth = useAuth()
+    const provider = new PhoneAuthProvider(auth)
+
+    const [verificationId, setVerificationId] = useState('')
+    const [phoneNumber, setPhoneNumber] = useState('')
+    const [currentUI, setCurrentUI] = useState(
+        <VerifyPhoneNumber
+            provider={provider}
+            setVerificationId={setVerificationId}
+            setShowModal={setShowModal}
+            setPhoneNumber={setPhoneNumber}
+        />
+    )
+    useEffect(() => {
+        if (verificationId.length > 0)
+            setCurrentUI(
+                <VerifyCode
+                    verificationId={verificationId}
+                    setShowModal={setShowModal}
+                    phoneNumber={phoneNumber}
+                />
+            )
+    }, [verificationId])
+
+    // Obtain the verificationCode from the user.
+
+    return <>{currentUI}</>
+}
+function VerifyPhoneNumber({
+    provider,
+    setVerificationId,
+    setShowModal,
+    setPhoneNumber,
+}: any) {
+    const { data: user } = useUser()
+    const auth = useAuth()
+    const [applicationVerifier, setApplicationVerifier] = useState<any>(null)
+
+    // Obtain the verificationCode from the user.
+    const phoneRegExp =
+        /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/
+    const personalInfoSchema = Yup.object().shape({
+        phoneNumber: Yup.string().matches(
+            phoneRegExp,
+            'Phone number is not valid'
+        ),
+    })
+
+    useEffect(() => {
+        setApplicationVerifier(
+            new RecaptchaVerifier(
+                'recapture',
+                {
+                    size: 'invisible',
+                },
+                auth
+            )
+        )
+    }, [])
+
+    return (
+        <Formik
+            initialValues={{
+                phoneNumber: (user && user.phoneNumber) || '',
+            }}
+            validationSchema={personalInfoSchema}
+            //Remember to add yup for  validation check.
+            onSubmit={(values: any, { setSubmitting, setFieldError }: any) => {
+                setTimeout(() => {
+                    setSubmitting(true)
+                    console.log(JSON.stringify(values, null, 2))
+                    if (user) {
+                        provider
+                            .verifyPhoneNumber(
+                                values.phoneNumber,
+                                applicationVerifier
+                            )
+                            .then((verificationId: any) => {
+                                console.log('verificationid', verificationId)
+                                if (
+                                    verificationId &&
+                                    verificationId.length > 0
+                                ) {
+                                    setPhoneNumber(values.phoneNumber)
+                                    setVerificationId(verificationId)
+                                } else {
+                                    setFieldError(
+                                        'phoneNumber',
+                                        'Failed to get verification id. Try again.'
+                                    )
+                                    setSubmitting(false)
+                                }
+                            })
+                            .catch((error: any) => {
+                                // An error occurred
+                                // ...
+                                setFieldError(
+                                    'phoneNumber',
+                                    'Failed to get verification id. Try again.'
+                                )
+                                setSubmitting(false)
+                                console.log(error)
+                            })
+                    }
+                }, 400)
+            }}
+        >
+            {({ isSubmitting, setFieldValue, handleChange, values }: any) => (
+                <Form
+                    style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        width: '100%',
+                        overflow: 'hidden',
+                    }}
+                >
+                    <InputWrapper>
+                        <Label>Phone Number</Label>
+                        <PhoneInput
+                            country={'gh'}
+                            onChange={(value, country, e) => handleChange(e)}
+                            value={values.phoneNumber}
+                            inputProps={{ name: 'phoneNumber' }}
+                            dropdownStyle={{ ...dropDownStyle }}
+                            inputStyle={{ ...reactTextInput }}
+                        />
+                        <ErrorMessage name="phoneNumber" component="div" />
+                    </InputWrapper>
+
+                    <InputWrapper
+                        style={{ display: 'flex', justifyContent: 'flex-end' }}
+                    >
+                        <Button
+                            secondary
+                            type="button"
+                            onClick={() => {
+                                setShowModal(false)
+                            }}
+                            style={{
+                                width: 100,
+                                display: 'flex',
+                                margin: '10px',
+                                height: 40,
+                                fontSize: 16,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            CANCEL
+                        </Button>
+                        <Button
+                            id="recapture"
+                            primary
+                            type="submit"
+                            disabled={isSubmitting}
+                            onClick={() => {}}
+                            style={{
+                                width: 100,
+                                display: 'flex',
+                                margin: '10px',
+                                height: 40,
+                                fontSize: 16,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            {isSubmitting ? 'Please Wait' : 'SEND'}
+                        </Button>
+                    </InputWrapper>
+                </Form>
+            )}
+        </Formik>
+    )
+}
+
+function VerifyCode({ verificationId, setShowModal, phoneNumber }: any) {
+    const { data: user } = useUser()
+
+    // Obtain the verificationCode from the user.
+    const codeSchema = Yup.object().shape({
+        code: Yup.number().required('Code is required.'),
+    })
+    return (
+        <Formik
+            initialValues={{
+                code: '',
+            }}
+            validationSchema={codeSchema}
+            //Remember to add yup for  validation check.
+            onSubmit={(values: any, { setSubmitting, setFieldError }: any) => {
+                setTimeout(() => {
+                    console.log(JSON.stringify(values, null, 2))
+                    setSubmitting(true)
+                    if (user) {
+                        const phoneCredential = PhoneAuthProvider.credential(
+                            verificationId,
+                            values.code
+                        )
+                        if (phoneCredential)
+                            updatePhoneNumber(user, phoneCredential)
+                                .then((result) => {
+                                    console.log(
+                                        `Phone number updated result`,
+                                        result
+                                    )
+                                    setShowModal(false)
+                                })
+                                .catch((error) => {
+                                    // An error occurred
+                                    // ...
+                                    console.log(error)
+                                    setFieldError(
+                                        'code',
+                                        'Something went wrong'
+                                    )
+                                    setSubmitting(false)
+                                })
+                        else {
+                            setFieldError('code', 'You entered the wrong code')
+                            setSubmitting(false)
+                        }
+                    }
+                }, 400)
+            }}
+        >
+            {({ isSubmitting, setFieldValue, handleChange, values }: any) => (
+                <Form
+                    style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        width: '100%',
+                        overflow: 'hidden',
+                    }}
+                >
+                    <InputWrapper>
+                        <Label>Verification Code</Label>
+                        <Input
+                            onChange={handleChange}
+                            value={values.displayName}
+                            type="text"
+                            name="code"
+                            id="code"
+                        />
+                        <span>{`Enter  text message code sent to ${phoneNumber}`}</span>
+                        <ErrorMessage name="code" component="div" />
+                    </InputWrapper>
+
+                    <InputWrapper
+                        style={{ display: 'flex', justifyContent: 'flex-end' }}
+                    >
+                        <Button
+                            secondary
+                            type="button"
+                            onClick={() => {
+                                setShowModal(false)
+                            }}
+                            style={{
+                                width: 100,
+                                display: 'flex',
+                                margin: '10px',
+                                height: 40,
+                                fontSize: 16,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            CANCEL
+                        </Button>
+                        <Button
+                            primary
+                            type="submit"
+                            disabled={isSubmitting}
+                            onClick={() => {}}
+                            style={{
+                                width: 100,
+                                display: 'flex',
+                                margin: '10px',
+                                height: 40,
+                                fontSize: 16,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            {isSubmitting ? 'Please Wait' : 'SEND'}
+                        </Button>
+                    </InputWrapper>
+                </Form>
+            )}
+        </Formik>
+    )
+}
 interface ChangeMailProps {
     setShowModal: (showModal: boolean) => void
 }
@@ -72,10 +495,14 @@ function ChangeEmail({ setShowModal }: ChangeMailProps) {
     const { data: user } = useUser()
     const [reauth, setReauth] = useState(false)
     const [success, setSuccess] = useState(false)
+    const emailSchema = Yup.object().shape({
+        email: Yup.string().email().required('Email is required'),
+    })
     return (
         <Formik
-            initialValues={{ email: '' }}
+            initialValues={{ email: (user && user.email) || '' }}
             //Remember to validate with YUP
+            validationSchema={emailSchema}
             onSubmit={(values: any, { setSubmitting }: any) => {
                 setTimeout(() => {
                     console.log(JSON.stringify(values, null, 2))

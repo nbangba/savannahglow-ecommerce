@@ -198,7 +198,7 @@ export default function AddressForm({
     const addressesQuery = query(
         addressesCollection,
         orderBy('dateCreated', 'desc'),
-        where('user', '==', user ? user.uid : 'NO_USER')
+        where('uid', '==', user ? user.uid : 'NO_USER')
     )
     const { data: addresses } = useFirestoreCollectionData(addressesQuery)
 
@@ -292,7 +292,7 @@ export default function AddressForm({
                                     .catch((e) => console.log(e))
                             } else if (addresses && addresses.length == 0) {
                                 addDoc(collection(db, 'addresses'), {
-                                    user: user && user.uid,
+                                    uid: user && user.uid,
                                     dateCreated: serverTimestamp(),
                                     isDefault: true,
                                     ...values,
@@ -304,7 +304,7 @@ export default function AddressForm({
                                     .catch((e) => console.log(e))
                             } else {
                                 addDoc(collection(db, 'addresses'), {
-                                    user: user && user.uid,
+                                    uid: user && user.uid,
                                     dateCreated: serverTimestamp(),
                                     ...values,
                                 })

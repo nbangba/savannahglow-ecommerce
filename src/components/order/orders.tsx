@@ -138,7 +138,7 @@ export function OrderCard({ order, role = null, children }: OrderCardProps) {
                 {order.order.items.slice(0, 1).map((item) => (
                     <CardItem>
                         <CardItem style={{ fontWeight: 'bold' }}>
-                            Savannah Glow
+                            {item.productName}
                         </CardItem>
                         <div style={{ display: 'flex' }}>
                             <GatsbyImage
@@ -283,7 +283,7 @@ export function OrderCard({ order, role = null, children }: OrderCardProps) {
                         Download Receipt
                     </Button>
                 )}
-                <Link to={`../../order/${order.NO_ID_FIELD}`}>
+                <Link to={`/user/orders/order/${order.NO_ID_FIELD}`}>
                     <Button
                         secondary
                         onClick={() => {

@@ -6,7 +6,7 @@ import { getAnalytics, logEvent } from 'firebase/analytics'
 
 export default function SignIn() {
     var uiConfig = {
-        signInSuccessUrl: `${process.env.REDIRECT_AFTER_SIGN_IN}`,
+        signInSuccessUrl: `https://www.savannahglow.com/`,
         signInOptions: [
             // Leave the lines as is for the providers you want to offer your users.
             {

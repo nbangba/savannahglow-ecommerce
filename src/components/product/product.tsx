@@ -663,7 +663,7 @@ function AddtoCartButton({ selectedVariety }: AddToCartProps) {
     const db = useFirestore()
     const auth = useAuth()
     const { data: user } = useUser()
-
+    const [showModal, setShowModal] = useState(false)
     console.log(signInCheckResult)
 
     const addCart = (cartUser: User) => {
@@ -674,7 +674,10 @@ function AddtoCartButton({ selectedVariety }: AddToCartProps) {
             numberOfItems: selectedVariety.quantity,
             dateCreated: serverTimestamp(),
         })
-            .then(() => console.log('cart added'))
+            .then(() => {
+                setShowModal(true)
+                console.log('cart added')
+            })
             .catch((e) => console.log(e))
     }
 
@@ -696,6 +699,18 @@ function AddtoCartButton({ selectedVariety }: AddToCartProps) {
     console.log(user && user.uid)
     const cartRef = doc(db, 'carts', user ? user.uid : 'NO_USER')
     const { data: cart } = useFirestoreDocData(cartRef)
+
+    const ItemsAddedModal = () => (
+        <ModalComponent
+            title={`${selectedVariety.quantity} ${selectedVariety.name} added to bag`}
+            showModal={showModal}
+            setShowModal={setShowModal}
+        >
+            <Button primary onClick={() => setShowModal(false)}>
+                Done
+            </Button>
+        </ModalComponent>
+    )
 
     const addToCart = () => {
         if (signInCheckResult.signedIn && user && !cart) {
@@ -724,7 +739,10 @@ function AddtoCartButton({ selectedVariety }: AddToCartProps) {
                                     selectedVariety.quantity
                                 ),
                             })
-                                .then(() => console.log('quantity increased'))
+                                .then(() => {
+                                    setShowModal(true)
+                                    console.log('quantity increased')
+                                })
                                 .catch((e) => console.log(e))
                         )
                         .then(() => console.log('an item quantity increased'))
@@ -738,7 +756,10 @@ function AddtoCartButton({ selectedVariety }: AddToCartProps) {
                         items: arrayUnion(selectedVariety),
                         numberOfItems: increment(selectedVariety.quantity),
                     })
-                        .then(() => console.log('address updated'))
+                        .then(() => {
+                            setShowModal(true)
+                            console.log('quantity updated')
+                        })
                         .catch((e) => console.log(e))
                 else {
                     console.log('User not found ', user)
@@ -750,15 +771,22 @@ function AddtoCartButton({ selectedVariety }: AddToCartProps) {
     if (status == 'success') {
         if (!user)
             return (
-                <Button secondary onClick={addCartAnonymousUser}>
-                    Add To Bag
-                </Button>
+                <>
+                    <ItemsAddedModal />
+
+                    <Button secondary onClick={addCartAnonymousUser}>
+                        Add To Bag
+                    </Button>
+                </>
             )
         else if (signInCheckResult.signedIn && user && user.uid)
             return (
-                <Button secondary onClick={addToCart}>
-                    Add To Bag
-                </Button>
+                <>
+                    <ItemsAddedModal />
+                    <Button secondary onClick={addToCart}>
+                        Add To Bag
+                    </Button>
+                </>
             )
         else return <div>Loading...</div>
     } else if (status == 'loading') return <div>Loading...</div>

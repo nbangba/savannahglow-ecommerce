@@ -26,7 +26,7 @@ export default function SEO({
         title: title || defaultTitle,
         description: description || defaultDescription,
         image: `${siteUrl}${image}`,
-        url: `${siteUrl}${pathname || ``}`,
+        url: `${siteUrl}/${pathname || ``}`,
     }
 
     return (

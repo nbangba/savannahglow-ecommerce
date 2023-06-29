@@ -115,7 +115,7 @@ export default function Settings() {
     const [activeTab, setActiveTab] = useState('')
     return (
         <SettingsWrapper>
-            <AccordionButton
+            {/*<AccordionButton
                 name="personal info"
                 title="Personal Info"
                 activeTab={activeTab}
@@ -123,8 +123,8 @@ export default function Settings() {
             >
                 <Errorwrapper>
                     <PersonalInfo />
-                </Errorwrapper>
-            </AccordionButton>
+    </Errorwrapper>
+            </AccordionButton>*/}
             <AccordionButton
                 name="account"
                 title="Account"

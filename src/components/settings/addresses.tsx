@@ -42,7 +42,7 @@ export default function Addresses({
     const addressesQuery = query(
         addressesCollection,
         orderBy('dateCreated', 'desc'),
-        where('user', '==', user ? user.uid : '')
+        where('uid', '==', user ? user.uid : '')
     )
     const getDefault = (addresses: AddressInfoProps[]) =>
         addresses.filter((address) => address.isDefault)

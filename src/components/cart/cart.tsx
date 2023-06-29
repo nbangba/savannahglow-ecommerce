@@ -21,6 +21,7 @@ import {
 } from '../../helperfunctions'
 import { VarietyProps } from '../product/product'
 import { GatsbyImage } from 'gatsby-plugin-image'
+import Errorwrapper from '../errorwrapper'
 
 const CartWrapper = styled.div`
     display: flex;
@@ -207,47 +208,49 @@ export function CartItems({ children, location }: CartItemsProps) {
 
         if (location || (items && items.length > 0))
             return (
-                <CartWrapper>
-                    <Card
-                        maxWidth="900px"
-                        className="mobileV"
-                        style={{ margin: '10px 0px' }}
-                    >
-                        <ProductImageWrapper>
-                            <ul>
-                                {items.map((item, index) => (
-                                    <CartItem
-                                        key={index}
-                                        index={index}
-                                        item={item}
-                                        updateDiscount={updateDiscount}
-                                        updateCart={updateCart}
-                                        deleteCartItem={deleteCartItem}
-                                        db={db}
-                                    />
-                                ))}
-                            </ul>
-                            {location &&
-                            location.state &&
-                            location.state.items ? (
-                                <div
-                                    style={{
-                                        width: '100%',
-                                        textAlign: 'right',
-                                    }}
-                                ></div>
-                            ) : (
-                                <div
-                                    style={{
-                                        width: '100%',
-                                        textAlign: 'right',
-                                    }}
-                                >{`Subtotal: GHS ${cart.discountedTotal}`}</div>
-                            )}
-                        </ProductImageWrapper>
-                    </Card>
-                    {children && children(cart)}
-                </CartWrapper>
+                <Errorwrapper>
+                    <CartWrapper>
+                        <Card
+                            maxWidth="900px"
+                            className="mobileV"
+                            style={{ margin: '10px 0px' }}
+                        >
+                            <ProductImageWrapper>
+                                <ul>
+                                    {items.map((item, index) => (
+                                        <CartItem
+                                            key={index}
+                                            index={index}
+                                            item={item}
+                                            updateDiscount={updateDiscount}
+                                            updateCart={updateCart}
+                                            deleteCartItem={deleteCartItem}
+                                            db={db}
+                                        />
+                                    ))}
+                                </ul>
+                                {location &&
+                                location.state &&
+                                location.state.items ? (
+                                    <div
+                                        style={{
+                                            width: '100%',
+                                            textAlign: 'right',
+                                        }}
+                                    ></div>
+                                ) : (
+                                    <div
+                                        style={{
+                                            width: '100%',
+                                            textAlign: 'right',
+                                        }}
+                                    >{`Subtotal: GHS ${cart.discountedTotal}`}</div>
+                                )}
+                            </ProductImageWrapper>
+                        </Card>
+                        {children && children(cart)}
+                    </CartWrapper>
+                </Errorwrapper>
             )
         else return <div>No items in your Cart</div>
     }
@@ -255,13 +258,15 @@ export function CartItems({ children, location }: CartItemsProps) {
         return <div>No items in your Cart</div>
     } else
         return (
-            <LoggedInCart
-                collection={
-                    location && location.state && location.state.fromFeed
-                        ? 'buyNow'
-                        : 'carts'
-                }
-            />
+            <Errorwrapper>
+                <LoggedInCart
+                    collection={
+                        location && location.state && location.state.fromFeed
+                            ? 'buyNow'
+                            : 'carts'
+                    }
+                />
+            </Errorwrapper>
         )
 }
 
@@ -419,6 +424,7 @@ export interface CartProps {
 export interface SubTotalProps {
     cart: CartProps
     isSubmitting?: boolean
+    handleSubmit?: any
 }
 
 function Subtotal({ cart }: SubTotalProps) {

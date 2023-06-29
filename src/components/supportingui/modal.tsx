@@ -62,7 +62,14 @@ const FormWrapper = styled.div`
     align-items: center;
     justify-content: center;
     h3 {
+        margin: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
         width: 100%;
+        font-size: 14px;
+        font-weight: 500;
     }
 `
 interface ModalProps {
@@ -95,8 +102,10 @@ export default function ModalComponent({
         /*onMouseLeave={()=>{if(type != 'form' && setShowModal) setShowModal(false)}}*/
         >
             <ModalContent style={style} width={width}>
-                <h3>{title ? title : ''}</h3>
-                <FormWrapper>{children}</FormWrapper>
+                <FormWrapper>
+                    <h3>{title ? title : ''}</h3>
+                    {children}
+                </FormWrapper>
             </ModalContent>
         </Modal>
     )

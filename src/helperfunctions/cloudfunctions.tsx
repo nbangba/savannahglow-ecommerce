@@ -6,11 +6,11 @@ import { InfoProps } from '../components/checkout/checkout'
 import { OrderInfoProps } from '../components/admin/adminCustomerOrders'
 import { ReviewProps } from '../components/product/review'
 
-export function verifyPaystack(info: InfoProps, response: any) {
+export async function verifyPaystack(info: InfoProps, response: any) {
     const functions = getFunctions()
     const verify = httpsCallable(functions, 'payStackTransctionVerification')
     const firestore = getFirestore()
-    verify({ info: info, response: response })
+    return await verify({ info: info, response: response })
         .then((result) => {
             console.log(response.status)
             console.log(result)
@@ -32,7 +32,6 @@ export function verifyPaystack(info: InfoProps, response: any) {
                     items: items,
                 })
 
-                console.log(info)
                 addDoc(collection(firestore, 'mail'), {
                     to: ['nbangba.la@gmail.com'],
                     template: {
@@ -46,40 +45,46 @@ export function verifyPaystack(info: InfoProps, response: any) {
                 console.log('success')
             }
             //window.location = "http://localhost:8000/verification/" + response.reference;
+            return result
         })
         .catch((err) => console.log(err))
 }
 
-export function chargeCard(info: InfoProps, cardId: string) {
+export async function chargeCard(info: InfoProps, cardId: string) {
     const functions = getFunctions()
     const chargeCardFn = httpsCallable(functions, 'chargeCard')
 
-    chargeCardFn({ info: info, docId: cardId })
+    const result = await chargeCardFn({ info: info, docId: cardId })
         .then((result) => {
-            console.log(result)
+            console.log('Charge card result', result)
+            return result
         })
         .catch((e) => console.log(e))
+
+    return result
 }
 
-export function payOnDelivery(info: InfoProps) {
+export async function payOnDelivery(info: InfoProps) {
     const functions = getFunctions()
     const payOnDeliveryFn = httpsCallable(functions, 'payOnDelivery')
 
-    payOnDeliveryFn({ info: info })
-        .then(() => {
-            console.log('Order Sent')
+    return await payOnDeliveryFn({ info: info })
+        .then((result) => {
+            console.log('Pay on deliver result', result)
+            return result
         })
         .catch((e) => console.log(e))
 }
 
-export function refund(order: OrderInfoProps) {
+export async function refund(order: OrderInfoProps) {
     const functions = getFunctions()
     const createRefund = httpsCallable(functions, 'createRefund')
     const firestore = getFirestore()
 
-    createRefund({
-        transactionID: order.response.reference,
+    const results = await createRefund({
+        transactionID: order.NO_ID_FIELD || order.response.reference,
         amount: order.order.amount * 100 + '',
+        payment: order.order.payment,
     })
         .then((result) => {
             addDoc(collection(firestore, 'mail'), {
@@ -92,9 +97,11 @@ export function refund(order: OrderInfoProps) {
                     },
                 },
             })
-            console.log(result)
+            console.log('refund result', result)
+            return result
         })
         .catch((e) => console.log(e))
+    return results
 }
 
 export async function deleteUsers(selectedRows: any) {

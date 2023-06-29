@@ -71,7 +71,7 @@ export const query = graphql`
 
 export function Head({ data }) {
     const product = data.productInfo
-    const productRating = data.productrating
+    const productRating = data.productRating
         ? data.productRating.documents[0]
         : null
     console.log(productRating)

@@ -36,8 +36,10 @@ import { AddressInfoProps } from '../address/addressform'
 import { VarietyProps } from '../product/product'
 import 'react-credit-cards/es/styles-compiled.css'
 import { SubTotalProps, CartProps } from '../cart/cart'
-import Errorwrapper from '../errorwrapper'
+import Errorwrapper, { Loading } from '../errorwrapper'
 import loadable from '@loadable/component'
+import { navigate } from 'gatsby'
+import { setServers } from 'dns'
 const AddressForm = loadable(() => import('../address/addressform'))
 const Addresses = loadable(() => import('../settings/addresses'))
 
@@ -137,7 +139,7 @@ export default function Checkout({ location }: any) {
     const cardsCollection = collection(db, 'cards')
     const cardsQuery = query(
         cardsCollection,
-        where('owner', '==', user ? user.uid : 'null')
+        where('uid', '==', user ? user.uid : 'null')
     )
     const { data: cards } = useFirestoreCollectionData(cardsQuery)
     const card = cards && cards[0] && cards[0].authorization
@@ -147,20 +149,27 @@ export default function Checkout({ location }: any) {
     const addressesQuery = query(
         addressesCollection,
         where('isDefault', '==', true),
-        where('user', '==', user ? user.uid : 'null')
+        where('uid', '==', user ? user.uid : 'null')
     )
     const { status: info, data: addresses } = useFirestoreCollectionData(
         addressesQuery
     ) as ObservableStatus<AddressInfoProps[]>
     const [selected, setSelected] = useState(addresses[0])
+    const [transactionStatus, setTransactionStatus] = useState('Loading')
     const orderSchema = Yup.object().shape({
         orderAddress: Yup.object().required('An address is required'),
         payment: Yup.string().required('Select a payment option'),
     })
+    const [showModal, setShowModal] = useState(false)
 
     if (items && items.length > 0)
         return (
             <CheckoutWrapper>
+                <TransactStatusModal
+                    showModal={showModal}
+                    setShowModal={setShowModal}
+                    transactionStatus={transactionStatus}
+                ></TransactStatusModal>
                 <div className="checkout-form">
                     <Formik
                         initialValues={{
@@ -201,19 +210,52 @@ export default function Checkout({ location }: any) {
                                     ? user.isAnonymous
                                     : true
                                 console.log(JSON.stringify(values, null, 2))
-                                if (values.paystackOptions == 'defaultCard')
+                                if (values.paystackOptions == 'defaultCard') {
                                     chargeCard(
                                         { ...values },
                                         cards[0].NO_ID_FIELD
+                                    ).then((result) => {
+                                        console.log(
+                                            'charge card result',
+                                            result
+                                        )
+                                    })
+                                } else if (values.payment == 'paystack') {
+                                    payWithPaystack(
+                                        { ...values },
+                                        setTransactionStatus
                                     )
-                                else if (values.payment == 'paystack')
-                                    payWithPaystack({ ...values })
-                                else payOnDelivery({ ...values })
-                                //setSubmitting(false);
+                                    setShowModal(true)
+                                } else {
+                                    setShowModal(true)
+                                    payOnDelivery({ ...values }).then(
+                                        (result: any) => {
+                                            console.log(
+                                                'charge card result',
+                                                result
+                                            )
+                                            if (
+                                                result &&
+                                                result.data.status ===
+                                                    'successful'
+                                            ) {
+                                                setShowModal(false)
+                                                navigate(
+                                                    `/user/orders/order/${result.data.firebasedata}`
+                                                )
+                                            } else setSubmitting(false)
+                                        }
+                                    )
+                                }
                             }, 400)
                         }}
                     >
-                        {({ setFieldValue, values, isSubmitting }: any) => (
+                        {({
+                            setFieldValue,
+                            values,
+                            isSubmitting,
+                            handleSubmit,
+                        }: any) => (
                             <Form id="checkout">
                                 <Errorwrapper>
                                     <UserAddress
@@ -245,6 +287,7 @@ export default function Checkout({ location }: any) {
                                 <Subtotal
                                     cart={cart}
                                     isSubmitting={isSubmitting}
+                                    handleSubmit={handleSubmit}
                                 />
                             </Form>
                         )}
@@ -358,6 +401,7 @@ interface PaymentSegmentProps {
 function PaymentSegment({ card, values, db, user }: PaymentSegmentProps) {
     const useFsRef = doc(db, 'users', user.uid)
     const { data: userFs } = useFirestoreDocData(useFsRef)
+
     return (
         <Card maxWidth="400px" style={{ margin: '10px 0px', maxWidth: 900 }}>
             <div role="group" aria-labelledby="my-radio-group">
@@ -418,7 +462,7 @@ function PaymentSegment({ card, values, db, user }: PaymentSegmentProps) {
     )
 }
 
-function Subtotal({ cart, isSubmitting }: SubTotalProps) {
+function Subtotal({ cart, isSubmitting, handleSubmit }: SubTotalProps) {
     return (
         <Card
             style={{
@@ -442,7 +486,7 @@ function Subtotal({ cart, isSubmitting }: SubTotalProps) {
                 type="submit"
                 disabled={isSubmitting}
                 onClick={() => {
-                    return false
+                    handleSubmit
                 }}
                 form="checkout"
                 style={{ minWidth: 'fit-content', width: 250 }}
@@ -453,6 +497,50 @@ function Subtotal({ cart, isSubmitting }: SubTotalProps) {
     )
 }
 
+function TransactStatusModal({
+    showModal,
+    setShowModal,
+    transactionStatus,
+}: any) {
+    const [status, setStatus] = useState(transactionStatus)
+    useEffect(() => {
+        setStatus(transactionStatus)
+    }, [transactionStatus])
+    setTimeout(() => {
+        setStatus('something went wrong')
+    }, 60000)
+
+    return (
+        <ModalComponent showModal={showModal} setShowModal={setShowModal}>
+            {status == 'Loading' ? (
+                <div>
+                    <div>Finishing up</div>
+                    <Loading>
+                        <div className="lds-facebook">
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                        </div>
+                    </Loading>
+                </div>
+            ) : status == 'complete' ? (
+                <div>
+                    <div>Transaction Complete</div>
+                    <Button onClick={() => setShowModal(false)} primary>
+                        Ok
+                    </Button>
+                </div>
+            ) : (
+                <div>
+                    <div>Something went wrong!</div>
+                    <Button onClick={() => setShowModal(false)} primary>
+                        Ok
+                    </Button>
+                </div>
+            )}
+        </ModalComponent>
+    )
+}
 export interface InfoProps {
     amount: number
     orderAddress: AddressInfoProps
@@ -463,7 +551,7 @@ export interface InfoProps {
     paystackOptions: string
 }
 
-function payWithPaystack(info: InfoProps) {
+function payWithPaystack(info: InfoProps, setTransactionStatus: any) {
     var handler = window.PaystackPop.setup({
         key: `pk_test_64cadcb7dfa0a05f73626432160213f40c80c77c`, // Replace with your public key
         email: info.orderAddress.email,
@@ -474,12 +562,19 @@ function payWithPaystack(info: InfoProps) {
             var reference = response.reference
             console.log(response)
             verifyPaystack(info, response)
-
+                .then((result: any) => {
+                    if (result.data.status == 'complete') {
+                        setTransactionStatus('complete')
+                    } else setTransactionStatus('Something went wrong!')
+                })
+                .then(() => navigate(`/user/orders/order/${reference}`))
             alert('Payment complete! Reference: ' + reference)
+            navigate
             // Make an AJAX call to your server with the reference to verify the transaction
         },
         onClose: function () {
             alert('Transaction was not completed, window closed.')
+            setTransactionStatus('Something went wrong!')
         },
     })
     handler.openIframe()

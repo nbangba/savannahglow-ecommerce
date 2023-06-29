@@ -104,9 +104,12 @@ export default function LoginStatus() {
                             >
                                 {(setReferenceElement: any) => (
                                     <MenuItem
+                                        className="tooltip-enter-done"
                                         ref={setReferenceElement}
                                         tabIndex={-1}
-                                        onClick={() => setOpen(!open)}
+                                        onClick={(e) => {
+                                            setOpen(!open)
+                                        }}
                                     >
                                         <UserWrapper>
                                             <User

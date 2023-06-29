@@ -177,32 +177,65 @@ exports.payStackTransctionVerification = functions
                                                 'RESPONSE',
                                                 response.data
                                             )
+
                                             if (
                                                 response.data.data.authorization
                                                     .reusable
-                                            )
-                                                admin
-                                                    .firestore()
-                                                    .collection('cards')
-                                                    .add({
-                                                        authorization:
-                                                            response.data.data
-                                                                .authorization,
-                                                        dateAdded:
-                                                            admin.firestore.Timestamp.now(),
-                                                        reference:
-                                                            response.data.data
-                                                                .reference,
-                                                        owner: context.auth.uid,
-                                                    })
-                                                    .then(() =>
-                                                        console.log(
-                                                            'New card added'
-                                                        )
+                                            ) {
+                                                //save new card
+                                                fs.collection('cards')
+                                                    .where(
+                                                        'uid',
+                                                        '==',
+                                                        context.auth.uid
                                                     )
+                                                    .where(
+                                                        'authorization.signature',
+                                                        '==',
+                                                        response.data.data
+                                                            .authorization
+                                                            .signature
+                                                    )
+                                                    .get()
+                                                    .then((result) => {
+                                                        if (result.empty)
+                                                            admin
+                                                                .firestore()
+                                                                .collection(
+                                                                    'cards'
+                                                                )
+                                                                .add({
+                                                                    authorization:
+                                                                        response
+                                                                            .data
+                                                                            .data
+                                                                            .authorization,
+                                                                    dateAdded:
+                                                                        admin.firestore.Timestamp.now(),
+                                                                    reference:
+                                                                        response
+                                                                            .data
+                                                                            .data
+                                                                            .reference,
+                                                                    uid: context
+                                                                        .auth
+                                                                        .uid,
+                                                                })
+                                                                .then(() =>
+                                                                    console.log(
+                                                                        'New card added'
+                                                                    )
+                                                                )
+                                                                .catch((e) =>
+                                                                    console.log(
+                                                                        e
+                                                                    )
+                                                                )
+                                                    })
                                                     .catch((e) =>
                                                         console.log(e)
                                                     )
+                                            }
                                         })
                                         .catch((e) => console.log(e))
                                 })
@@ -248,7 +281,7 @@ exports.chargeCard = functions
                         },
                     }
 
-                    return await axios(options)
+                    const result = await axios(options)
                         .then(async (response) => {
                             console.log('RESPONSE', response.data)
                             const data = response.data.data
@@ -380,7 +413,7 @@ exports.chargeCard = functions
                                         })
                                 } catch (e) {
                                     console.log('Transaction failed: ', e)
-                                    return e.message
+                                    return 'transaction failed'
                                 }
                             } else return data.status
                         })
@@ -411,7 +444,7 @@ exports.chargeCard = functions
             })
             .catch((error) => {
                 console.log('Error getting document:', error)
-                return error.message()
+                return 'unsuccessful'
             })
 
         return { status: result }
@@ -424,7 +457,7 @@ exports.payOnDelivery = functions
     })
     .https.onCall(async (data, context) => {
         const { info } = data
-
+        let result
         try {
             info.items.map((item) => {
                 fs.runTransaction(async (transaction) => {
@@ -440,7 +473,7 @@ exports.payOnDelivery = functions
                 })
             })
 
-            await fs
+            result = await fs
                 .runTransaction(async (transaction) => {
                     const docRef = fs
                         .collection('ordersMetadata')
@@ -498,28 +531,36 @@ exports.payOnDelivery = functions
                             ...result,
                             user: context.auth.uid,
                         })
-                        .then(() =>
-                            admin
-                                .firestore()
-                                .collection(info.collection)
-                                .doc(context.auth.uid)
-                                .set(
-                                    {
-                                        items: [],
-                                        numberOfItems: 0,
-                                    },
-                                    { merge: true }
-                                )
-                        )
+                        .then((result) => {
+                            {
+                                admin
+                                    .firestore()
+                                    .collection(info.collection)
+                                    .doc(context.auth.uid)
+                                    .set(
+                                        {
+                                            items: [],
+                                            numberOfItems: 0,
+                                        },
+                                        { merge: true }
+                                    )
+                            }
+                            return result
+                        })
+                        .then((result) => {
+                            return {
+                                status: 'successful',
+                                firebasedata: result.id,
+                            }
+                        })
                 )
             console.log('Transaction successfully committed!')
         } catch (e) {
             console.log('Transaction failed: ', e)
+            return 'Something went wrong'
         }
 
-        return {
-            status: 'complete',
-        }
+        return result
     })
 
 exports.createRefund = functions
@@ -528,8 +569,9 @@ exports.createRefund = functions
         memory: '128MB',
     })
     .https.onCall(async (data, context) => {
-        const { transactionID, amount } = data
+        const { transactionID, amount, payment } = data
         const secret = functions.config().paystack.key
+        let result
         const options = {
             url: 'https://api.paystack.co/refund',
             method: 'post',
@@ -542,85 +584,139 @@ exports.createRefund = functions
                 amount: amount,
             },
         }
+        if (payment === 'paystack')
+            result = await axios(options)
+                .then(async (response) => {
+                    console.log('RESPONSE', response.data)
+                    const data = response.data
+                    if (data.status) {
+                        console.log('Status', data.status)
+                        return await admin
+                            .firestore()
+                            .collection('orders')
+                            .doc(transactionID)
+                            .set(
+                                {
+                                    orderStatus: 'cancelled',
+                                },
+                                { merge: true }
+                            )
+                            .then(() => {
+                                const orderRef = fs
+                                    .collection('orders')
+                                    .doc(transactionID)
+                                orderRef.get().then((doc) => {
+                                    const result = doc.data()
+                                    result.order.items.map((item) => {
+                                        try {
+                                            fs.runTransaction(
+                                                async (transaction) => {
+                                                    const itemRef = fs
+                                                        .collection('product')
+                                                        .doc(item.id)
+                                                    const itemDoc =
+                                                        await transaction.get(
+                                                            itemRef
+                                                        )
+                                                    if (!itemDoc.exists) {
+                                                        throw 'Document does not exist!'
+                                                    }
+                                                    const newAvailable =
+                                                        itemDoc.data()
+                                                            .available +
+                                                        item.quantity
 
-        const result = await axios(options)
-            .then(async (response) => {
-                console.log('RESPONSE', response.data)
-                const data = response.data
-                if (data.status) {
-                    console.log('Status', data.status)
-                    return await admin
-                        .firestore()
-                        .collection('orders')
-                        .doc(transactionID)
-                        .set(
-                            {
-                                orderStatus: 'cancelled',
-                            },
-                            { merge: true }
-                        )
-                        .then(() => {
-                            const orderRef = fs
-                                .collection('orders')
-                                .doc(transactionID)
-                            orderRef.get().then((doc) => {
-                                const result = doc.data()
-                                result.order.items.map((item) => {
-                                    try {
-                                        fs.runTransaction(
-                                            async (transaction) => {
-                                                const itemRef = fs
-                                                    .collection('product')
-                                                    .doc(item.id)
-                                                const itemDoc =
-                                                    await transaction.get(
-                                                        itemRef
+                                                    transaction.update(
+                                                        itemRef,
+                                                        {
+                                                            available:
+                                                                newAvailable,
+                                                        }
                                                     )
-                                                if (!itemDoc.exists) {
-                                                    throw 'Document does not exist!'
                                                 }
-                                                const newAvailable =
-                                                    itemDoc.data().available +
-                                                    item.quantity
-
-                                                transaction.update(itemRef, {
-                                                    available: newAvailable,
-                                                })
-                                            }
-                                        )
-                                    } catch (e) {
-                                        console.log(e)
-                                    }
+                                            )
+                                        } catch (e) {
+                                            console.log(e)
+                                        }
+                                    })
                                 })
+                                console.log('doc updated')
+                                return data.status
                             })
-                            console.log('doc updated')
-                            return data.status
+                            .catch((e) => {
+                                console.log(e.message)
+                                return e.message
+                            })
+                    }
+                })
+                .catch((error) => {
+                    if (error.response) {
+                        // The request was made and the server responded with a status code
+                        // that falls out of the range of 2xx
+                        console.log('Response', error.response.data)
+                        console.log('Response', error.response.status)
+                        console.log('Response', error.response.headers)
+                        return 'There was an error'
+                    } else if (error.request) {
+                        // The request was made but no response was received
+                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                        // http.ClientRequest in node.js
+                        console.log(error.request)
+                    } else {
+                        // Something happened in setting up the request that triggered an Error
+                        console.log('Error', error.message)
+                        return 'There was an error'
+                    }
+                    console.log(error.config)
+                    return 'Refund Failed'
+                })
+        else {
+            result = await admin
+                .firestore()
+                .collection('orders')
+                .doc(transactionID)
+                .set(
+                    {
+                        orderStatus: 'cancelled',
+                    },
+                    { merge: true }
+                )
+                .then(() => {
+                    const orderRef = fs.collection('orders').doc(transactionID)
+                    orderRef.get().then((doc) => {
+                        const result = doc.data()
+                        result.order.items.map((item) => {
+                            try {
+                                fs.runTransaction(async (transaction) => {
+                                    const itemRef = fs
+                                        .collection('product')
+                                        .doc(item.id)
+                                    const itemDoc = await transaction.get(
+                                        itemRef
+                                    )
+                                    if (!itemDoc.exists) {
+                                        throw 'Document does not exist!'
+                                    }
+                                    const newAvailable =
+                                        itemDoc.data().available + item.quantity
+
+                                    transaction.update(itemRef, {
+                                        available: newAvailable,
+                                    })
+                                })
+                            } catch (e) {
+                                console.log(e)
+                            }
                         })
-                        .catch((e) => {
-                            console.log(e.message)
-                            return e.message
-                        })
-                }
-            })
-            .catch((error) => {
-                if (error.response) {
-                    // The request was made and the server responded with a status code
-                    // that falls out of the range of 2xx
-                    console.log('Response', error.response.data)
-                    console.log('Response', error.response.status)
-                    console.log('Response', error.response.headers)
-                } else if (error.request) {
-                    // The request was made but no response was received
-                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                    // http.ClientRequest in node.js
-                    console.log(error.request)
-                } else {
-                    // Something happened in setting up the request that triggered an Error
-                    console.log('Error', error.message)
-                }
-                console.log(error.config)
-                return 'Refund Failed'
-            })
+                    })
+                    console.log('doc updated')
+                    return data.status
+                })
+                .catch((e) => {
+                    console.log(e.message)
+                    return e.message
+                })
+        }
 
         return { status: result }
     })

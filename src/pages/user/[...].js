@@ -37,6 +37,7 @@ const User = styled.div`
 `
 
 const App = (props) => {
+    console.log(props)
     return (
         <Errorwrapper>
             <Router basepath="/user" style={{ width: '100%' }}>
@@ -47,7 +48,7 @@ const App = (props) => {
                 <PrivateRoute path="/settings" component={Settings} />
                 <PrivateRoute path="/orders" component={Orders} />
                 <PrivateRoute
-                    path={`/userorder/${props.id}`}
+                    path={`/orders/order/:id`}
                     component={OrderComponent}
                 />
                 <PrivateRoute path="/admin/orders" component={AdminOrders} />

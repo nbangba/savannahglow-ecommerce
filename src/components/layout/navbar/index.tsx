@@ -12,7 +12,8 @@ import { MenuContentList } from '../../supportingui/popper'
 import { AccordionButton } from '../../settings/settings'
 import LoginStatus from './loggedinui'
 import Search from '../../search'
-
+import Close from '../../../images/svgs/close-mini.svg'
+import Whatsapp from '../../../images/svgs/whatsapp.svg'
 const Navbar = styled.div`
     display: flex;
     width: 100%;
@@ -177,7 +178,28 @@ const MobileSearchButton = styled.div`
         display: none;
     }
 `
-
+const WhatsappWrapper = styled.a`
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    z-index: 3;
+    border-radius: 20px;
+    /* background: aquamarine; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: linear-gradient(
+        to bottom,
+        #fff,
+        #f4ece6,
+        hsl(42.65deg 43.44% 88.58%)
+    );
+    box-shadow: 0 4px 11px -2px rgba(37, 44, 97, 0.15),
+        0 1px 3px 0 rgba(93, 100, 148, 0.2);
+`
 export default function Nav() {
     const [openDrawer, setOpenDrawer] = useState(false)
     const [loginUI, setLoginUI] = useState(<></>)
@@ -255,6 +277,9 @@ export default function Nav() {
 
     return (
         <>
+            <WhatsappWrapper href="https://wa.me/233267720270">
+                <Whatsapp style={{ width: 40, height: 40, fill: '#2b7c2f' }} />
+            </WhatsappWrapper>
             <Navbar>
                 <MenuIcon onClick={() => setOpenDrawer(true)}>
                     <HamburgerIcon
@@ -262,6 +287,17 @@ export default function Nav() {
                     />
                 </MenuIcon>
                 <Drawer openDrawer={openDrawer} setOpenDrawer={setOpenDrawer}>
+                    <Close
+                        onClick={() => setOpenDrawer(false)}
+                        style={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            width: 20,
+                            height: 20,
+                            cursor: 'pointer',
+                        }}
+                    />
                     <MenuContent>
                         {menuItems.map((item: string, index: number) => (
                             <MenuContentList key={index}>
