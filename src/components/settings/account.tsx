@@ -245,15 +245,15 @@ function VerifyPhoneNumber({
     })
 
     useEffect(() => {
-        setApplicationVerifier(
-            new RecaptchaVerifier(
-                'recapture',
-                {
-                    size: 'invisible',
-                },
-                auth
-            )
+        const verifier = new RecaptchaVerifier(
+            'recapture',
+            {
+                size: 'invisible',
+            },
+            auth
         )
+        window.recaptchaVerifier = verifier
+        setApplicationVerifier(verifier)
     }, [])
 
     return (
@@ -284,7 +284,7 @@ function VerifyPhoneNumber({
                                 } else {
                                     setFieldError(
                                         'phoneNumber',
-                                        'Failed to get verification id. Try again.'
+                                        `Failed to get verification id. Try again.`
                                     )
                                     setSubmitting(false)
                                 }
@@ -294,7 +294,7 @@ function VerifyPhoneNumber({
                                 // ...
                                 setFieldError(
                                     'phoneNumber',
-                                    'Failed to get verification id. Try again.'
+                                    `Failed to get verification id. Try again.${error.message}`
                                 )
                                 setSubmitting(false)
                                 console.log(error)
